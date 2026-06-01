@@ -1,0 +1,190 @@
+/* Sidebar.css - Solid Brand Blue Theme */
+
+.sidebar {
+  width: 260px;
+  background-color: var(--primary); /* Haatza Royal Blue */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  transition: width var(--transition-normal);
+  flex-shrink: 0;
+  z-index: 100;
+  padding: 24px 16px;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 24px 12px;
+}
+
+/* Integrated Header Toggle Styles */
+.sidebar-brand-container {
+  margin-bottom: 32px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.brand-logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header-toggle {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.sidebar-header-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.sidebar-header-toggle svg {
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-header-toggle:hover svg {
+  transform: scale(1.05);
+}
+
+/* Styles when collapsed */
+.sidebar-header-toggle.collapsed-toggle {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+}
+
+.sidebar-header-toggle.collapsed-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.logo-icon-container {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Styled brand logo image from assets */
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.logo-text-main {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-inverse); /* White brand text */
+  letter-spacing: 0.5px;
+  font-family: var(--font-sans);
+}
+
+.logo-text-sub {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+/* Nav Menu */
+.sidebar-nav {
+  flex: 1;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.75); /* Semi-transparent white text */
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.75);
+  transition: transform var(--transition-fast);
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Soft white highlight on hover */
+  color: #ffffff;
+}
+
+.nav-link:hover .nav-icon {
+  transform: scale(1.05);
+  color: #ffffff;
+}
+
+.nav-link.active {
+  background-color: var(--bg-card); /* High contrast white pill active state */
+  color: var(--primary); /* Brand blue active text */
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.nav-link.active .nav-icon {
+  color: var(--primary); /* Active icon is brand blue */
+}
+
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+/* Footer Section */
+.sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+  margin-top: auto;
+}

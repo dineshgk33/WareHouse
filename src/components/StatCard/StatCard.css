@@ -1,0 +1,124 @@
+/* StatCard.css */
+
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Header: Title and Icon */
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.stat-card-icon-wrapper {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-icon {
+  stroke-width: 2px;
+}
+
+/* Body: Numeric Value */
+.stat-card-body {
+  display: flex;
+  align-items: baseline;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.75px;
+}
+
+/* Footer: Trend and Dropdown */
+.stat-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* Trend Badges */
+.trend-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trend-positive {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.trend-negative {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+/* Period selector pill */
+.period-dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.period-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  outline: none;
+  padding: 4px 20px 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.period-select:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.period-arrow-icon {
+  position: absolute;
+  right: 6px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.period-dropdown-container:hover .period-arrow-icon {
+  color: var(--text-main);
+}
