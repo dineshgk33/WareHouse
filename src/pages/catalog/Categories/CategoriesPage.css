@@ -1,0 +1,71 @@
+/* CategoriesPage.css - HAATZA Categories module custom styling */
+
+.cat-page-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats */
+.cat-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Info Cell */
+.cat-cell-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-cell-emoji {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-cell-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cat-cell-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.cat-cell-id {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.cat-count-bold {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.cat-order-tag {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Responsive adjustment */
+@media (max-width: 1024px) {
+  .cat-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

@@ -4,7 +4,7 @@
   display: flex;
   width: 100vw;
   height: 100vh;
-  background-color: var(--bg-app);
+  background: linear-gradient(180deg, #F7F9FF 0%, #F4F7FC 100%);
   overflow: hidden;
   transition: all var(--transition-normal);
 }

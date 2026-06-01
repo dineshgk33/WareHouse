@@ -580,3 +580,562 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── Orders Root Shell ──────────────────────────── */
+.orders-root {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.orders-header-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.orders-header-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.6px;
+    line-height: 1.2;
+}
+
+.orders-header-subtitle {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.orders-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+/* ─── Picker Assignment Pills ────────────────────── */
+.picker-assigned-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.picker-assigned-pill.unassigned {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+/* ─── Inline Action Buttons (Picking / Packing) ────── */
+.orders-actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.orders-inline-btn {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    border: 1px solid var(--primary);
+    transition: all var(--transition-fast);
+}
+
+.orders-inline-btn:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.orders-inline-btn--secondary {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.orders-inline-btn--secondary:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--text-muted);
+}
+
+.orders-inline-btn--success {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.orders-inline-btn--success:hover {
+    background-color: var(--color-success);
+    color: var(--text-inverse);
+}
+
+.orders-inline-completed {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+/* ─── Toolbar Selector & Dropdowns ────────────────── */
+.orders-toolbar-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.orders-toolbar-select:focus {
+    border-color: var(--primary);
+}
+
+/* ─── Tabs Toolbar config ─────────────────────────── */
+.orders-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.orders-tab {
+    padding: 7px 16px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    background-color: transparent;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.orders-tab:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.orders-tab--active {
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    border-color: var(--primary);
+}
+
+/* ─── Glassmorphic Modal Backdrop & Windows ──────── */
+.orders-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.orders-modal-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalScaleUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.orders-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.orders-modal-header__icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.orders-modal-header__text-block {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.orders-modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+}
+
+.orders-modal-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.orders-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(85vh - 150px);
+}
+
+.orders-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    background-color: var(--bg-app);
+}
+
+/* Forms inside modal */
+.orders-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.orders-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.orders-form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.orders-form-group input,
+.orders-form-group select {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.orders-form-group input:focus,
+.orders-form-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3.5px rgba(30, 96, 255, 0.12);
+}
+
+.orders-modal-cancel-btn {
+    padding: 9px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.orders-modal-cancel-btn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--text-muted);
+}
+
+.orders-modal-submit-btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: var(--primary);
+    color: var(--text-inverse);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.orders-modal-submit-btn:hover {
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow-md);
+}
+
+/* Details sheet layout */
+.orders-details-sheet {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.details-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13.5px;
+}
+
+.details-row:last-child {
+    border-bottom: none;
+}
+
+.details-row:nth-child(even) {
+    background-color: var(--bg-hover);
+}
+
+.details-label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.details-val {
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: right;
+}
+
+.details-val.bold {
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* ─── Action Status Badges/Pills ────────────────── */
+.orders-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.orders-pill--success {
+    background-color: var(--color-success-light);
+    color: #065f46;
+}
+
+.orders-pill--warning {
+    background-color: var(--color-warning-light);
+    color: #b45309;
+}
+
+.orders-pill--info {
+    background-color: var(--color-info-light);
+    color: #1d4ed8;
+}
+
+.orders-pill--danger {
+    background-color: var(--color-danger-light);
+    color: #b91c1c;
+}
+
+/* ─── Simulated Map Tracking System ─────────────── */
+.map-view-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.simulated-map-container {
+    height: 240px;
+    background-color: #e2e8f0;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.simulated-map-grid {
+    width: 100%;
+    height: 100%;
+    background-color: #cbd5e1;
+    background-image: radial-gradient(#94a3b8 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+    position: relative;
+}
+
+.simulated-road {
+    position: absolute;
+    background-color: #64748b;
+}
+
+.simulated-road.horizontal {
+    width: 100%;
+    height: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.simulated-road.vertical {
+    width: 14px;
+    height: 100%;
+    left: 45%;
+}
+
+.map-pin-badge {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+}
+
+.map-pin-badge.store {
+    top: 20%;
+    left: 15%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-color: rgba(37, 99, 235, 0.2);
+}
+
+.map-pin-badge.customer {
+    bottom: 20%;
+    right: 15%;
+    background-color: var(--color-success-light);
+    color: #065f46;
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.map-pin-badge.rider-pin {
+    top: 45%;
+    left: 42%;
+    background-color: var(--color-warning-light);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.2);
+    z-index: 10;
+}
+
+.bounce {
+    animation: pinBounce 1.2s infinite alternate;
+}
+
+@keyframes pinBounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+}
+
+.map-details-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    background-color: var(--bg-app);
+}
+
+.map-detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.map-detail-row .label {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.map-detail-row .val {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.map-detail-row .val.highlight {
+    color: var(--primary);
+}
+
+/* ─── Global Soft Toast Notifications ────────────── */
+.orders-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 3000;
+    background-color: #0f172a;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.toast-icon {
+    color: #10b981;
+}
+
+.slide-in-top {
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastSlideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.orders-row-hover {
+    cursor: pointer;
+}
+
+.orders-row-hover:hover {
+    background-color: var(--bg-hover);
+}
+

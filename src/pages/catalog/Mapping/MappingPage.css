@@ -1,0 +1,195 @@
+/* MappingPage.css - HAATZA Mapping styles */
+
+.mapping-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats */
+.map-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Table cells */
+.map-prod-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-box-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-prod-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-prod-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.map-prod-sku {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* Mapped Hub List formatting */
+.mapped-hubs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 300px;
+}
+
+.mapped-hub-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  border: 1px solid rgba(30, 96, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.unmapped-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-danger);
+  background-color: var(--color-danger-light);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Stock status badge */
+.map-stock-badge {
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 13px;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.map-stock-badge.out {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: #fcdbdc;
+}
+
+/* Checkbox Grid inside Modal */
+.dh-mapping-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dh-map-instruction {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.dh-list-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.dh-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.dh-checkbox-card:hover {
+  background-color: var(--bg-card);
+  border-color: var(--text-muted);
+}
+
+.dh-checkbox-card.checked {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  box-shadow: 0 4px 10px -2px rgba(30, 96, 255, 0.1);
+}
+
+.dh-real-checkbox {
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.dh-checkbox-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dh-header-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dh-map-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text-main);
+}
+
+.dh-map-code {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.dh-map-city {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Responsive adjustment */
+@media (max-width: 1024px) {
+  .map-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dh-list-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}

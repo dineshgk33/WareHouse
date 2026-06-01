@@ -1,0 +1,475 @@
+/* CatalogCommon.css - Unified Stylesheet for HAATZA Catalog Commons */
+
+/* ─── Page Header & Spacing ──────────────────────────────────────────────── */
+.cat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.cat-header-title h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.cat-header-title p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-weight: 400;
+}
+
+.cat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ─── Premium Button Accents ─────────────────────────────────────────────── */
+.cat-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background-color: var(--primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 12px -2px rgba(30, 96, 255, 0.35);
+}
+
+.cat-btn-primary:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 6px 18px -3px rgba(30, 96, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.cat-btn-primary:active {
+  transform: translateY(0);
+}
+
+.cat-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.cat-btn-secondary:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+/* ─── Search and Filters Toolbar ────────────────────────────────────────── */
+.cat-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cat-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 380px;
+  min-width: 240px;
+}
+
+.cat-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.cat-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.cat-search-input:focus {
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 96, 255, 0.1);
+}
+
+.cat-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-filter-wrap select {
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-hover);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.cat-filter-wrap select:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+}
+
+/* ─── Large Data Table Grids ─────────────────────────────────────────────── */
+.cat-table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+.cat-table th {
+  padding: 14px 24px;
+  background-color: var(--bg-hover);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+}
+
+.cat-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13.5px;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.cat-table-row {
+  transition: background-color var(--transition-fast);
+}
+
+.cat-table-row.clickable {
+  cursor: pointer;
+}
+
+.cat-table-row:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Empty Table state */
+.cat-table-empty {
+  padding: 60px 24px !important;
+  text-align: center;
+}
+
+.empty-message-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+/* Row actions vertical icon button */
+.cat-row-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cat-row-action-btn:hover {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+}
+
+/* ─── Standard Badge Stylings ───────────────────────────────────────────── */
+.cat-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.cat-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+}
+
+.cat-badge-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+.cat-badge-success .cat-status-dot {
+  background-color: var(--color-success);
+}
+
+.cat-badge-danger {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+.cat-badge-danger .cat-status-dot {
+  background-color: var(--color-danger);
+}
+
+.cat-badge-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.cat-badge-warning .cat-status-dot {
+  background-color: var(--color-warning);
+}
+
+.cat-badge-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+.cat-badge-info .cat-status-dot {
+  background-color: var(--color-info);
+}
+
+/* ─── Empty state block fallback ─────────────────────────────────────────── */
+.cat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: var(--text-muted);
+  gap: 12px;
+  text-align: center;
+}
+
+.cat-empty-icon {
+  color: var(--border-color);
+}
+
+.cat-empty-text {
+  font-size: 14px;
+}
+
+/* ─── Glassmorphic Modals ────────────────────────────────────────────────── */
+.cat-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: backdropFadeIn 0.25s ease-out;
+}
+
+.cat-modal-container {
+  width: 100%;
+  max-width: 580px;
+  background-color: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18), var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.cat-modal-container.large {
+  max-width: 780px;
+}
+
+.cat-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cat-modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cat-modal-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.cat-modal-header-title h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.4px;
+}
+
+.cat-modal-header-title p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.cat-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  background-color: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cat-modal-close:hover {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+}
+
+.cat-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cat-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: var(--bg-hover);
+}
+
+/* Form Styles inside Modals */
+.cat-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 20px;
+}
+
+.cat-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cat-full-width {
+  grid-column: span 2;
+}
+
+.cat-form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cat-form-group input,
+.cat-form-group select,
+.cat-form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.cat-form-group input:focus,
+.cat-form-group select:focus,
+.cat-form-group textarea:focus {
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 96, 255, 0.12);
+}
+
+.cat-form-group textarea {
+  resize: vertical;
+}
+
+.cat-input-error {
+  border-color: var(--color-danger) !important;
+  background-color: #fffafb !important;
+}
+
+.cat-error-text {
+  font-size: 11px;
+  color: var(--color-danger);
+  font-weight: 600;
+}

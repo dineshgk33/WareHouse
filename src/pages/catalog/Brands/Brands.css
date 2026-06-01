@@ -1,0 +1,344 @@
+/* Brands.css - HAATZA Brands Module Stylesheet */
+
+.brands-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stat Grid */
+.brand-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Brand Cells Formatting */
+.brand-logo-badge {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-id-text {
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.brand-name-text {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.brand-products-badge {
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--bg-hover);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: inline-block;
+}
+
+/* Pagination Footer */
+.brand-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  gap: 16px;
+}
+
+.brand-pagination-info {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.brand-pagination-info strong {
+  color: var(--text-main);
+}
+
+.brand-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.brand-page-btn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.brand-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.brand-page-number {
+  min-width: 36px;
+  padding: 8px 8px;
+}
+
+.brand-page-btn--active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: 0 2px 6px -1px rgba(30, 96, 255, 0.3);
+}
+
+.brand-page-btn--active:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--text-inverse);
+}
+
+/* Form Buttons inside modal footer */
+.btn-cancel {
+  padding: 10px 20px;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.btn-submit {
+  padding: 10px 22px;
+  background-color: var(--primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 10px -2px rgba(30, 96, 255, 0.3);
+}
+
+.btn-submit:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 6px 16px -3px rgba(30, 96, 255, 0.4);
+}
+
+/* Brand Details Layout */
+.brand-details-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.brand-details-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.brand-details-large-icon {
+  font-size: 32px;
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-details-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.4px;
+}
+
+.brand-details-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--bg-app);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-top: 3px;
+}
+
+.brand-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.brand-details-card {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brand-details-card h3 {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.brand-details-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand-details-row .label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.brand-details-row .val {
+  font-size: 13.5px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.brand-details-row .val.highlighted {
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Linked products list styling */
+.brand-empty-products {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  gap: 10px;
+}
+
+.brand-empty-icon {
+  color: var(--border-color);
+}
+
+.brand-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.brand-product-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.brand-product-emoji {
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-product-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-product-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.brand-product-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Responsive adjustment */
+@media (max-width: 1024px) {
+  .brand-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .brand-details-grid {
+    grid-template-columns: 1fr;
+  }
+  .brand-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

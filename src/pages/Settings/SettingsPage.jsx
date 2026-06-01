@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
     Trash2, 
     Upload, 
@@ -15,8 +16,26 @@ import avatarImg from "../../assets/dinesh.png";
 import "./Settings.css";
 
 function SettingsPage() {
-    const [activeTab, setActiveTab] = useState("general");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const queryTab = searchParams.get("tab");
+    
+    // Determine initial tab from query parameters
+    const initialTab = queryTab && ["general", "notifications", "billing", "security", "members", "roles"].includes(queryTab)
+        ? queryTab
+        : "general";
+
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [theme, setTheme] = useState("light");
+
+    // Sync activeTab state when URL query parameters change
+    useEffect(() => {
+        if (queryTab && ["general", "notifications", "billing", "security", "members", "roles"].includes(queryTab)) {
+            setActiveTab(queryTab);
+        } else if (!queryTab) {
+            setActiveTab("general");
+        }
+    }, [queryTab]);
+
 
     // Dynamic states for interactive controls
     const [name, setName] = useState("Dinesh G.K");
@@ -468,7 +487,7 @@ function SettingsPage() {
                             <li key={tab.id}>
                                 <button
                                     className={`settings-tab-btn ${activeTab === tab.id ? "active" : ""}`}
-                                    onClick={() => setActiveTab(tab.id)}
+                                    onClick={() => setSearchParams({ tab: tab.id })}
                                 >
                                     {tab.label}
                                 </button>

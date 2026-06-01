@@ -1,0 +1,444 @@
+/* MediaLibrary.css - Storefront Media Library Page */
+
+.med-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Controls Toolbar Card */
+.med-controls-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.med-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.med-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  min-width: 260px;
+}
+
+.med-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.med-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-main);
+  background-color: var(--bg-hover);
+  outline: none;
+  transition: all var(--transition-fast) ease;
+}
+
+.med-search-input:focus {
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 96, 255, 0.1);
+}
+
+.med-select-wrap select {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-hover);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast) ease;
+}
+
+.med-select-wrap select:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+}
+
+/* View Mode Toggler */
+.med-view-toggle {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.med-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.med-view-btn:hover {
+  color: var(--text-main);
+}
+
+.med-view-btn.active {
+  background-color: var(--bg-card);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Immersive Grid View Mode */
+.med-assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+.med-asset-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-fast) ease;
+}
+
+.med-asset-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--text-muted);
+}
+
+/* Asset Rendering Frame */
+.med-card-render-frame {
+  position: relative;
+  aspect-ratio: 1.1 / 1;
+  background-color: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.med-card-emoji-visual {
+  font-size: 52px;
+  user-select: none;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.1));
+  transition: transform var(--transition-fast) ease;
+}
+
+.med-asset-card:hover .med-card-emoji-visual {
+  transform: scale(1.1);
+}
+
+/* Floating Actions on Hover */
+.med-card-hover-actions {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast) ease;
+}
+
+.med-card-render-frame:hover .med-card-hover-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.med-float-act-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: none;
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast) ease;
+}
+
+.med-float-act-btn:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.med-float-act-btn.delete:hover {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+/* Media Classification Badge */
+.med-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.med-card-badge.front,
+.med-type-pill.front {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.med-card-badge.side,
+.med-type-pill.side {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.med-card-badge.gallery,
+.med-type-pill.gallery {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+/* Card details block */
+.med-card-details {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.med-card-title-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.med-card-metadata-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.med-card-metadata-row .prod-assoc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+
+/* List View Table Cards styling */
+.med-table-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.med-table-preview-cell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.med-emoji-avatar {
+  font-size: 24px;
+  user-select: none;
+}
+
+.med-zoom-hover {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast) ease;
+}
+
+.med-table-preview-cell:hover .med-zoom-hover {
+  opacity: 1;
+}
+
+.med-file-name-txt {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.med-file-size-txt {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.med-type-pill {
+  display: inline-flex;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+}
+
+.med-product-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-main);
+}
+
+.med-prod-icon {
+  color: var(--text-muted);
+}
+
+/* Empty wrapper block */
+.med-card-empty-wrapper {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+
+/* Modal spec sheets lightbox layout */
+.med-zoom-lightbox-wrapper {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .med-zoom-lightbox-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+.med-zoom-render-window {
+  aspect-ratio: 1 / 1;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.med-zoom-visual {
+  font-size: 120px;
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
+  user-select: none;
+}
+
+.med-zoom-specs-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.med-specs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.med-specs-group.full-row {
+  grid-column: span 2;
+}
+
+.med-specs-group .lbl {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.med-specs-group .val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.med-specs-group .val .med-type-pill {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+/* Simulated upload descriptor frame */
+.med-simulated-upload-feedback {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 14px !important;
+  font-size: 11.5px !important;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.med-simulated-upload-feedback strong {
+  color: var(--primary);
+}

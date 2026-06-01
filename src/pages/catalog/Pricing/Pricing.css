@@ -1,0 +1,252 @@
+/* Pricing.css - Pricing Engine Page Stylesheet */
+
+.prc-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats Summary Panel */
+.prc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .prc-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .prc-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prc-stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast) ease;
+}
+
+.prc-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--text-muted);
+}
+
+.prc-stat-card.hazard {
+  border-color: var(--color-danger);
+  background-color: var(--color-danger-light);
+}
+
+.prc-stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prc-stat-icon-wrap.primary {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.prc-stat-icon-wrap.warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.prc-stat-icon-wrap.info {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.prc-stat-icon-wrap.danger {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.prc-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin: 0;
+}
+
+.prc-stat-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 2px 0 0 0;
+}
+
+/* Card Container */
+.prc-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Custom Table cells styling */
+.prc-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.prc-prod-icon {
+  font-size: 20px;
+  padding: 6px;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-md);
+}
+
+.prc-prod-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.prc-prod-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.prc-price-mrp {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-size: 12px;
+}
+
+.prc-price-sell {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.prc-price-dh {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.prc-discount-val {
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.prc-discount-pct {
+  font-size: 11px;
+  color: var(--color-success);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Validity Badge */
+.prc-validity-badge {
+  position: relative;
+  display: inline-flex;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  cursor: help;
+}
+
+.prc-validity-badge.permanent {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.prc-validity-badge.promo {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.prc-validity-tooltip {
+  visibility: hidden;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #0f172a;
+  color: #ffffff;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  z-index: 100;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: opacity var(--transition-fast) ease;
+}
+
+.prc-validity-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.prc-validity-badge:hover .prc-validity-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Input Symbol Addon wrapper */
+.prc-input-addon {
+  display: flex;
+  position: relative;
+  width: 100%;
+  align-items: center;
+}
+
+.addon-symbol {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 13.5px;
+  pointer-events: none;
+}
+
+.prc-input-addon input {
+  padding-left: 28px !important;
+}
+
+/* Form info banner */
+.prc-preview-banner {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 12px 16px !important;
+  border-radius: var(--radius-md);
+  font-size: 12.5px !important;
+}
+
+.prc-preview-banner strong {
+  font-weight: 800;
+}

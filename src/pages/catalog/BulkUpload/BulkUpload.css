@@ -1,0 +1,496 @@
+/* BulkUpload.css - Bulk Data Ingestion Stylesheet */
+
+.blk-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Split-Panel Layout */
+.blk-layout-grid {
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .blk-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blk-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.blk-history-panel {
+  flex: 1;
+  min-width: 0; /* Protect flex tables */
+}
+
+/* Card panels */
+.blk-panel-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.blk-panel-card.history-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.blk-panel-card.history-card .blk-card-title {
+  padding: 24px 24px 8px 24px;
+}
+
+.blk-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.25px;
+}
+
+.blk-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Blank Schema Downloads section */
+.blk-template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.blk-temp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  font-family: var(--font-sans);
+}
+
+.blk-temp-btn:hover {
+  background-color: var(--bg-card);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.blk-temp-btn span {
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Context form select group */
+.blk-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.blk-form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.blk-form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+}
+
+.blk-form-group select:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+}
+
+/* Upload Dropzone styling */
+.blk-upload-zone {
+  margin-top: 16px;
+  border: 2px dashed var(--border-color);
+  border-radius: 16px;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background-color: var(--bg-hover);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.blk-upload-zone:hover,
+.blk-upload-zone.active {
+  border-color: var(--primary);
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.blk-upload-cloud-icon {
+  color: var(--text-muted);
+  transition: color var(--transition-fast) ease;
+  margin-bottom: 12px;
+}
+
+.blk-upload-zone:hover .blk-upload-cloud-icon {
+  color: var(--primary);
+}
+
+.blk-placeholder-text .main-prompt {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.blk-placeholder-text .sub-prompt {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.blk-selected-feedback .filename {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+  word-break: break-all;
+}
+
+.blk-selected-feedback .filesize {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.blk-process-btn {
+  margin-top: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Processing Overlay / Loader inside Cards */
+.blk-processing-overlay {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--bg-hover);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.blk-processing-overlay p {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 10px 0;
+}
+
+.blk-spinner {
+  color: var(--primary);
+  animation: blkSpin 1.2s linear infinite;
+}
+
+.blk-prog-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.blk-prog-bar-fill {
+  height: 100%;
+  background-color: var(--primary);
+  border-radius: 10px;
+  width: 0;
+  transition: width 0.25s linear;
+}
+
+.blk-prog-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+@keyframes blkSpin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Upload validation feedback banners */
+.blk-feedback-card {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  border-left: 4px solid transparent;
+}
+
+.blk-feedback-card.success {
+  background-color: var(--color-success-light);
+  border-color: var(--color-success);
+}
+
+.blk-feedback-card.failed {
+  background-color: var(--color-danger-light);
+  border-color: var(--color-danger);
+}
+
+.feedback-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.feedback-hdr h4 {
+  font-size: 13.5px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.success-color {
+  color: var(--color-success);
+}
+
+.danger-color {
+  color: var(--color-danger);
+}
+
+.feedback-body {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.blk-err-view-btn {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 0;
+  margin-top: 8px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+}
+
+/* History logs table specific styling */
+.blk-file-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blk-file-icon {
+  color: var(--text-muted);
+  padding: 6px;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-md);
+}
+
+.blk-file-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.blk-file-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.blk-rec-total {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.blk-rec-breakdown {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.blk-rec-breakdown .success {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.blk-rec-breakdown .danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Modal details styling */
+.blk-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .blk-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.blk-stat-box {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.blk-stat-box .lbl {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.blk-stat-box .val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+/* Anomalies error detail grid */
+.blk-anomaly-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.anomaly-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-danger);
+  font-size: 14.5px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.anomaly-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 6px 0 16px 0;
+  line-height: 1.4;
+}
+
+.blk-anomaly-table-wrap {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.blk-anomaly-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+.blk-anomaly-table th {
+  background-color: var(--bg-hover);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.blk-anomaly-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.blk-anomaly-table tr:last-child td {
+  border-bottom: none;
+}
+
+.column-code {
+  background-color: var(--bg-hover);
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.error-reason {
+  color: var(--color-danger);
+  font-weight: 500;
+}
+
+/* Success modal screen */
+.blk-ingestion-success-message {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.blk-ingestion-success-message .success-icon {
+  color: var(--color-success);
+  margin-bottom: 12px;
+}
+
+.blk-ingestion-success-message h4 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.blk-ingestion-success-message p {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  max-width: 440px;
+  margin: 8px auto 0 auto;
+  line-height: 1.5;
+}

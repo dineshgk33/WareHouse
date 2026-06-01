@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     Sparkles,
     TrendingUp,
@@ -10,7 +11,13 @@ import {
     Loader2,
     AlertTriangle,
     History,
-    ChevronDown
+    ChevronDown,
+    Download,
+    ChevronRight,
+    ShoppingBag,
+    Warehouse,
+    PlusCircle,
+    X
 } from "lucide-react";
 import {
     AreaChart,
@@ -29,15 +36,57 @@ import {
 import "./Analytics.css";
 
 /* ─── Mock Data ───────────────────────────────────────────────── */
-const revenueData = [
-    { month: "Jan", revenue: 42000, orders: 320 },
-    { month: "Feb", revenue: 55000, orders: 410 },
-    { month: "Mar", revenue: 47000, orders: 380 },
-    { month: "Apr", revenue: 63000, orders: 490 },
-    { month: "May", revenue: 78000, orders: 612 },
-    { month: "Jun", revenue: 91000, orders: 710 },
-    { month: "Jul", revenue: 108000, orders: 842 },
-];
+const chartDataSets = {
+    "7D": [
+        { label: "Mon", revenue: 12000, orders: 95, profit: 4800 },
+        { label: "Tue", revenue: 15000, orders: 110, profit: 6000 },
+        { label: "Wed", revenue: 11000, orders: 85, profit: 4400 },
+        { label: "Thu", revenue: 18000, orders: 130, profit: 7200 },
+        { label: "Fri", revenue: 22000, orders: 165, profit: 8800 },
+        { label: "Sat", revenue: 25000, orders: 190, profit: 10000 },
+        { label: "Sun", revenue: 20000, orders: 150, profit: 8000 }
+    ],
+    "30D": [
+        { label: "W1", revenue: 78000, orders: 610, profit: 31200 },
+        { label: "W2", revenue: 91000, orders: 710, profit: 36400 },
+        { label: "W3", revenue: 108000, orders: 840, profit: 43200 },
+        { label: "W4", revenue: 115000, orders: 920, profit: 46000 }
+    ],
+    "3M": [
+        { label: "May", revenue: 78000, orders: 612, profit: 31200 },
+        { label: "Jun", revenue: 91000, orders: 710, profit: 36400 },
+        { label: "Jul", revenue: 108000, orders: 842, profit: 43200 }
+    ],
+    "1Y": [
+        { label: "Jan", revenue: 42000, orders: 320, profit: 16800 },
+        { label: "Feb", revenue: 55000, orders: 410, profit: 22000 },
+        { label: "Mar", revenue: 47000, orders: 380, profit: 18800 },
+        { label: "Apr", revenue: 63000, orders: 490, profit: 25200 },
+        { label: "May", revenue: 78000, orders: 612, profit: 31200 },
+        { label: "Jun", revenue: 91000, orders: 710, profit: 36400 },
+        { label: "Jul", revenue: 108000, orders: 842, profit: 43200 },
+        { label: "Aug", revenue: 112000, orders: 890, profit: 44800 },
+        { label: "Sep", revenue: 125000, orders: 980, profit: 50000 },
+        { label: "Oct", revenue: 130000, orders: 1020, profit: 52000 },
+        { label: "Nov", revenue: 145000, orders: 1150, profit: 58000 },
+        { label: "Dec", revenue: 160000, orders: 1280, profit: 64000 }
+    ]
+};
+
+const sparklineData = {
+    "Total Revenue": [
+        { val: 40000 }, { val: 52000 }, { val: 45000 }, { val: 61000 }, { val: 75000 }, { val: 89000 }, { val: 108000 }
+    ],
+    "Conversion Rate": [
+        { val: 3.1 }, { val: 3.4 }, { val: 3.2 }, { val: 3.5 }, { val: 3.7 }, { val: 3.6 }, { val: 3.82 }
+    ],
+    "Avg Order Value": [
+        { val: 132 }, { val: 130 }, { val: 129 }, { val: 131 }, { val: 127 }, { val: 126 }, { val: 128.30 }
+    ],
+    "Return Rate": [
+        { val: 3.2 }, { val: 2.9 }, { val: 2.8 }, { val: 2.6 }, { val: 2.5 }, { val: 2.3 }, { val: 2.4 }
+    ]
+};
 
 const categoryData = [
     { name: "Electronics", value: 38 },
@@ -50,18 +99,112 @@ const categoryData = [
 const PIE_COLORS = ["#1e60ff", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444"];
 
 const topProducts = [
-    { name: "iPhone 15 Pro", sales: 412, revenue: "₹206,000", trend: "+18%" },
-    { name: "MacBook Air M3", sales: 287, revenue: "₹143,500", trend: "+12%" },
-    { name: "Sony WH-1000XM5", sales: 341, revenue: "₹85,250", trend: "+24%" },
-    { name: "Samsung Galaxy S24", sales: 298, revenue: "₹74,500", trend: "+9%" },
-    { name: "Nike Air Max 270", sales: 512, revenue: "₹61,440", trend: "+31%" },
+    {
+        id: "1",
+        name: "Fresh Alphonso Mangoes",
+        category: "Fruits & Vegetables",
+        sales: 412,
+        stock: 45,
+        revenue: "₹20,600",
+        trend: "+18%",
+        up: true,
+        thumbnailColor: "avatar-amber",
+        initials: "AM"
+    },
+    {
+        id: "2",
+        name: "Amul Butter 500g",
+        category: "Dairy & Bread",
+        sales: 287,
+        stock: 82,
+        revenue: "₹14,350",
+        trend: "+12%",
+        up: true,
+        thumbnailColor: "avatar-indigo",
+        initials: "AB"
+    },
+    {
+        id: "3",
+        name: "Coca Cola Zero 300ml",
+        category: "Beverages",
+        sales: 341,
+        stock: 12,
+        revenue: "₹8,525",
+        trend: "-5%",
+        up: false,
+        thumbnailColor: "avatar-rose",
+        initials: "CC"
+    },
+    {
+        id: "4",
+        name: "Aashirvaad Atta 5kg",
+        category: "Atta, Rice & Dal",
+        sales: 298,
+        stock: 94,
+        revenue: "₹74,500",
+        trend: "+9%",
+        up: true,
+        thumbnailColor: "avatar-teal",
+        initials: "AA"
+    },
+    {
+        id: "5",
+        name: "Surf Excel Liquid 1L",
+        category: "Cleaning Essentials",
+        sales: 512,
+        stock: 3,
+        revenue: "₹61,440",
+        trend: "+31%",
+        up: true,
+        thumbnailColor: "avatar-purple",
+        initials: "SE"
+    }
 ];
 
 const summaryCards = [
-    { label: "Total Revenue", value: "₹108,000", change: "+18.4%", up: true, icon: TrendingUp },
-    { label: "Conversion Rate", value: "3.82%", change: "+0.6%", up: true, icon: Activity },
-    { label: "Avg Order Value", value: "₹128.30", change: "-2.1%", up: false, icon: BarChart3 },
-    { label: "Return Rate", value: "2.4%", change: "-0.8%", up: true, icon: PieChart },
+    { label: "Total Revenue", value: "₹108,000", change: "+18.4%", up: true, icon: TrendingUp, key: "total-revenue" },
+    { label: "Conversion Rate", value: "3.82%", change: "+0.6%", up: true, icon: Activity, key: "conversion-rate" },
+    { label: "Avg Order Value", value: "₹128.30", change: "-2.1%", up: false, icon: BarChart3, key: "avg-order-value" },
+    { label: "Return Rate", value: "2.4%", change: "-0.8%", up: true, icon: PieChart, key: "return-rate" },
+];
+
+const darkhousePerformanceData = [
+    {
+        name: "HAATZA Koramangala Hub",
+        orders: 512,
+        revenue: "₹45,600",
+        avgDeliveryTime: "12 mins",
+        stockHealth: "94%",
+        status: "Healthy",
+        statusColor: "healthy"
+    },
+    {
+        name: "HAATZA Indiranagar Hub",
+        orders: 410,
+        revenue: "₹38,200",
+        avgDeliveryTime: "15 mins",
+        stockHealth: "88%",
+        status: "Warning",
+        statusColor: "warning"
+    },
+    {
+        name: "HAATZA HSR Layout Hub",
+        orders: 380,
+        revenue: "₹31,400",
+        avgDeliveryTime: "24 mins",
+        stockHealth: "65%",
+        status: "Issue",
+        statusColor: "issue"
+    },
+    {
+        name: "HAATZA Jayanagar Hub",
+        orders: 490,
+        revenue: "₹41,800",
+        avgDeliveryTime: "14 mins",
+        stockHealth: "91%",
+        status: "Healthy",
+        statusColor: "healthy"
+    }
 ];
 
 /* ─── AI Chat Component ───────────────────────────────────────── */
@@ -197,28 +340,21 @@ User question: ${userMsg}`;
                     {loading ? <Loader2 size={16} className="ai-spinner" /> : <Send size={16} />}
                 </button>
             </div>
-
-            <div className="ai-suggestions">
-                {["Top selling products?", "Revenue forecast for next month?", "Which category needs attention?"].map((s) => (
-                    <button
-                        key={s}
-                        className="ai-suggestion-chip"
-                        onClick={() => { setInput(s); }}
-                    >
-                        {s}
-                    </button>
-                ))}
-            </div>
         </div>
     );
 }
 
 /* ─── Analytics Dashboard ─────────────────────────────────── */
 function AnalyticsDashboard() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [period, setPeriod] = useState("Last 7 months");
     const [customStart, setCustomStart] = useState("2026-01-01");
     const [customEnd, setCustomEnd] = useState("2026-06-01");
     const [customApplied, setCustomApplied] = useState(false);
+
+    // Dynamic Chart States
+    const [chartMetric, setChartMetric] = useState("revenue"); // "revenue" | "orders" | "profit"
+    const [chartTimeframe, setChartTimeframe] = useState("1Y"); // "7D" | "30D" | "3M" | "1Y"
 
     // ─── AI Store Insights (SWOT) States ──────────────────────────────────────────
     const [analyses, setAnalyses] = useState(() => {
@@ -471,116 +607,295 @@ Be concise. Keep it under 200 words total. Bold crucial words. Keep it professio
                 {summaryCards.map((card) => {
                     const Icon = card.icon;
                     return (
-                        <div className="analytics-summary-card" key={card.label}>
-                            <div className="analytics-card-icon-wrap">
-                                <Icon size={18} />
+                        <div
+                            className="analytics-summary-card"
+                            key={card.label}
+                            onClick={() => setSearchParams({ detail: card.key })}
+                        >
+                            <div className="analytics-card-left-block">
+                                <div className="analytics-card-icon-wrap">
+                                    <Icon size={18} />
+                                </div>
+                                <div className="analytics-card-body">
+                                    <span className="analytics-card-label">{card.label}</span>
+                                    <span className="analytics-card-value">{card.value}</span>
+                                    <span className="analytics-card-subtext">vs previous month</span>
+                                </div>
                             </div>
-                            <div className="analytics-card-body">
-                                <span className="analytics-card-label">{card.label}</span>
-                                <span className="analytics-card-value">{card.value}</span>
+                            
+                            <div className="analytics-card-right-block" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+                                <span className={`analytics-card-change ${card.up ? "change-up" : "change-down"}`}>
+                                    {card.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                    {card.change}
+                                </span>
+                                
+                                {/* Sparkline Area Chart */}
+                                <div className="analytics-card-sparkline" style={{ width: "70px", height: "30px" }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={sparklineData[card.label]} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                                            <defs>
+                                                <linearGradient id={`grad-${card.key}`} x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={card.up ? "#10b981" : "#ef4444"} stopOpacity={0.25} />
+                                                    <stop offset="95%" stopColor={card.up ? "#10b981" : "#ef4444"} stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <Area
+                                                type="monotone"
+                                                dataKey="val"
+                                                stroke={card.up ? "#10b981" : "#ef4444"}
+                                                strokeWidth={1.5}
+                                                fill={`url(#grad-${card.key})`}
+                                                dot={false}
+                                                isAnimationActive={true}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
-                            <span className={`analytics-card-change ${card.up ? "change-up" : "change-down"}`}>
-                                {card.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                                {card.change}
-                            </span>
                         </div>
                     );
                 })}
             </div>
 
-            {/* AI Store Insights SWOT Widget */}
-            <div className="ai-insights-card">
-                <div className="card-header">
-                    <div className="card-title-block">
-                        <h2>AI Store Insights</h2>
-                        <p>Analyse your store performance with Google Gemini</p>
+            {/* AI Recommendations section inside insights card */}
+            <div className="analytics-grid-two-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                {/* AI Recommendations */}
+                <div className="analytics-chart-card ai-recommendations-section">
+                    <div className="analytics-chart-header" style={{ marginBottom: "16px" }}>
+                        <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <Sparkles size={16} className="toast-icon" style={{ color: "var(--primary)" }} />
+                                <h3 style={{ fontSize: "16px", fontWeight: "700", margin: 0 }}>AI Recommendations</h3>
+                            </div>
+                            <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-muted)" }}>Actionable inventory strategies and consumer demand optimizations</p>
+                        </div>
                     </div>
-                    <button
-                        onClick={runAiAnalysis}
-                        disabled={aiLoading}
-                        className="ai-analyse-btn"
-                    >
-                        {aiLoading ? (
-                            <><Loader2 size={14} className="ai-spinner" /> Analysing...</>
-                        ) : (
-                            <><Sparkles size={14} /> Analyse Data</>
-                        )}
-                    </button>
+                    
+                    <div className="ai-rec-grid" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                    <Warehouse size={16} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: "13.5px", fontWeight: "700", color: "var(--text-main)" }}>Koramangala darkhouse low stock</h4>
+                                    <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "var(--text-muted)" }}>5 high-demand items are running below reorder limit</p>
+                                </div>
+                            </div>
+                            <button className="dkh-inline-btn" style={{ backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "1px solid rgba(239, 68, 68, 0.15)", borderRadius: "8px", padding: "8px 14px", fontWeight: "700", cursor: "pointer" }} onClick={() => alert("Initiated restocking allocation order to Koramangala darkhouse.")}>
+                                Restock
+                            </button>
+                        </div>
+
+                        <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                    <TrendingDown size={16} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: "13.5px", fontWeight: "700", color: "var(--text-main)" }}>Customer repeat orders dropped 8%</h4>
+                                    <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "var(--text-muted)" }}>Retention rate showing signs of fatigue in Bangalore</p>
+                                </div>
+                            </div>
+                            <button className="dkh-inline-btn" style={{ backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", border: "1px solid rgba(245, 158, 11, 0.15)", borderRadius: "8px", padding: "8px 14px", fontWeight: "700", cursor: "pointer" }} onClick={() => alert("Navigating to retention optimization cohorts...")}>
+                                View customer trends
+                            </button>
+                        </div>
+
+                        <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-success-light)", color: "var(--color-success)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                    <PlusCircle size={16} />
+                                </div>
+                                <div>
+                                    <h4 style={{ margin: 0, fontSize: "13.5px", fontWeight: "700", color: "var(--text-main)" }}>Electronics category performing strong</h4>
+                                    <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "var(--text-muted)" }}>Demand is up 34% this week. Consider stocking variants</p>
+                                </div>
+                            </div>
+                            <button className="dkh-inline-btn" style={{ backgroundColor: "var(--color-success-light)", color: "var(--color-success)", border: "1px solid rgba(16, 185, 129, 0.15)", borderRadius: "8px", padding: "8px 14px", fontWeight: "700", cursor: "pointer" }} onClick={() => alert("Loading dynamic electronics inventory expansion panel...")}>
+                                Expand inventory
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* AI Recommendations Quick Action Buttons */}
+                    <div className="ai-rec-quick-actions" style={{ display: "flex", gap: "10px", marginTop: "18px", paddingTop: "14px", borderTop: "1px solid var(--border-color)" }}>
+                        <button className="ai-rec-qa-btn" style={{ flex: 1, padding: "8px 14px", border: "1px solid var(--border-color)", borderRadius: "8px", backgroundColor: "var(--bg-card)", color: "var(--text-main)", fontSize: "12px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s ease" }} onClick={() => alert("Generating monthly store performance audit report...")}>Generate Report</button>
+                        <button className="ai-rec-qa-btn" style={{ flex: 1, padding: "8px 14px", border: "1px solid var(--border-color)", borderRadius: "8px", backgroundColor: "var(--bg-card)", color: "var(--text-main)", fontSize: "12px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s ease" }} onClick={() => alert("Downloading PDF summary...")}>Export PDF</button>
+                        <button className="ai-rec-qa-btn" style={{ flex: 1, padding: "8px 14px", border: "1px solid var(--primary)", borderRadius: "8px", backgroundColor: "var(--primary-light)", color: "var(--primary)", fontSize: "12px", fontWeight: "700", cursor: "pointer", transition: "all 0.2s ease" }} onClick={() => alert("Opening deep analytics insights console...")}>View Insights</button>
+                    </div>
                 </div>
 
-                {/* Error state */}
-                {aiError && (
-                    <div className="ai-error-bar">
-                        <AlertTriangle size={14} />
-                        <span>{aiError}</span>
-                    </div>
-                )}
-
-                {/* Loading state */}
-                {aiLoading && (
-                    <div className="ai-loading-state">
-                        <Loader2 size={22} className="ai-spinner" />
-                        <p>Gemini is analysing your store metrics…</p>
-                    </div>
-                )}
-
-                {/* Analysis result */}
-                {!aiLoading && selectedAnalysis && (
-                    <div className="ai-result-section fade-in">
-                        <div className="ai-result-meta">
-                            <span className="ai-report-badge">Gemini AI Report</span>
-                            <span className="ai-result-time">{selectedAnalysis.timestamp}</span>
+                {/* AI Store Insights SWOT Widget */}
+                <div className="ai-insights-card" style={{ gap: "12px" }}>
+                    <div className="card-header">
+                        <div className="card-title-block">
+                            <h2 style={{ fontSize: "16px", fontWeight: "700" }}>AI Store Insights</h2>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Analyze your store performance with Google Gemini</p>
                         </div>
-                        <div className="ai-result-body">
-                            {parseAnalysisContent(selectedAnalysis.text)}
-                        </div>
+                        <button
+                            onClick={runAiAnalysis}
+                            disabled={aiLoading}
+                            className="ai-analyse-btn"
+                        >
+                            {aiLoading ? (
+                                <><Loader2 size={14} className="ai-spinner" /> Analyzing...</>
+                            ) : (
+                                <><Sparkles size={14} /> Analyze Data</>
+                            )}
+                        </button>
                     </div>
-                )}
 
-                {/* Empty state */}
-                {!aiLoading && !selectedAnalysis && !aiError && (
-                    <div className="ai-empty-state">
-                        <Sparkles size={20} className="ai-sparkles-icon" />
-                        <p>Click <strong>Analyse Data</strong> to generate an AI-powered analysis of your store metrics.</p>
-                    </div>
-                )}
+                    {/* Error state */}
+                    {aiError && (
+                        <div className="ai-error-bar">
+                            <AlertTriangle size={14} />
+                            <span>{aiError}</span>
+                        </div>
+                    )}
 
-                {/* Previous analyses history */}
-                {analyses.length > 1 && (
-                    <div className="ai-history-section">
-                        <div className="ai-history-title">
-                            <History size={13} />
-                            <h3>Previous Analyses</h3>
+                    {/* Loading state */}
+                    {aiLoading && (
+                        <div className="ai-loading-state">
+                            <Loader2 size={22} className="ai-spinner" />
+                            <p>Gemini is analyzing your store metrics…</p>
                         </div>
-                        <div className="ai-history-list">
-                            {analyses.map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setSelectedAnalysis(item)}
-                                    className={`ai-history-item ${selectedAnalysis?.id === item.id ? "active" : ""}`}
-                                >
-                                    <span className="ai-hist-dot"></span>
-                                    <span className="ai-hist-time">{item.timestamp}</span>
-                                    <span className="ai-hist-revenue">{item.metrics.revenue}</span>
-                                </button>
-                            ))}
+                    )}
+
+                    {/* Analysis result */}
+                    {!aiLoading && selectedAnalysis && (
+                        <div className="ai-result-section fade-in" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                            <div className="ai-result-meta">
+                                <span className="ai-report-badge">Gemini AI Report</span>
+                                <span className="ai-result-time">{selectedAnalysis.timestamp}</span>
+                            </div>
+                            <div className="ai-result-body">
+                                {parseAnalysisContent(selectedAnalysis.text)}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+
+                    {/* Empty state */}
+                    {!aiLoading && !selectedAnalysis && !aiError && (
+                        <div className="ai-empty-state">
+                            <Sparkles size={20} className="ai-sparkles-icon" />
+                            <p>Click <strong>Analyze Data</strong> to generate an AI-powered analysis of your store metrics.</p>
+                        </div>
+                    )}
+
+                    {/* Previous analyses history */}
+                    {analyses.length > 1 && (
+                        <div className="ai-history-section" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                            <div className="ai-history-title">
+                                <History size={13} />
+                                <h3>Previous Analyses</h3>
+                            </div>
+                            <div className="ai-history-list">
+                                {analyses.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setSelectedAnalysis(item)}
+                                        className={`ai-history-item ${selectedAnalysis?.id === item.id ? "active" : ""}`}
+                                    >
+                                        <span className="ai-hist-dot"></span>
+                                        <span className="ai-hist-time">{item.timestamp}</span>
+                                        <span className="ai-hist-revenue">{item.metrics.revenue}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Middle: Revenue Chart + AI Chat */}
             <div className="analytics-middle-grid">
                 {/* Revenue Over Time */}
                 <div className="analytics-chart-card">
-                    <div className="analytics-chart-header">
+                    <div className="analytics-chart-header" style={{ flexWrap: "wrap", gap: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                            <h3>Revenue Over Time</h3>
-                            <p>Monthly revenue vs order volume</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: "700" }}>Revenue & Volumes Analysis</h3>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Interactive transactional metrics and volume filters</p>
+                        </div>
+                        
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                            {/* Metric Toggles */}
+                            <div className="chart-metric-toggles" style={{ display: "flex", background: "var(--bg-app)", padding: "4px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                                {["revenue", "orders", "profit"].map((m) => (
+                                    <button
+                                        key={m}
+                                        className={`chart-metric-toggle-btn ${chartMetric === m ? "active" : ""}`}
+                                        onClick={() => setChartMetric(m)}
+                                        style={{
+                                            padding: "6px 12px",
+                                            borderRadius: "6px",
+                                            border: "none",
+                                            fontSize: "12px",
+                                            fontWeight: "700",
+                                            textTransform: "capitalize",
+                                            cursor: "pointer",
+                                            backgroundColor: chartMetric === m ? "var(--primary)" : "transparent",
+                                            color: chartMetric === m ? "var(--text-inverse)" : "var(--text-muted)",
+                                            transition: "all 0.2s ease"
+                                        }}
+                                    >
+                                        {m}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Time Filters */}
+                            <div className="chart-time-filters" style={{ display: "flex", gap: "6px" }}>
+                                {["7D", "30D", "3M", "1Y"].map((tf) => (
+                                    <button
+                                        key={tf}
+                                        className={`chart-time-btn ${chartTimeframe === tf ? "active" : ""}`}
+                                        onClick={() => setChartTimeframe(tf)}
+                                        style={{
+                                            padding: "6px 10px",
+                                            borderRadius: "6px",
+                                            border: "1px solid",
+                                            borderColor: chartTimeframe === tf ? "var(--primary)" : "var(--border-color)",
+                                            fontSize: "12px",
+                                            fontWeight: "700",
+                                            cursor: "pointer",
+                                            backgroundColor: chartTimeframe === tf ? "var(--primary-light)" : "var(--bg-card)",
+                                            color: chartTimeframe === tf ? "var(--primary)" : "var(--text-muted)",
+                                            transition: "all 0.2s ease"
+                                        }}
+                                    >
+                                        {tf}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Export Button */}
+                            <button
+                                className="analytics-chart-export-btn"
+                                onClick={() => alert(`Exported ${chartMetric} data for ${chartTimeframe} timeframe successfully!`)}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "8px 14px",
+                                    border: "1px solid var(--border-color)",
+                                    borderRadius: "8px",
+                                    backgroundColor: "var(--bg-card)",
+                                    color: "var(--text-main)",
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease"
+                                }}
+                            >
+                                <Download size={14} />
+                                <span>Export</span>
+                            </button>
                         </div>
                     </div>
+                    
                     <ResponsiveContainer width="100%" height={260}>
-                        <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <AreaChart data={chartDataSets[chartTimeframe]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="analyticsRevGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#1e60ff" stopOpacity={0.2} />
@@ -588,10 +903,27 @@ Be concise. Keep it under 200 words total. Bold crucial words. Keep it professio
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
-                            <YAxis tickFormatter={(v) => `₹${v / 1000}k`} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
-                            <Tooltip formatter={(val, name) => [name === "revenue" ? `₹${val.toLocaleString()}` : val, name === "revenue" ? "Revenue" : "Orders"]} contentStyle={{ borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "12px" }} />
-                            <Area type="monotone" dataKey="revenue" stroke="#1e60ff" strokeWidth={2} fill="url(#analyticsRevGrad)" activeDot={{ r: 5, fill: "#1e60ff", stroke: "#fff", strokeWidth: 2 }} />
+                            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
+                            <YAxis 
+                                tickFormatter={(v) => chartMetric === "orders" ? v : `₹${v / 1000}k`} 
+                                tickLine={false} 
+                                axisLine={false} 
+                                tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} 
+                            />
+                            <Tooltip 
+                                formatter={(val) => chartMetric === "orders" ? [val, "Orders"] : chartMetric === "profit" ? [`₹${val.toLocaleString()}`, "Profit"] : [`₹${val.toLocaleString()}`, "Revenue"]} 
+                                contentStyle={{ borderRadius: "12px", border: "1px solid var(--border-color)", padding: "10px 14px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }} 
+                            />
+                            <Area 
+                                type="monotone" 
+                                dataKey={chartMetric} 
+                                stroke="#1e60ff" 
+                                strokeWidth={2.5} 
+                                fill="url(#analyticsRevGrad)" 
+                                isAnimationActive={true}
+                                animationDuration={800}
+                                activeDot={{ r: 6, fill: "#1e60ff", stroke: "#fff", strokeWidth: 2 }} 
+                            />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -606,14 +938,14 @@ Be concise. Keep it under 200 words total. Bold crucial words. Keep it professio
                 <div className="analytics-chart-card">
                     <div className="analytics-chart-header">
                         <div>
-                            <h3>Monthly Orders</h3>
-                            <p>Order volume per month</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: "700" }}>Monthly Orders</h3>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Order volume per month</p>
                         </div>
                     </div>
                     <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={revenueData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <BarChart data={chartDataSets["1Y"]} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
+                            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
                             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#9ca3af", fontWeight: 600 }} />
                             <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "12px" }} />
                             <Bar dataKey="orders" fill="#1e60ff" radius={[4, 4, 0, 0]} />
@@ -625,8 +957,8 @@ Be concise. Keep it under 200 words total. Bold crucial words. Keep it professio
                 <div className="analytics-chart-card analytics-pie-card">
                     <div className="analytics-chart-header">
                         <div>
-                            <h3>Sales by Category</h3>
-                            <p>Category revenue breakdown</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: "700" }}>Sales by Category</h3>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Category revenue breakdown</p>
                         </div>
                     </div>
                     <div className="analytics-pie-layout">
@@ -653,24 +985,34 @@ Be concise. Keep it under 200 words total. Bold crucial words. Keep it professio
                 </div>
 
                 {/* Top Products */}
-                <div className="analytics-chart-card analytics-top-products-card">
-                    <div className="analytics-chart-header">
+                <div className="analytics-chart-card analytics-top-products-card" style={{ padding: "20px" }}>
+                    <div className="analytics-chart-header" style={{ marginBottom: "14px" }}>
                         <div>
-                            <h3>Top Products</h3>
-                            <p>Best performing by revenue</p>
+                            <h3 style={{ fontSize: "16px", fontWeight: "700" }}>Top Products</h3>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Best performing catalog lines by revenue</p>
                         </div>
                     </div>
-                    <div className="top-products-list">
-                        {topProducts.map((p, i) => (
-                            <div key={p.name} className="top-product-row">
-                                <span className="top-product-rank">{i + 1}</span>
-                                <div className="top-product-info">
-                                    <span className="top-product-name">{p.name}</span>
-                                    <span className="top-product-sales">{p.sales} sold</span>
+                    <div className="top-products-list-new" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {topProducts.map((p) => (
+                            <div key={p.id} className="top-product-row-new" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", border: "1px solid var(--border-color)", borderRadius: "12px", transition: "all 0.2s ease" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+                                    <div className={`odt-avatar ${p.thumbnailColor}`} style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", fontWeight: "700", fontSize: "11px", flexShrink: 0 }}>
+                                        {p.initials}
+                                    </div>
+                                    <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <span className="top-product-name" style={{ fontWeight: "700", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{p.name}</span>
+                                        <span className="dkh-city-badge" style={{ fontSize: "9.5px", padding: "2px 6px", width: "fit-content" }}>{p.category}</span>
+                                    </div>
                                 </div>
-                                <div className="top-product-right">
-                                    <span className="top-product-revenue">{p.revenue}</span>
-                                    <span className="top-product-trend">{p.trend}</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                                        <span style={{ fontSize: "12.5px", fontWeight: "700", color: "var(--text-main)" }}>{p.sales} sold</span>
+                                        <span style={{ fontSize: "10px", color: p.stock <= 15 ? "var(--color-danger)" : "var(--text-muted)", fontWeight: p.stock <= 15 ? "700" : "500" }}>{p.stock} left</span>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px", minWidth: "60px" }}>
+                                        <span style={{ fontSize: "13px", fontWeight: "800", color: "var(--primary)" }}>{p.revenue}</span>
+                                        <span className={`analytics-card-change ${p.up ? "change-up" : "change-down"}`} style={{ fontSize: "9.5px", padding: "2px 6px" }}>{p.trend}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
