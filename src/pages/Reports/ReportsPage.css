@@ -1,0 +1,247 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+}
+
+.reports-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reports-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.reports-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.btn-refresh {
+  height: 40px;
+  padding: 0 16px;
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.reports-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.reports-stat-card {
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stat-badge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.stat-badge.green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.stat-badge.blue {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.stat-badge.grey {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.reports-list-container {
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 16px;
+}
+
+.list-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.reports-count {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .reports-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.report-card {
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+
+.report-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.report-card-top {
+  display: flex;
+  gap: 16px;
+}
+
+.report-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background-color: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.report-info h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.report-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.report-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+.report-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.meta-tag.format {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.meta-tag.date {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.meta-tag.size {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.btn-download-report {
+  height: 32px;
+  padding: 0 12px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-download-report:hover {
+  background-color: #1d4ed8;
+}

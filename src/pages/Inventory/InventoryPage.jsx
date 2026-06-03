@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { MOCK_WAREHOUSE_STOCK, MOCK_DARKHOUSE_STOCK, MOCK_STOCK_TRANSFERS } from "../../data/inventoryData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
+import { getInventoryStatusClass } from "../../utils/statusUtils";
 import "./Inventory.css";
 
 const ROWS_PER_PAGE = 6;
@@ -282,14 +283,12 @@ function InventoryPage() {
         setIsModalOpen(false);
     };
 
+    // Approve a pending transfer → sets to Dispatched
     const handleApproveTransfer = (id) => {
         setTransfers(prev => prev.map(t => t.id === id ? { ...t, status: "Dispatched" } : t));
     };
 
-    const handleDispatchTransfer = (id) => {
-        setTransfers(prev => prev.map(t => t.id === id ? { ...t, status: "Dispatched" } : t));
-    };
-
+    // Mark a dispatched transfer as received
     const handleReceiveTransfer = (id) => {
         setTransfers(prev => prev.map(t => t.id === id ? { ...t, status: "Received" } : t));
     };
@@ -298,22 +297,8 @@ function InventoryPage() {
         setSearchParams({ tab: tabKey });
     };
 
-    // Helper classes for statuses
-    const getStatusClass = (status) => {
-        switch (status) {
-            case "In Stock":
-            case "Received":
-                return "inv-pill inv-pill--success";
-            case "Low Stock":
-            case "Dispatched":
-                return "inv-pill inv-pill--warning";
-            case "Out of Stock":
-            case "Pending":
-                return "inv-pill inv-pill--danger";
-            default:
-                return "inv-pill";
-        }
-    };
+    // Use shared utility from statusUtils.js
+    const getStatusClass = getInventoryStatusClass;
 
     const handleExportCSV = () => {
         let headers = [];
@@ -776,7 +761,7 @@ function InventoryPage() {
                                                                 <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
                                                                     Approve
                                                                 </button>
-                                                                <button className="inv-action-inline-btn inv-action-inline-btn--warning" onClick={() => handleDispatchTransfer(item.id)}>
+                                                                <button className="inv-action-inline-btn inv-action-inline-btn--warning" onClick={() => handleApproveTransfer(item.id)}>
                                                                     Dispatch
                                                                 </button>
                                                             </>

@@ -64,15 +64,39 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-card);
-    padding: 18px 20px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     gap: 14px;
-    transition: box-shadow var(--transition-fast);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 130px;
+    flex-shrink: 0;
 }
 
 .orders-stat-card:hover {
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+/* Active State for Filter Cards */
+.orders-stat-card.active {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--text-inverse) !important;
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(30, 96, 255, 0.3) !important;
+}
+
+.orders-stat-card.active .stat-card-value {
+    color: var(--text-inverse) !important;
+}
+
+.orders-stat-card.active .stat-card-label {
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .stat-dot {
@@ -134,6 +158,13 @@
     gap: 12px;
     padding: 18px 24px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.orders-toolbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
     flex-wrap: wrap;
 }
 
@@ -276,6 +307,7 @@
 .orders-table-responsive {
     width: 100%;
     overflow-x: auto;
+    min-height: 240px;
 }
 
 .orders-data-table {
@@ -551,8 +583,14 @@
     }
 
     .orders-toolbar {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .orders-toolbar__actions {
         flex-direction: column;
         align-items: stretch;
+        width: 100%;
     }
 
     .orders-filters {
@@ -609,9 +647,31 @@
 }
 
 .orders-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
     gap: 16px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 4px 4px 12px 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .orders-stats-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding: 4px 4px 12px 4px !important;
+        gap: 12px !important;
+        width: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    .orders-stats-grid .orders-stat-card {
+        flex: 0 0 auto !important;
+        width: 150px !important;
+    }
 }
 
 /* ─── Picker Assignment Pills ────────────────────── */
@@ -1137,5 +1197,741 @@
 
 .orders-row-hover:hover {
     background-color: var(--bg-hover);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Bulk Selection Checkboxes
+   ═══════════════════════════════════════════════════════════════ */
+.orders-checkbox-main,
+.orders-checkbox-row {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    accent-color: var(--primary);
+    transition: transform var(--transition-fast);
+}
+
+.orders-checkbox-main:hover,
+.orders-checkbox-row:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.orders-checkbox-row:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Floating Bulk Actions Bar
+   ═══════════════════════════════════════════════════════════════ */
+.orders-bulk-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    z-index: 2100;
+    width: calc(100% - 48px);
+    max-width: 820px;
+    animation: toolbarSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toolbarSlideUp {
+    from { transform: translate(-50%, 40px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.bulk-toolbar-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bulk-count-badge {
+    background-color: var(--primary);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(30, 96, 255, 0.4);
+}
+
+.bulk-text {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.bulk-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bulk-action-btn {
+    padding: 9px 16px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all var(--transition-fast);
+}
+
+.bulk-action-btn.primary {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+.bulk-action-btn.primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 0 12px rgba(30, 96, 255, 0.3);
+}
+
+.bulk-action-btn.success {
+    background-color: #10b981;
+    color: #ffffff;
+}
+.bulk-action-btn.success:hover {
+    background-color: #059669;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.bulk-action-btn.info {
+    background-color: #f59e0b;
+    color: #ffffff;
+}
+.bulk-action-btn.info:hover {
+    background-color: #d97706;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.bulk-action-btn.cancel {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+}
+.bulk-action-btn.cancel:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Responsive Floating Toolbar Breakpoints
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .orders-bulk-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding: 16px;
+        bottom: 16px;
+    }
+    
+    .bulk-toolbar-info {
+        justify-content: center;
+    }
+    
+    .bulk-toolbar-actions {
+        justify-content: center;
+    }
+    
+    .bulk-action-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Print Preview Modal Extensions
+   ═══════════════════════════════════════════════════════════════ */
+.preview-backdrop {
+    background-color: rgba(15, 23, 42, 0.6);
+}
+
+.preview-container {
+    max-width: 960px;
+    height: 90vh;
+    max-height: 840px;
+}
+
+.preview-header {
+    justify-content: flex-start;
+}
+
+.preview-header-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.format-select {
+    font-size: 13px;
+    padding: 8px 14px;
+    font-weight: 700;
+}
+
+.preview-body {
+    background-color: var(--bg-app);
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.preview-sheet-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.preview-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+.print-submit-btn {
+    background-color: #10b981 !important;
+}
+.print-submit-btn:hover {
+    background-color: #059669 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Visual A4 Mockup Sheets (Screen Preview)
+   ═══════════════════════════════════════════════════════════════ */
+.a4-page-mockup {
+    width: 210mm;
+    min-height: 297mm;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 12mm 8mm;
+    display: grid;
+    gap: 4mm;
+    align-content: start;
+    box-sizing: border-box;
+}
+
+/* 2x4 Layout: 2 columns, 4 rows (8 labels) */
+.a4-page-mockup.grid-2x4 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+}
+
+/* 3x4 Layout: 3 columns, 4 rows (12 labels) */
+.a4-page-mockup.grid-3x4 {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    padding: 8mm 6mm;
+    gap: 3mm;
+}
+
+/* Scale preview on tablet / mobile to prevent horizontal scrolling */
+@media (max-width: 991px) {
+    .preview-sheet-scroll-container {
+        justify-content: flex-start;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Premium Quick Commerce Industrial Label (Thermal design)
+   ═══════════════════════════════════════════════════════════════ */
+.quick-commerce-label {
+    background-color: #ffffff !important;
+    border: 2px dashed #000000;
+    border-radius: 2px;
+    padding: 12px;
+    color: #000000 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60mm; /* Fixed height for consistency */
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+}
+
+.quick-commerce-label.printable {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* Label Top Header */
+.label-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 18px;
+}
+
+.label-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.label-logo-symbol {
+    font-size: 11px;
+    font-weight: 900;
+    color: #000000;
+}
+
+.label-logo-text {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    color: #000000;
+}
+
+.label-qc-badge {
+    border: 1.5px solid #000000;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 1px;
+    letter-spacing: 0.4px;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.label-divider {
+    border-top: 1.5px solid #000000;
+    margin: 6px 0;
+    width: 100%;
+}
+
+/* Product Section */
+.label-product-name {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #000000;
+    margin-bottom: 4px;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 34px;
+}
+
+/* Metadata Grid */
+.label-meta-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 4px 8px;
+    margin-bottom: 6px;
+}
+
+.meta-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-cell .lbl {
+    font-size: 7px;
+    font-weight: 700;
+    color: #4b5563;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+}
+
+.meta-cell .val {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #000000;
+}
+
+.meta-cell .val.bold {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Footer layout (details + QR code) */
+.label-footer-section {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 52px;
+}
+
+.label-footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.footer-info-row {
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    gap: 4px;
+}
+
+.footer-info-row .lbl {
+    color: #4b5563;
+    font-size: 8px;
+    width: 32px;
+    flex-shrink: 0;
+}
+
+.footer-info-row .val {
+    color: #000000;
+}
+
+.label-qr-code {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    padding: 2px;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dedicated Offline Print Styles Container (Hidden on Screen)
+   ═══════════════════════════════════════════════════════════════ */
+#print-sheet {
+    display: none;
+}
+
+/* Page mockup wrappers */
+.preview-pages-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+    width: 100%;
+}
+
+.a4-page-mockup,
+.a4-page-print-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    align-content: start !important;
+}
+
+/* Screen mockup additional styles */
+.a4-page-mockup {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #c1c5cb;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+/* Print sizes: 1x1 grid (1 label) */
+.a4-page-mockup.grid-1x1,
+.a4-page-print-sheet.grid-1x1 {
+    grid-template-columns: repeat(1, 1fr) !important;
+    grid-template-rows: repeat(1, 1fr) !important;
+    padding: 20mm 15mm !important;
+    justify-items: center !important;
+    align-items: center !important;
+}
+
+/* Print sizes: 1x2 grid (2 labels) */
+.a4-page-mockup.grid-1x2,
+.a4-page-print-sheet.grid-1x2 {
+    grid-template-columns: repeat(1, 1fr) !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+    gap: 10mm !important;
+    padding: 20mm 15mm !important;
+}
+
+/* Print sizes: 2x2 grid (4 labels) */
+.a4-page-mockup.grid-2x2,
+.a4-page-print-sheet.grid-2x2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+    gap: 8mm !important;
+    padding: 15mm 10mm !important;
+}
+
+/* Print sizes: 2x4 grid (8 labels) */
+.a4-page-mockup.grid-2x4,
+.a4-page-print-sheet.grid-2x4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: repeat(4, 1fr) !important;
+    gap: 4mm !important;
+    padding: 12mm 8mm !important;
+}
+
+/* Print sizes: 3x4 grid (12 labels) */
+.a4-page-mockup.grid-3x4,
+.a4-page-print-sheet.grid-3x4 {
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-rows: repeat(4, 1fr) !important;
+    gap: 3mm !important;
+    padding: 8mm 6mm !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Premium Quick Commerce Industrial Label (Thermal design)
+   ═══════════════════════════════════════════════════════════════ */
+.quick-commerce-label {
+    background-color: #ffffff !important;
+    border: 2px dashed #000000 !important;
+    border-radius: 2px !important;
+    padding: 12px !important;
+    color: #000000 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 60mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.quick-commerce-label.printable {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* 1x1 Custom label layout - Large Industrial Shipping Tag */
+.grid-1x1 .quick-commerce-label {
+    width: 150mm !important;
+    height: 100mm !important;
+    padding: 24px !important;
+    border-width: 3px !important;
+}
+.grid-1x1 .label-logo-text {
+    font-size: 20px !important;
+}
+.grid-1x1 .label-logo-symbol {
+    font-size: 18px !important;
+}
+.grid-1x1 .label-qc-badge {
+    font-size: 12px !important;
+    padding: 2px 8px !important;
+}
+.grid-1x1 .label-product-name {
+    font-size: 22px !important;
+    height: auto !important;
+    margin: 12px 0 !important;
+    line-height: 1.3 !important;
+    -webkit-line-clamp: 2 !important;
+}
+.grid-1x1 .label-meta-grid {
+    gap: 8px 16px !important;
+    margin-bottom: 12px !important;
+}
+.grid-1x1 .meta-cell .lbl {
+    font-size: 10px !important;
+}
+.grid-1x1 .meta-cell .val {
+    font-size: 15px !important;
+}
+.grid-1x1 .label-footer-section {
+    height: 76px !important;
+}
+.grid-1x1 .footer-info-row {
+    font-size: 12px !important;
+    gap: 6px !important;
+}
+.grid-1x1 .footer-info-row .lbl {
+    width: 44px !important;
+    font-size: 11px !important;
+}
+.grid-1x1 .label-qr-code {
+    width: 76px !important;
+    height: 76px !important;
+}
+
+/* 1x2 Custom label layout */
+.grid-1x2 .quick-commerce-label {
+    height: 110mm !important;
+    padding: 20px !important;
+    border-width: 2.5px !important;
+}
+.grid-1x2 .label-logo-text {
+    font-size: 16px !important;
+}
+.grid-1x2 .label-logo-symbol {
+    font-size: 14px !important;
+}
+.grid-1x2 .label-qc-badge {
+    font-size: 11px !important;
+    padding: 2px 6px !important;
+}
+.grid-1x2 .label-product-name {
+    font-size: 18px !important;
+    height: auto !important;
+    margin: 8px 0 !important;
+}
+.grid-1x2 .label-meta-grid {
+    gap: 6px 12px !important;
+    margin-bottom: 10px !important;
+}
+.grid-1x2 .meta-cell .lbl {
+    font-size: 9px !important;
+}
+.grid-1x2 .meta-cell .val {
+    font-size: 13.5px !important;
+}
+.grid-1x2 .label-footer-section {
+    height: 68px !important;
+}
+.grid-1x2 .footer-info-row {
+    font-size: 11px !important;
+}
+.grid-1x2 .footer-info-row .lbl {
+    width: 38px !important;
+    font-size: 10px !important;
+}
+.grid-1x2 .label-qr-code {
+    width: 68px !important;
+    height: 68px !important;
+}
+
+/* 2x2 Custom label layout */
+.grid-2x2 .quick-commerce-label {
+    height: 110mm !important;
+    padding: 20px !important;
+    border-width: 2.5px !important;
+}
+.grid-2x2 .label-logo-text {
+    font-size: 15px !important;
+}
+.grid-2x2 .label-logo-symbol {
+    font-size: 13px !important;
+}
+.grid-2x2 .label-qc-badge {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+}
+.grid-2x2 .label-product-name {
+    font-size: 18px !important;
+    height: auto !important;
+    margin: 8px 0 !important;
+}
+.grid-2x2 .label-meta-grid {
+    gap: 6px 12px !important;
+    margin-bottom: 10px !important;
+}
+.grid-2x2 .meta-cell .lbl {
+    font-size: 9px !important;
+}
+.grid-2x2 .meta-cell .val {
+    font-size: 13px !important;
+}
+.grid-2x2 .label-footer-section {
+    height: 68px !important;
+}
+.grid-2x2 .footer-info-row {
+    font-size: 11px !important;
+}
+.grid-2x2 .footer-info-row .lbl {
+    width: 38px !important;
+    font-size: 10px !important;
+}
+.grid-2x2 .label-qr-code {
+    width: 68px !important;
+    height: 68px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CRITICAL PRINT PAGE MEDIA STYLING RULES
+   ═══════════════════════════════════════════════════════════════ */
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
+
+@media print {
+    body {
+        background: white !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 210mm !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #root,
+    .app-layout,
+    .sidebar,
+    .topbar,
+    .modal-footer,
+    .action-toolbar,
+    button,
+    .orders-modal-backdrop,
+    .preview-backdrop,
+    .confirm-modal-backdrop,
+    .global-dropdown-overlay,
+    .global-action-dropdown {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    #print-sheet {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 210mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 9999999 !important;
+        background-color: #ffffff !important;
+    }
+
+    .a4-page-print-sheet {
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        background-color: #ffffff !important;
+        box-sizing: border-box !important;
+        display: grid !important;
+        align-content: start !important;
+        page-break-after: always !important;
+        break-after: always !important;
+    }
 }
 

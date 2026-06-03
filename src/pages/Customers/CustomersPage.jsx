@@ -27,7 +27,10 @@ import {
     FileText,
     Percent,
     ArrowUpRight,
-    Edit2
+    Edit2,
+    Eye,
+    Bell,
+    History
 } from "lucide-react";
 import {
     AreaChart,
@@ -254,10 +257,22 @@ const TYPE_FILTER_OPTIONS = [
 ];
 
 // Helper: status CSS class
-function statusClass(status) {
+function statusClass(status, loyaltyBadge) {
+    if (loyaltyBadge === "VIP") return "badge-vip";
     if (status === "Active") return "badge-active";
     if (status === "Blocked") return "badge-blocked";
     return "badge-inactive";
+}
+
+// Helper: format compact date
+function formatCompactDate(dateStr) {
+    if (!dateStr || dateStr === "N/A") return "N/A";
+    const cleanStr = dateStr.replace(",", "");
+    const parts = cleanStr.trim().split(/\s+/);
+    if (parts.length === 3) {
+        return `${parts[1]} ${parts[0]} ${parts[2]}`;
+    }
+    return dateStr;
 }
 
 // Helper: initials from name
@@ -735,7 +750,7 @@ function CustomersPage() {
                     <table className="cust-table">
                         <thead>
                             <tr>
-                                <th style={{ width: "40px" }} className="align-center-cell">
+                                <th style={{ width: "4%" }} className="align-center-cell">
                                     <input 
                                         type="checkbox"
                                         className="cust-checkbox"
@@ -744,15 +759,15 @@ function CustomersPage() {
                                         aria-label="Select all customers on page"
                                     />
                                 </th>
-                                <th>Customer</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Location</th>
-                                <th className="align-center-header">Orders</th>
-                                <th>Total Spent</th>
-                                <th>Last Order</th>
-                                <th>Status</th>
-                                <th className="align-center-header">Actions</th>
+                                <th style={{ width: "22%" }}>Customer</th>
+                                <th style={{ width: "22%" }}>Email</th>
+                                <th style={{ width: "14%" }}>Phone</th>
+                                <th style={{ width: "14%" }}>Location</th>
+                                <th style={{ width: "8%" }} className="align-center-header">Orders</th>
+                                <th style={{ width: "10%" }}>Total Spent</th>
+                                <th style={{ width: "10%" }}>Last Order</th>
+                                <th style={{ width: "8%" }}>Status</th>
+                                <th style={{ width: "6%" }} className="align-center-header">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -763,7 +778,7 @@ function CustomersPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                displayedCustomers.map((customer) => (
+                                displayedCustomers.map((customer, index) => (
                                     <tr 
                                         key={customer.id} 
                                         className={`cust-table-row interactive-table-row ${selectedCustomers.includes(customer.id) ? "row-checked" : ""}`}
@@ -781,65 +796,74 @@ function CustomersPage() {
                                         </td>
 
                                         {/* Customer avatar and ID details */}
-                                        <td>
+                                        <td data-label="Customer">
                                             <div className="cust-identity">
                                                 <div className={`cust-avatar ${customer.avatarColor}`}>
                                                     {getInitials(customer.name)}
                                                 </div>
                                                 <div className="cust-name-block">
-                                                    <div className="cust-name-row">
-                                                        <span className="cust-name">{customer.name}</span>
-                                                        <span className={`loyalty-tag tag-${customer.loyaltyBadge.toLowerCase()}`}>
-                                                            {customer.loyaltyBadge}
-                                                        </span>
-                                                    </div>
-                                                    <span className="cust-id">{customer.id}</span>
+                                                    <span className="cust-name-single" title={customer.name}>{customer.name}</span>
+                                                    <span className="cust-id-small">{customer.id}</span>
                                                 </div>
                                             </div>
                                         </td>
 
                                         {/* Email */}
-                                        <td>
+                                        <td data-label="Email">
                                             <a
                                                 href={`mailto:${customer.email}`}
                                                 className="cust-email-link"
-                                                title={`Email ${customer.name}`}
+                                                title={customer.email}
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <Mail size={13} className="cust-email-icon" />
-                                                <span>{customer.email}</span>
+                                                <span className="cust-email-text-wrap">
+                                                    📧 <span className="cust-email-text">{customer.email}</span>
+                                                </span>
                                             </a>
                                         </td>
 
                                         {/* Phone */}
-                                        <td className="cust-cell-muted">{customer.phone}</td>
+                                        <td data-label="Phone" className="cust-cell-phone">{customer.phone}</td>
 
                                         {/* Location */}
-                                        <td className="cust-cell-muted">{customer.location}</td>
+                                        <td data-label="Location" className="cust-cell-location" title={customer.location}>
+                                            <span className="cust-location-text">{customer.location}</span>
+                                        </td>
 
                                         {/* Orders */}
-                                        <td className="cust-cell-orders">{customer.totalOrders}</td>
+                                        <td data-label="Orders" className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                            <span className="cust-orders-pill">{customer.totalOrders}</span>
+                                        </td>
 
                                         {/* Total Spent */}
-                                        <td className="cust-cell-spent">
-                                            ₹{customer.totalSpent.toLocaleString("en-IN", {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}
+                                        <td data-label="Spent" className="cust-cell-spent">
+                                            <div className="spent-cell-container">
+                                                <span>
+                                                    ₹{customer.totalSpent.toLocaleString("en-IN", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                    })}
+                                                </span>
+                                                {customer.totalSpent >= 4000 && (
+                                                    <span className="high-spender-dot" title="High Spender" />
+                                                )}
+                                            </div>
                                         </td>
 
                                         {/* Last Order Date */}
-                                        <td className="cust-cell-muted">{customer.lastOrderDate || "N/A"}</td>
+                                        <td data-label="Last Order" className="cust-cell-muted">
+                                            {formatCompactDate(customer.lastOrderDate)}
+                                        </td>
 
                                         {/* Status Badge */}
-                                        <td>
-                                            <span className={`cust-badge ${statusClass(customer.status)}`}>
-                                                {customer.status}
+                                        <td data-label="Status">
+                                            <span className={`cust-badge ${statusClass(customer.status, customer.loyaltyBadge)}`}>
+                                                {customer.loyaltyBadge === "VIP" ? "VIP" : customer.status}
                                             </span>
                                         </td>
 
                                         {/* Row actions dots */}
-                                        <td style={{ position: "relative" }} className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td data-label="Actions" style={{ position: "relative" }} className="align-center-cell" onClick={(e) => e.stopPropagation()}>
                                             <button
                                                 className="cust-action-btn"
                                                 aria-label={`More actions for ${customer.name}`}
@@ -851,7 +875,10 @@ function CustomersPage() {
                                             {activeDropdownId === customer.id && (
                                                 <>
                                                     <div className="cust-dropdown-overlay" onClick={() => setActiveDropdownId(null)} />
-                                                    <div className="cust-action-dropdown">
+                                                    <div 
+                                                        className="cust-action-dropdown"
+                                                        style={index >= displayedCustomers.length - 2 && displayedCustomers.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                    >
                                                         <button 
                                                             className="dropdown-item"
                                                             onClick={() => {
@@ -859,22 +886,36 @@ function CustomersPage() {
                                                                 setActiveDropdownId(null);
                                                             }}
                                                         >
-                                                            <Users size={13} />
+                                                            <Eye size={13} />
                                                             <span>View Profile</span>
                                                         </button>
                                                         <button 
                                                             className="dropdown-item"
                                                             onClick={() => {
+                                                                alert(`Opening order history for ${customer.name}`);
                                                                 handleOpenDrawer(customer);
                                                                 setActiveDropdownId(null);
                                                             }}
                                                         >
-                                                            <Edit2 size={13} />
-                                                            <span>Edit Profile</span>
+                                                            <History size={13} />
+                                                            <span>Order History</span>
                                                         </button>
                                                         <button 
                                                             className="dropdown-item"
-                                                            onClick={(e) => handleChangeStatus(customer.id, customer.status === "Blocked" ? "Active" : "Blocked", e)}
+                                                            onClick={() => {
+                                                                alert(`Notification sent to ${customer.name}`);
+                                                                setActiveDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <Bell size={13} />
+                                                            <span>Send Notification</span>
+                                                        </button>
+                                                        <button 
+                                                            className="dropdown-item"
+                                                            onClick={(e) => {
+                                                                handleChangeStatus(customer.id, customer.status === "Blocked" ? "Active" : "Blocked", e);
+                                                                setActiveDropdownId(null);
+                                                            }}
                                                         >
                                                             <Ban size={13} />
                                                             <span>{customer.status === "Blocked" ? "Unblock" : "Block Customer"}</span>
@@ -882,7 +923,10 @@ function CustomersPage() {
                                                         <div className="dropdown-divider"></div>
                                                         <button 
                                                             className="dropdown-item dropdown-item-danger"
-                                                            onClick={(e) => handleRemoveCustomer(customer.id, e)}
+                                                            onClick={(e) => {
+                                                                handleRemoveCustomer(customer.id, e);
+                                                                setActiveDropdownId(null);
+                                                            }}
                                                         >
                                                             <Trash2 size={13} />
                                                             <span>Delete Profile</span>

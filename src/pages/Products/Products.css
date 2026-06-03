@@ -212,6 +212,7 @@
 .products-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  min-height: 240px;
 }
 
 /* ─── Products Table ─────────────────────────────────────────────────────────── */

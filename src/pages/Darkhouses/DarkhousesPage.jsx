@@ -748,7 +748,7 @@ function DarkhousesPage() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        paginatedDarkhouses.map(dh => (
+                                        paginatedDarkhouses.map((dh, index) => (
                                             <tr key={dh.id} className="darkhouse-row-hover">
                                                 <td className="dkh-td--name">{dh.name}</td>
                                                 <td className="dkh-td--code">{dh.code}</td>
@@ -769,7 +769,10 @@ function DarkhousesPage() {
                                                     {activeRowMenuId === dh.id && (
                                                         <>
                                                             <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                            <div className="global-action-dropdown">
+                                                            <div 
+                                                                className="global-action-dropdown"
+                                                                style={index >= paginatedDarkhouses.length - 2 && paginatedDarkhouses.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                            >
                                                                 <button className="global-dropdown-item" onClick={() => openDhView(dh)}>
                                                                     <Eye size={13} />
                                                                     <span>View Details</span>
@@ -816,7 +819,7 @@ function DarkhousesPage() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        paginatedManagers.map(mgr => (
+                                        paginatedManagers.map((mgr, index) => (
                                             <tr key={mgr.id} className="darkhouse-row-hover">
                                                 <td>
                                                     <div className={`odt-avatar ${mgr.avatarColor || "avatar-indigo"}`}>
@@ -851,7 +854,10 @@ function DarkhousesPage() {
                                                     {activeRowMenuId === mgr.id && (
                                                         <>
                                                             <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                            <div className="global-action-dropdown">
+                                                            <div 
+                                                                className="global-action-dropdown"
+                                                                style={index >= paginatedManagers.length - 2 && paginatedManagers.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                            >
                                                                 <button className="global-dropdown-item" onClick={() => openMgrAssign(mgr)}>
                                                                     <Warehouse size={13} />
                                                                     <span>Assign Hub</span>

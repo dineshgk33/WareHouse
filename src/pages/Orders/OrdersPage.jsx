@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import {
     Search,
@@ -21,11 +22,35 @@ import {
     Navigation,
     PhoneCall,
     MapPin,
-    AlertCircle
+    AlertCircle,
+    Store
 } from "lucide-react";
 import { MOCK_ORDERS, MOCK_PICKING, MOCK_PACKING, MOCK_DELIVERY } from "../../data/ordersData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
+import { getOrderStatusClass } from "../../utils/statusUtils";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import { useToast } from "../../hooks/useToast";
+import { generateQRCodeSVG } from "../../utils/qrcode";
 import "./Orders.css";
+
+const chunkArray = (array, size) => {
+    const chunked = [];
+    for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+    }
+    return chunked;
+};
+
+const getPageSize = (format) => {
+    switch (format) {
+        case "grid-1x1": return 1;
+        case "grid-1x2": return 2;
+        case "grid-2x2": return 4;
+        case "grid-2x4": return 8;
+        case "grid-3x4": return 12;
+        default: return 8;
+    }
+};
 
 const ROWS_PER_PAGE = 7;
 
@@ -44,7 +69,7 @@ function OrdersPage() {
 
     // Filters All Orders
     const [ordSearch, setOrdSearch] = useState("");
-    const [ordStatus, setOrdStatus] = useState("All");
+    const [selectedStatus, setSelectedStatus] = useState("ALL");
     const [ordPage, setOrdPage] = useState(1);
 
     // Filters Picking
@@ -62,6 +87,24 @@ function OrdersPage() {
     const [dlvRider, setDlvRider] = useState("All");
     const [dlvStatus, setDlvStatus] = useState("All");
     const [dlvPage, setDlvPage] = useState(1);
+
+    // Filters Label History Tab
+    const [histPage, setHistPage] = useState(1);
+
+    // Bulk selection, printing, and preview states
+    const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+    const [labelHistory, setLabelHistory] = useState(() => {
+        try {
+            const saved = localStorage.getItem("haatza_label_history");
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+    const [previewLabels, setPreviewLabels] = useState([]);
+    const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+    const [labelLayoutFormat, setLabelLayoutFormat] = useState("grid-2x4"); // grid-2x4 or grid-3x4
+    const [triggerImmediatePrint, setTriggerImmediatePrint] = useState(false);
 
     // Modals
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,16 +124,61 @@ function OrdersPage() {
     const [formLocation, setFormLocation] = useState("");
     const [formEta, setFormEta] = useState("");
 
-    // Custom alerts / toast simulations
-    const [toastMessage, setToastMessage] = useState("");
+    const { toast, showToast } = useToast(3000);
 
-    // Auto-dismiss toast
+    // ConfirmModal state for accessible order cancellation (replaces window.confirm)
+    const [confirmState, setConfirmState] = useState({ open: false, orderId: null });
+
+    // Sync label history to localStorage
     useEffect(() => {
-        if (toastMessage) {
-            const timer = setTimeout(() => setToastMessage(""), 3000);
-            return () => clearTimeout(timer);
+        try {
+            localStorage.setItem("haatza_label_history", JSON.stringify(labelHistory));
+        } catch (e) {
+            console.error("Failed to save label history to localStorage", e);
         }
-    }, [toastMessage]);
+    }, [labelHistory]);
+
+    const triggerPrint = () => {
+        console.log("Labels to print:", previewLabels);
+
+        // Verify if labels exist
+        if (!previewLabels || previewLabels.length === 0) {
+            showToast("No labels available for printing.");
+            alert("No labels available for printing.");
+            return;
+        }
+
+        // Wait for labels to render inside DOM before print
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const printContainer = document.getElementById("print-sheet");
+                if (!printContainer) {
+                    console.error("Print container #print-sheet not found in DOM");
+                    showToast("Error: Print container not found.");
+                    return;
+                }
+
+                // Verify print data rendered
+                const renderedLabels = printContainer.querySelectorAll(".quick-commerce-label");
+                if (renderedLabels.length === 0) {
+                    console.error("Print data not rendered: no label elements found inside #print-sheet");
+                    showToast("Error: Print data not rendered.");
+                    return;
+                }
+
+                console.log(`Print verification passed: ${renderedLabels.length} labels found in #print-sheet`);
+                window.print();
+            });
+        });
+    };
+
+    // Handle instant print trigger
+    useEffect(() => {
+        if (triggerImmediatePrint && isPrintPreviewOpen && previewLabels.length > 0) {
+            setTriggerImmediatePrint(false);
+            triggerPrint();
+        }
+    }, [triggerImmediatePrint, isPrintPreviewOpen, previewLabels]);
 
     // Reset pagination when tab changes
     useEffect(() => {
@@ -98,25 +186,48 @@ function OrdersPage() {
         setPickPage(1);
         setPackPage(1);
         setDlvPage(1);
+        setHistPage(1);
         setActiveRowMenuId(null);
+        setSelectedOrderIds([]); // Clear selection when switching tabs
     }, [activeTab]);
 
-    const showToast = (msg) => {
-        setToastMessage(msg);
-    };
+
+
 
     // Derived filtering pools
     const pickers = useMemo(() => ["All", ...new Set(picks.map(p => p.picker).filter(p => p !== "Unassigned"))], [picks]);
     const riders = useMemo(() => ["All", ...new Set(deliveries.map(d => d.rider).filter(r => r !== "Unassigned"))], [deliveries]);
 
+    const paginatedHistory = useMemo(() => {
+        const start = (histPage - 1) * ROWS_PER_PAGE;
+        return labelHistory.slice(start, start + ROWS_PER_PAGE);
+    }, [labelHistory, histPage]);
+
     // ─── 1. Filtering All Orders ──────────────────────────────────────────────
     const filteredOrders = useMemo(() => {
         return orders.filter(o => {
             const matchesSearch = o.id.toLowerCase().includes(ordSearch.toLowerCase()) || o.customer.toLowerCase().includes(ordSearch.toLowerCase());
-            const matchesStatus = ordStatus === "All" || o.status === ordStatus;
+            
+            let matchesStatus = false;
+            if (selectedStatus === "ALL") {
+                matchesStatus = true;
+            } else if (selectedStatus === "Pending") {
+                matchesStatus = o.status === "Pending";
+            } else if (selectedStatus === "Picking") {
+                matchesStatus = o.status === "Picking";
+            } else if (selectedStatus === "Packing") {
+                matchesStatus = o.status === "Packing";
+            } else if (selectedStatus === "Ready To Dispatch") {
+                matchesStatus = o.status === "Ready To Dispatch" || o.status === "Label Generated" || o.status === "Processing";
+            } else if (selectedStatus === "Shipped") {
+                matchesStatus = o.status === "Shipped";
+            } else if (selectedStatus === "Delivered") {
+                matchesStatus = o.status === "Delivered";
+            }
+            
             return matchesSearch && matchesStatus;
         });
-    }, [orders, ordSearch, ordStatus]);
+    }, [orders, ordSearch, selectedStatus]);
 
     const paginatedOrders = useMemo(() => {
         const start = (ordPage - 1) * ROWS_PER_PAGE;
@@ -126,9 +237,12 @@ function OrdersPage() {
     const ordStats = useMemo(() => {
         const total = orders.length;
         const pending = orders.filter(o => o.status === "Pending").length;
+        const picking = orders.filter(o => o.status === "Picking").length;
+        const packing = orders.filter(o => o.status === "Packing").length;
+        const readyToDispatch = orders.filter(o => o.status === "Ready To Dispatch" || o.status === "Label Generated" || o.status === "Processing").length;
         const shipped = orders.filter(o => o.status === "Shipped").length;
         const delivered = orders.filter(o => o.status === "Delivered").length;
-        return { total, pending, shipped, delivered };
+        return { total, pending, picking, packing, readyToDispatch, shipped, delivered };
     }, [orders]);
 
     // ─── 2. Filtering Picking ─────────────────────────────────────────────────
@@ -195,6 +309,194 @@ function OrdersPage() {
         const failed = deliveries.filter(d => d.status === "Failed").length;
         return { assigned, outForDelivery, delivered, failed };
     }, [deliveries]);
+
+    // ─── Bulk Label Generation Helpers & Handlers ──────────────────────────────
+
+    // Stable product mapping helper for generating labels based on order information
+    const getLabelsForOrder = (order) => {
+        const labelsCount = order.items || 1;
+        const labels = [];
+        
+        const productsPool = [
+            { id: "PRD-101", name: "Fresh Alphonso Mangoes", brand: "Organic India", weight: "1.0 kg", baseSku: "FRT-MNG-ALP" },
+            { id: "PRD-102", name: "Amul Taaza Toned Milk", brand: "Amul", weight: "1.03 kg", baseSku: "DRY-MLK-TAZ" },
+            { id: "PRD-103", name: "Lay's Classic Salted Chips", brand: "Britannia", weight: "50g", baseSku: "SNK-LYS-CLT" },
+            { id: "PRD-104", name: "Coca-Cola Zero Sugar", brand: "Coca-Cola", weight: "320g", baseSku: "DRK-COK-ZER" },
+            { id: "PRD-105", name: "McCain French Fries", brand: "Nestle", weight: "450g", baseSku: "FZN-MCN-FRS" }
+        ];
+        
+        const warehouseList = ["Koramangala Hub", "Indiranagar Hub", "HSR Layout Depot", "GK-1 Warehouse", "Powai Depot"];
+        const packedByList = ["Ramesh Kumar", "Sunita Sharma", "Amit Patel", "Suresh Singh", "Ananya Iyer"];
+        
+        const idNum = parseInt(order.id.replace(/\D/g, "")) || 8818;
+        
+        for (let i = 0; i < labelsCount; i++) {
+            const prodIndex = (idNum + i) % productsPool.length;
+            const whIndex = (idNum + i) % warehouseList.length;
+            const pbIndex = (idNum + i) % packedByList.length;
+            
+            const product = productsPool[prodIndex];
+            const warehouse = warehouseList[whIndex];
+            const packedBy = packedByList[pbIndex];
+            const batchId = `BCH-${1000 + (idNum % 9000)}-${i + 1}`;
+            
+            const packedDate = order.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            labels.push({
+                id: `${order.id}-${i + 1}`,
+                orderId: order.id,
+                productId: product.id,
+                productName: product.name,
+                brand: product.brand,
+                netWeight: product.weight,
+                sku: `${product.baseSku}-${whIndex}`,
+                batchId,
+                warehouse,
+                packedBy,
+                packedDate,
+                status: "Label Generated",
+                customer: order.customer
+            });
+        }
+        
+        return labels;
+    };
+
+    const toggleSelectOrder = (id) => {
+        setSelectedOrderIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        const pendingOnPage = paginatedOrders.filter(o => o.status === "Pending" || o.status === "Label Generated");
+        if (pendingOnPage.length === 0) return;
+        
+        const allSelected = pendingOnPage.every(o => selectedOrderIds.includes(o.id));
+        if (allSelected) {
+            const toRemove = pendingOnPage.map(o => o.id);
+            setSelectedOrderIds(prev => prev.filter(id => !toRemove.includes(id)));
+        } else {
+            const toAdd = pendingOnPage.map(o => o.id).filter(id => !selectedOrderIds.includes(id));
+            setSelectedOrderIds(prev => [...prev, ...toAdd]);
+        }
+    };
+
+    const handleBulkGenerateLabels = () => {
+        if (selectedOrderIds.length === 0) {
+            showToast("No orders selected for label generation.");
+            return;
+        }
+        
+        const selectedOrders = orders.filter(o => selectedOrderIds.includes(o.id));
+        const allLabels = [];
+        
+        selectedOrders.forEach(o => {
+            allLabels.push(...getLabelsForOrder(o));
+        });
+        
+        setPreviewLabels(allLabels);
+        setIsPrintPreviewOpen(true);
+        
+        // Add record to label history
+        const newBatch = {
+            id: `BCH-${Date.now().toString().slice(-6)}`,
+            timestamp: new Date().toLocaleString('en-IN', { hour12: true }),
+            ordersCount: selectedOrders.length,
+            labelsCount: allLabels.length,
+            labels: allLabels
+        };
+        
+        setLabelHistory(prev => [newBatch, ...prev]);
+        
+        // Update statuses of pending selected orders to Label Generated
+        setOrders(prev => prev.map(o => {
+            if (selectedOrderIds.includes(o.id) && o.status === "Pending") {
+                return { ...o, status: "Label Generated" };
+            }
+            return o;
+        }));
+        
+        showToast(`Generated ${allLabels.length} labels for ${selectedOrders.length} orders.`);
+    };
+
+    const handleBulkPrintLabels = () => {
+        if (selectedOrderIds.length === 0) {
+            showToast("No orders selected for printing.");
+            return;
+        }
+        handleBulkGenerateLabels();
+        setTriggerImmediatePrint(true);
+    };
+
+    const handleBulkMarkReadyForPacking = () => {
+        if (selectedOrderIds.length === 0) {
+            showToast("No orders selected.");
+            return;
+        }
+        
+        setOrders(prev => prev.map(o => {
+            if (selectedOrderIds.includes(o.id) && (o.status === "Pending" || o.status === "Label Generated")) {
+                return { ...o, status: "Processing" };
+            }
+            return o;
+        }));
+        
+        showToast(`Marked ${selectedOrderIds.length} orders as Ready for Packing.`);
+        setSelectedOrderIds([]);
+    };
+
+    const handleCardClick = (status) => {
+        setSelectedStatus(status);
+        setOrdPage(1);
+        
+        // Auto-select pending orders if "Pending" card is clicked
+        if (status === "Pending") {
+            const pendingOrders = orders.filter(o => o.status === "Pending");
+            if (pendingOrders.length > 0) {
+                setSelectedOrderIds(pendingOrders.map(o => o.id));
+            }
+        } else {
+            setSelectedOrderIds([]);
+        }
+    };
+
+    const handleCreateTestOrders = () => {
+        const count = 100;
+        const newOrders = [];
+        const customerNames = [
+            "Aarav Mehta", "Ishaan Sharma", "Ananya Verma", "Kabir Gupta", "Aditya Rao",
+            "Diya Kapoor", "Rohan Malhotra", "Sai Prasad", "Riya Sen", "Vikram Joshi"
+        ];
+        const initialList = ["AM", "IS", "AV", "KG", "AR", "DK", "RM", "SP", "RS", "VJ"];
+        const avatarColors = [
+            "avatar-indigo", "avatar-teal", "avatar-rose", "avatar-amber", 
+            "avatar-violet", "avatar-sky", "avatar-green", "avatar-orange"
+        ];
+        const paymentMethods = ["Credit Card", "PayPal", "COD", "Transfer Bank"];
+        
+        for (let i = 1; i <= count; i++) {
+            const id = `#ORD-TEST-${9000 + i}`;
+            const custIdx = i % customerNames.length;
+            const colorIdx = i % avatarColors.length;
+            const payIdx = i % paymentMethods.length;
+            
+            newOrders.push({
+                id,
+                customer: customerNames[custIdx],
+                initials: initialList[custIdx],
+                color: avatarColors[colorIdx],
+                date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                items: 1 + (i % 4),
+                amount: `₹${(100 + (i * 12.5)).toFixed(2)}`,
+                payment: paymentMethods[payIdx],
+                status: "Pending"
+            });
+        }
+        
+        setOrders(prev => [...newOrders, ...prev]);
+        showToast(`Successfully created ${count} Pending orders for high-capacity load testing!`);
+    };
 
     // ─── Modals Handlers ──────────────────────────────────────────────────────
     const openOrdView = (order) => {
@@ -295,12 +597,21 @@ function OrdersPage() {
     };
 
     // ─── Inline Operations ────────────────────────────────────────────────────
+    // Open accessible confirm dialog instead of window.confirm()
     const handleCancelOrder = (id) => {
-        if (window.confirm(`Are you sure you want to cancel order ${id}?`)) {
-            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "Cancelled" } : o));
-            setActiveRowMenuId(null);
-            showToast(`Cancelled order ${id}`);
-        }
+        setConfirmState({ open: true, orderId: id });
+        setActiveRowMenuId(null);
+    };
+
+    const handleConfirmCancel = () => {
+        const id = confirmState.orderId;
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "Cancelled" } : o));
+        setConfirmState({ open: false, orderId: null });
+        showToast(`Cancelled order ${id}`);
+    };
+
+    const handleCancelDismiss = () => {
+        setConfirmState({ open: false, orderId: null });
     };
 
     const handleCompletePick = (id) => {
@@ -315,9 +626,25 @@ function OrdersPage() {
 
     const handlePrintLabel = (id) => {
         showToast(`Generating barcode tag & printing shipping label for ${id}...`);
-        if (window.print) {
-            // Simulated delay indicator
+        const orderItem = orders.find(o => o.id === id) || 
+                          orders.find(o => o.id === id.replace("PCK-", "ORD-")) ||
+                          orders.find(o => id.includes(o.id));
+                          
+        if (!orderItem) {
+            showToast("Error: Order item not found.");
+            return;
         }
+
+        const labels = getLabelsForOrder(orderItem);
+        if (labels.length === 0) {
+            showToast("No labels available for printing.");
+            alert("No labels available for printing.");
+            return;
+        }
+
+        setPreviewLabels(labels);
+        setIsPrintPreviewOpen(true);
+        setTriggerImmediatePrint(true);
     };
 
     const handleCompletePack = (id) => {
@@ -329,29 +656,8 @@ function OrdersPage() {
         showToast(`Dialing rider ${rider} at +91 99880 12345...`);
     };
 
-    // Utility classes for statuses
-    const getStatusClass = (status) => {
-        switch (status) {
-            case "Delivered":
-            case "Completed":
-            case "Packed":
-                return "orders-pill orders-pill--success";
-            case "Shipped":
-            case "Processing":
-            case "Assigned":
-            case "Packing":
-            case "Out for Delivery":
-                return "orders-pill orders-pill--warning";
-            case "Pending":
-            case "Waiting":
-                return "orders-pill orders-pill--info";
-            case "Cancelled":
-            case "Failed":
-                return "orders-pill orders-pill--danger";
-            default:
-                return "orders-pill";
-        }
-    };
+    // Use shared utility — eliminates the local copy
+    const getStatusClass = getOrderStatusClass;
 
     const toggleRowMenu = (id, e) => {
         e.stopPropagation();
@@ -364,58 +670,129 @@ function OrdersPage() {
 
     return (
         <div className="orders-root fade-in">
-            {/* Custom Toast Indicator */}
-            {toastMessage && (
-                <div className="orders-toast slide-in-top">
+            {/* Accessible Toast Notification */}
+            {toast && (
+                <div
+                    className="orders-toast slide-in-top"
+                    role="alert"
+                    aria-live="polite"
+                >
                     <CheckCircle size={15} className="toast-icon" />
-                    <span>{toastMessage}</span>
+                    <span>{toast}</span>
                 </div>
             )}
 
+            {/* Accessible Confirm Modal — replaces window.confirm() */}
+            <ConfirmModal
+                isOpen={confirmState.open}
+                title={`Cancel Order ${confirmState.orderId}?`}
+                message="This will mark the order as Cancelled. This action cannot be undone."
+                confirmLabel="Yes, Cancel Order"
+                cancelLabel="Keep Order"
+                onConfirm={handleConfirmCancel}
+                onCancel={handleCancelDismiss}
+                variant="danger"
+            />
+
             {/* Page Header */}
-            <div className="orders-header-block">
+            <div className="orders-header-block print-btn-no-print">
                 <div className="orders-header-left">
                     <h1 className="orders-header-title">
                         {activeTab === "orders" && "All Orders"}
                         {activeTab === "picking" && "Order Picking Control"}
                         {activeTab === "packing" && "Order Packing & Labeling"}
                         {activeTab === "tracking" && "Real-Time Delivery Tracking"}
+                        {activeTab === "label-history" && "Label Printing History Log"}
                     </h1>
                     <p className="orders-header-subtitle">
                         {activeTab === "orders" && "Track customer invoices, payment statuses, and overall execution lifecycle."}
                         {activeTab === "picking" && "Dispatch inventory pickers to gather mapped items across darkhouse bins."}
                         {activeTab === "packing" && "Box, seal, and generate custom package barcode tags for active riders."}
                         {activeTab === "tracking" && "Monitor dispatch riders, ETAs, active locations, and package handovers."}
+                        {activeTab === "label-history" && "Search, audit, and reprint previously compiled A4 adhesive label sheets."}
                     </p>
                 </div>
+                {activeTab === "orders" && (
+                    <div className="orders-header-right">
+                        <button 
+                            className="orders-inline-btn orders-inline-btn--secondary"
+                            onClick={handleCreateTestOrders}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                            <span>+ Create 100 Bulk Test Orders</span>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Summary Stat Grid */}
             <div className="orders-stats-grid">
                 {activeTab === "orders" && (
                     <>
-                        <div className="orders-stat-card">
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "ALL" ? "active" : ""}`}
+                            onClick={() => handleCardClick("ALL")}
+                        >
                             <span className="stat-dot dot-info" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.total}</span>
-                                <span className="stat-card-label">Total Invoices</span>
+                                <span className="stat-card-label">All Orders</span>
                             </div>
                         </div>
-                        <div className="orders-stat-card">
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Pending" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Pending")}
+                        >
                             <span className="stat-dot dot-pending" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.pending}</span>
                                 <span className="stat-card-label">Pending</span>
                             </div>
                         </div>
-                        <div className="orders-stat-card">
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Picking" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Picking")}
+                        >
+                            <span className="stat-dot dot-info" style={{ backgroundColor: "#3b82f6" }} />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{ordStats.picking}</span>
+                                <span className="stat-card-label">Picking</span>
+                            </div>
+                        </div>
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Packing" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Packing")}
+                        >
+                            <span className="stat-dot dot-pending" style={{ backgroundColor: "#f97316" }} />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{ordStats.packing}</span>
+                                <span className="stat-card-label">Packing</span>
+                            </div>
+                        </div>
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Ready To Dispatch" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Ready To Dispatch")}
+                        >
+                            <span className="stat-dot dot-shipped" style={{ backgroundColor: "#10b981" }} />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{ordStats.readyToDispatch}</span>
+                                <span className="stat-card-label">Ready To Dispatch</span>
+                            </div>
+                        </div>
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Shipped" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Shipped")}
+                        >
                             <span className="stat-dot dot-shipped" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.shipped}</span>
                                 <span className="stat-card-label">Shipped</span>
                             </div>
                         </div>
-                        <div className="orders-stat-card">
+                        <div 
+                            className={`orders-stat-card ${selectedStatus === "Delivered" ? "active" : ""}`}
+                            onClick={() => handleCardClick("Delivered")}
+                        >
                             <span className="stat-dot dot-delivered" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.delivered}</span>
@@ -509,6 +886,45 @@ function OrdersPage() {
                         </div>
                     </>
                 )}
+
+                {activeTab === "label-history" && (
+                    <>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-info" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{labelHistory.length}</span>
+                                <span className="stat-card-label">Total Batches</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-delivered" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">
+                                    {labelHistory.reduce((acc, b) => acc + b.labelsCount, 0)}
+                                </span>
+                                <span className="stat-card-label">Labels Printed</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-pending" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">
+                                    {orders.filter(o => o.status === "Pending").length}
+                                </span>
+                                <span className="stat-card-label">Pending Invoices</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-shipped" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">
+                                    {orders.filter(o => o.status === "Label Generated").length}
+                                </span>
+                                <span className="stat-card-label">Labels Generated</span>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Main Table Container */}
@@ -548,6 +964,14 @@ function OrdersPage() {
                         >
                             Delivery Tracking
                         </button>
+                        <button
+                            role="tab"
+                            aria-selected={activeTab === "label-history"}
+                            className={`orders-tab ${activeTab === "label-history" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("label-history")}
+                        >
+                            Label History
+                        </button>
                     </div>
 
                     {/* Toolbar Search / Select Filters */}
@@ -566,15 +990,16 @@ function OrdersPage() {
                                 </div>
                                 <select
                                     className="orders-toolbar-select"
-                                    value={ordStatus}
-                                    onChange={(e) => { setOrdStatus(e.target.value); setOrdPage(1); }}
+                                    value={selectedStatus}
+                                    onChange={(e) => { handleCardClick(e.target.value); }}
                                 >
-                                    <option value="All">All Statuses</option>
+                                    <option value="ALL">All Statuses</option>
                                     <option value="Pending">Pending</option>
-                                    <option value="Processing">Processing</option>
+                                    <option value="Picking">Picking</option>
+                                    <option value="Packing">Packing</option>
+                                    <option value="Ready To Dispatch">Ready To Dispatch</option>
                                     <option value="Shipped">Shipped</option>
                                     <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled">Cancelled</option>
                                 </select>
                             </>
                         )}
@@ -665,6 +1090,11 @@ function OrdersPage() {
                                 </select>
                             </>
                         )}
+                        {activeTab === "label-history" && (
+                            <div className="orders-toolbar-log-info" style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
+                                Total printed batches recorded: {labelHistory.length}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -675,6 +1105,19 @@ function OrdersPage() {
                             <>
                                 <thead>
                                     <tr>
+                                        <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
+                                            <input 
+                                                type="checkbox"
+                                                className="orders-checkbox-main"
+                                                checked={
+                                                    paginatedOrders.length > 0 &&
+                                                    paginatedOrders.filter(o => o.status === "Pending").length > 0 &&
+                                                    paginatedOrders.filter(o => o.status === "Pending").every(o => selectedOrderIds.includes(o.id))
+                                                }
+                                                onChange={toggleSelectAll}
+                                                title="Select all Pending orders on this page"
+                                            />
+                                        </th>
                                         <th>Order ID</th>
                                         <th>Customer</th>
                                         <th>Date</th>
@@ -688,13 +1131,23 @@ function OrdersPage() {
                                 <tbody>
                                     {paginatedOrders.length === 0 ? (
                                         <tr>
-                                            <td colSpan={8} className="odt-empty">
+                                            <td colSpan={9} className="odt-empty">
                                                 No customer orders found matching filters.
                                             </td>
                                         </tr>
                                     ) : (
-                                        paginatedOrders.map(order => (
+                                        paginatedOrders.map((order, index) => (
                                             <tr key={order.id} className="orders-row-hover">
+                                                <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="orders-checkbox-row"
+                                                        checked={selectedOrderIds.includes(order.id)}
+                                                        onChange={() => toggleSelectOrder(order.id)}
+                                                        disabled={order.status !== "Pending" && order.status !== "Label Generated"}
+                                                        title={order.status !== "Pending" && order.status !== "Label Generated" ? "Only Pending or Label Generated orders can be selected" : ""}
+                                                    />
+                                                </td>
                                                 <td className="odt-id">{order.id}</td>
                                                 <td>
                                                     <div className="odt-customer">
@@ -716,7 +1169,10 @@ function OrdersPage() {
                                                     {activeRowMenuId === order.id && (
                                                         <>
                                                             <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                            <div className="global-action-dropdown">
+                                                            <div 
+                                                                className="global-action-dropdown"
+                                                                style={index >= paginatedOrders.length - 2 && paginatedOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                            >
                                                                 <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
                                                                     <Eye size={13} />
                                                                     <span>View Details</span>
@@ -926,6 +1382,63 @@ function OrdersPage() {
                                 </tbody>
                             </>
                         )}
+
+                        {activeTab === "label-history" && (
+                            <>
+                                <thead>
+                                    <tr>
+                                        <th>Batch ID</th>
+                                        <th>Generated Date & Time</th>
+                                        <th>Orders Count</th>
+                                        <th>Labels Count</th>
+                                        <th style={{ textAlign: "right" }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedHistory.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="odt-empty">
+                                                No label printing history found. Generate some labels to start logging.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        paginatedHistory.map(batch => (
+                                            <tr key={batch.id} className="orders-row-hover">
+                                                <td className="odt-id">{batch.id}</td>
+                                                <td className="odt-date">{batch.timestamp}</td>
+                                                <td className="odt-items">{batch.ordersCount} orders</td>
+                                                <td className="odt-items">{batch.labelsCount} labels</td>
+                                                <td>
+                                                    <div className="orders-actions-cell">
+                                                        <button 
+                                                            className="orders-inline-btn orders-inline-btn--secondary"
+                                                            onClick={() => {
+                                                                setPreviewLabels(batch.labels);
+                                                                setIsPrintPreviewOpen(true);
+                                                            }}
+                                                        >
+                                                            <Eye size={12} />
+                                                            <span>Preview</span>
+                                                        </button>
+                                                                                        <button 
+                                                            className="orders-inline-btn"
+                                                            onClick={() => {
+                                                                setPreviewLabels(batch.labels);
+                                                                setIsPrintPreviewOpen(true);
+                                                                setTriggerImmediatePrint(true);
+                                                            }}
+                                                        >
+                                                            <Printer size={12} />
+                                                            <span>Reprint Sheet</span>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </>
+                        )}
                     </table>
                 </div>
 
@@ -933,25 +1446,29 @@ function OrdersPage() {
                 {((activeTab === "orders" && filteredOrders.length > ROWS_PER_PAGE) ||
                   (activeTab === "picking" && filteredPicks.length > ROWS_PER_PAGE) ||
                   (activeTab === "packing" && filteredPacks.length > ROWS_PER_PAGE) ||
-                  (activeTab === "tracking" && filteredDeliveries.length > ROWS_PER_PAGE)) && (
-                    <div className="orders-pagination">
+                  (activeTab === "tracking" && filteredDeliveries.length > ROWS_PER_PAGE) ||
+                  (activeTab === "label-history" && labelHistory.length > ROWS_PER_PAGE)) && (
+                    <div className="orders-pagination print-btn-no-print">
                         <span className="orders-pagination-info">
                             Showing <strong>{
                                 activeTab === "orders" ? Math.min(filteredOrders.length, (ordPage - 1) * ROWS_PER_PAGE + 1) :
                                 activeTab === "picking" ? Math.min(filteredPicks.length, (pickPage - 1) * ROWS_PER_PAGE + 1) :
                                 activeTab === "packing" ? Math.min(filteredPacks.length, (packPage - 1) * ROWS_PER_PAGE + 1) :
-                                Math.min(filteredDeliveries.length, (dlvPage - 1) * ROWS_PER_PAGE + 1)
+                                activeTab === "tracking" ? Math.min(filteredDeliveries.length, (dlvPage - 1) * ROWS_PER_PAGE + 1) :
+                                Math.min(labelHistory.length, (histPage - 1) * ROWS_PER_PAGE + 1)
                             }</strong> to <strong>{
                                 activeTab === "orders" ? Math.min(filteredOrders.length, ordPage * ROWS_PER_PAGE) :
                                 activeTab === "picking" ? Math.min(filteredPicks.length, pickPage * ROWS_PER_PAGE) :
                                 activeTab === "packing" ? Math.min(filteredPacks.length, packPage * ROWS_PER_PAGE) :
-                                Math.min(filteredDeliveries.length, dlvPage * ROWS_PER_PAGE)
+                                activeTab === "tracking" ? Math.min(filteredDeliveries.length, dlvPage * ROWS_PER_PAGE) :
+                                Math.min(labelHistory.length, histPage * ROWS_PER_PAGE)
                             }</strong> of <strong>{
                                 activeTab === "orders" ? filteredOrders.length :
                                 activeTab === "picking" ? filteredPicks.length :
                                 activeTab === "packing" ? filteredPacks.length :
-                                filteredDeliveries.length
-                            }</strong> orders
+                                activeTab === "tracking" ? filteredDeliveries.length :
+                                labelHistory.length
+                            }</strong> {activeTab === "label-history" ? "batches" : "orders"}
                         </span>
 
                         <div className="orders-pagination-controls">
@@ -961,13 +1478,15 @@ function OrdersPage() {
                                     if (activeTab === "orders") setOrdPage(p => Math.max(1, p - 1));
                                     else if (activeTab === "picking") setPickPage(p => Math.max(1, p - 1));
                                     else if (activeTab === "packing") setPackPage(p => Math.max(1, p - 1));
-                                    else setDlvPage(p => Math.max(1, p - 1));
+                                    else if (activeTab === "tracking") setDlvPage(p => Math.max(1, p - 1));
+                                    else setHistPage(p => Math.max(1, p - 1));
                                 }}
                                 disabled={
                                     activeTab === "orders" ? ordPage === 1 :
                                     activeTab === "picking" ? pickPage === 1 :
                                     activeTab === "packing" ? packPage === 1 :
-                                    dlvPage === 1
+                                    activeTab === "tracking" ? dlvPage === 1 :
+                                    histPage === 1
                                 }
                             >
                                 <ChevronLeft size={14} />
@@ -977,7 +1496,8 @@ function OrdersPage() {
                                 activeTab === "orders" ? Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
                                 activeTab === "picking" ? Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
                                 activeTab === "packing" ? Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
-                                Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE)
+                                activeTab === "tracking" ? Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
+                                Math.ceil(labelHistory.length / ROWS_PER_PAGE)
                             }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
@@ -985,14 +1505,14 @@ function OrdersPage() {
                                         (activeTab === "orders" && ordPage === page) ||
                                         (activeTab === "picking" && pickPage === page) ||
                                         (activeTab === "packing" && packPage === page) ||
-                                        (activeTab === "tracking" && dlvPage === page)
+                                        (activeTab === "tracking" && dlvPage === page) ||
+                                        (activeTab === "label-history" && histPage === page)
                                             ? "orders-page-number--active" : ""
                                     }`}
                                     onClick={() => {
                                         if (activeTab === "orders") setOrdPage(page);
                                         else if (activeTab === "picking") setPickPage(page);
-                                        else if (activeTab === "packing") setPackPage(page);
-                                        else setDlvPage(page);
+                                        else if (activeTab === "packing" ? setPackPage(page) : activeTab === "tracking" ? setDlvPage(page) : setHistPage(page));
                                     }}
                                 >
                                     {page}
@@ -1005,13 +1525,15 @@ function OrdersPage() {
                                     if (activeTab === "orders") setOrdPage(p => Math.min(Math.ceil(filteredOrders.length / ROWS_PER_PAGE), p + 1));
                                     else if (activeTab === "picking") setPickPage(p => Math.min(Math.ceil(filteredPicks.length / ROWS_PER_PAGE), p + 1));
                                     else if (activeTab === "packing") setPackPage(p => Math.min(Math.ceil(filteredPacks.length / ROWS_PER_PAGE), p + 1));
-                                    else setDlvPage(p => Math.min(Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activeTab === "tracking") setDlvPage(p => Math.min(Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE), p + 1));
+                                    else setHistPage(p => Math.min(Math.ceil(labelHistory.length / ROWS_PER_PAGE), p + 1));
                                 }}
                                 disabled={
                                     activeTab === "orders" ? ordPage === Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
                                     activeTab === "picking" ? pickPage === Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
                                     activeTab === "packing" ? packPage === Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
-                                    dlvPage === Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE)
+                                    activeTab === "tracking" ? dlvPage === Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
+                                    histPage === Math.ceil(labelHistory.length / ROWS_PER_PAGE)
                                 }
                             >
                                 <ChevronRight size={14} />
@@ -1207,6 +1729,187 @@ function OrdersPage() {
 
                     </div>
                 </div>
+            )}
+
+            {/* ─── FLOATING BULK ACTIONS TOOLBAR ─── */}
+            {selectedOrderIds.length > 0 && activeTab === "orders" && (
+                <div className="orders-bulk-toolbar fade-in-up print-btn-no-print">
+                    <div className="bulk-toolbar-info">
+                        <div className="bulk-count-badge">{selectedOrderIds.length}</div>
+                        <span className="bulk-text">Orders Selected</span>
+                    </div>
+                    <div className="bulk-toolbar-actions">
+                        <button className="bulk-action-btn primary" onClick={handleBulkGenerateLabels}>
+                            Generate Labels
+                        </button>
+                        <button className="bulk-action-btn success" onClick={handleBulkPrintLabels}>
+                            <Printer size={13} />
+                            <span>Print Labels</span>
+                        </button>
+                        <button className="bulk-action-btn info" onClick={handleBulkMarkReadyForPacking}>
+                            Mark Ready For Packing
+                        </button>
+                        <button className="bulk-action-btn cancel" onClick={() => setSelectedOrderIds([])}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── PRINT PREVIEW MODAL ─── */}
+            {isPrintPreviewOpen && (
+                <div className="orders-modal-backdrop preview-backdrop fade-in print-btn-no-print" onClick={() => setIsPrintPreviewOpen(false)}>
+                    <div className="orders-modal-container preview-container scale-up" onClick={(e) => e.stopPropagation()}>
+                        
+                        {/* Header */}
+                        <div className="orders-modal-header preview-header">
+                            <div className="orders-modal-header__icon-wrap">
+                                <Printer size={18} />
+                            </div>
+                            <div className="orders-modal-header__text-block">
+                                <h3 className="orders-modal-title">A4 Warehouse Labels Print Preview</h3>
+                                <span className="orders-modal-subtitle">
+                                    {previewLabels.length} Labels generated • HAATZA Dark Store Operations
+                                </span>
+                            </div>
+                            <div className="preview-header-controls">
+                                <select 
+                                    className="orders-toolbar-select format-select"
+                                    value={labelLayoutFormat}
+                                    onChange={(e) => setLabelLayoutFormat(e.target.value)}
+                                >
+                                    <option value="grid-1x1">A4 Sheet - 1x1 Grid (1 label)</option>
+                                    <option value="grid-1x2">A4 Sheet - 1x2 Grid (2 labels)</option>
+                                    <option value="grid-2x2">A4 Sheet - 2x2 Grid (4 labels)</option>
+                                    <option value="grid-2x4">A4 Sheet - 2x4 Grid (8 labels)</option>
+                                    <option value="grid-3x4">A4 Sheet - 3x4 Grid (12 labels)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="orders-modal-body preview-body">
+                            <p className="adjust-explainer">
+                                Review the layout below. Make sure your printer is set to <strong>A4</strong> paper, portrait orientation, with **no margins** (scale: 100%) for perfect thermal sticker alignment.
+                            </p>
+                            
+                            <div className="preview-sheet-scroll-container">
+                                <div className="preview-pages-wrapper">
+                                    {chunkArray(previewLabels, getPageSize(labelLayoutFormat)).map((pageLabels, pageIndex) => (
+                                        <div key={pageIndex} className={`a4-page-mockup ${labelLayoutFormat}`}>
+                                            {pageLabels.map((label) => (
+                                                <div key={label.id} className="quick-commerce-label">
+                                                    <div className="label-header">
+                                                        <div className="label-logo-area">
+                                                            <span className="label-logo-symbol">▲</span>
+                                                            <span className="label-logo-text">HAATZA</span>
+                                                        </div>
+                                                        <div className="label-qc-badge">QC PASSED</div>
+                                                    </div>
+                                                    <div className="label-divider"></div>
+                                                    <div className="label-product-name">{label.productName}</div>
+                                                    <div className="label-meta-grid">
+                                                        <div className="meta-cell"><span className="lbl">ORDER ID</span><span className="val bold">{label.orderId}</span></div>
+                                                        <div className="meta-cell"><span className="lbl">NET WT</span><span className="val">{label.netWeight}</span></div>
+                                                        <div className="meta-cell"><span className="lbl">BATCH ID</span><span className="val font-mono">{label.batchId}</span></div>
+                                                        <div className="meta-cell"><span className="lbl">PACKED BY</span><span className="val">{label.packedBy}</span></div>
+                                                    </div>
+                                                    <div className="label-footer-section">
+                                                        <div className="label-footer-info">
+                                                            <div className="footer-info-row"><span className="lbl">DATE:</span> <span className="val">{label.packedDate}</span></div>
+                                                            <div className="footer-info-row"><span className="lbl">HUB:</span> <span className="val font-mono">{label.warehouse}</span></div>
+                                                            <div className="footer-info-row"><span className="lbl">SKU:</span> <span className="val font-mono">{label.sku}</span></div>
+                                                        </div>
+                                                        <div 
+                                                            className="label-qr-code"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: generateQRCodeSVG(JSON.stringify({
+                                                                    brand: "HAATZA",
+                                                                    orderId: label.orderId,
+                                                                    productId: label.productId,
+                                                                    productName: label.productName,
+                                                                    warehouse: label.warehouse,
+                                                                    packedDate: label.packedDate,
+                                                                    status: label.status
+                                                                }), { size: 76, margin: 0 })
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="orders-modal-footer preview-footer">
+                            <button className="orders-modal-cancel-btn" onClick={() => setIsPrintPreviewOpen(false)}>
+                                Close
+                            </button>
+                            <button 
+                                className="orders-modal-submit-btn print-submit-btn" 
+                                onClick={triggerPrint}
+                            >
+                                <Printer size={15} />
+                                <span>Print Sheet</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {/* ─── DEDICATED PRINT CONTAINER (HIDDEN ON SCREEN, VISIBLE ON PRINT) ─── */}
+            {previewLabels.length > 0 && createPortal(
+                <div id="print-sheet">
+                    {chunkArray(previewLabels, getPageSize(labelLayoutFormat)).map((pageLabels, pageIndex) => (
+                        <div key={pageIndex} className={`a4-page-print-sheet ${labelLayoutFormat}`}>
+                            {pageLabels.map((label) => (
+                                <div key={label.id} className="quick-commerce-label printable">
+                                    <div className="label-header">
+                                        <div className="label-logo-area">
+                                            <span className="label-logo-symbol">▲</span>
+                                            <span className="label-logo-text">HAATZA</span>
+                                        </div>
+                                        <div className="label-qc-badge">QC PASSED</div>
+                                    </div>
+                                    <div className="label-divider"></div>
+                                    <div className="label-product-name">{label.productName}</div>
+                                    <div className="label-meta-grid">
+                                        <div className="meta-cell"><span className="lbl">ORDER ID</span><span className="val bold">{label.orderId}</span></div>
+                                        <div className="meta-cell"><span className="lbl">NET WT</span><span className="val">{label.netWeight}</span></div>
+                                        <div className="meta-cell"><span className="lbl">BATCH ID</span><span className="val font-mono">{label.batchId}</span></div>
+                                        <div className="meta-cell"><span className="lbl">PACKED BY</span><span className="val">{label.packedBy}</span></div>
+                                    </div>
+                                    <div className="label-footer-section">
+                                        <div className="label-footer-info">
+                                            <div className="footer-info-row"><span className="lbl">DATE:</span> <span className="val">{label.packedDate}</span></div>
+                                            <div className="footer-info-row"><span className="lbl">HUB:</span> <span className="val font-mono">{label.warehouse}</span></div>
+                                            <div className="footer-info-row"><span className="lbl">SKU:</span> <span className="val font-mono">{label.sku}</span></div>
+                                        </div>
+                                        <div 
+                                            className="label-qr-code"
+                                            dangerouslySetInnerHTML={{
+                                                __html: generateQRCodeSVG(JSON.stringify({
+                                                    brand: "HAATZA",
+                                                    orderId: label.orderId,
+                                                    productId: label.productId,
+                                                    productName: label.productName,
+                                                    warehouse: label.warehouse,
+                                                    packedDate: label.packedDate,
+                                                    status: label.status
+                                                }), { size: 76, margin: 0 })
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>,
+                document.body
             )}
         </div>
     );

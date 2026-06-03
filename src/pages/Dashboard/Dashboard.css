@@ -831,9 +831,6 @@
   color: var(--text-muted);
   border-bottom: 2px solid var(--border-color);
   background-color: var(--bg-card);
-  position: sticky;
-  top: 0;
-  z-index: 5;
 }
 
 .orders-table td {

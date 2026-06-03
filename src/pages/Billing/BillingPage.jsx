@@ -30,7 +30,10 @@ import {
     Calendar,
     RefreshCw,
     Info,
-    ExternalLink
+    ExternalLink,
+    HelpCircle,
+    MapPin,
+    Phone
 } from "lucide-react";
 import {
     AreaChart,
@@ -302,18 +305,111 @@ const invoiceStatusDistribution = [
 ];
 
 const mockRefunds = [
-    { id: "RFD-88210", customer: "Sophia Ramirez", email: "sophia.ramirez@email.com", amount: 1250, reason: "Product damaged during delivery transit", status: "Pending" },
-    { id: "RFD-88209", customer: "James Okafor", email: "james.okafor@mail.com", amount: 460, reason: "Wrong color variant delivered", status: "Approved" },
-    { id: "RFD-88208", customer: "David Park", email: "david.park@kmail.kr", amount: 2100, reason: "Order canceled by customer before dispatch", status: "Processed" },
-    { id: "RFD-88207", customer: "Elena Petrov", email: "e.petrov@euronet.eu", amount: 890, reason: "Duplicate billing transaction error", status: "Rejected" }
+    { 
+        id: "RFD-88210", 
+        customer: "Sophia Ramirez", 
+        email: "sophia.ramirez@email.com", 
+        phone: "+1 (415) 823-9201",
+        amount: 1250, 
+        reason: "Product damaged during delivery transit", 
+        shortReason: "Product Damage",
+        status: "Pending",
+        date: "02 Jun 2026",
+        avatarColor: "avatar-indigo",
+        productName: "Ergonomic Mechanical Keyboard (Black)",
+        price: 1250,
+        qty: 1,
+        image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=150&q=80",
+        supportingImages: [
+            "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=80&q=80",
+            "https://images.unsplash.com/photo-1595225476474-87563907a212?w=80&q=80"
+        ],
+        timeline: [
+            { event: "Refund request initiated by customer", date: "02 Jun 2026 11:24" },
+            { event: "Auto gate audit complete: pass", date: "02 Jun 2026 11:25" },
+            { event: "Agent Rajesh K. assigned to case", date: "02 Jun 2026 13:40" }
+        ],
+        address: "450 Mission St, San Francisco, CA 94105"
+    },
+    { 
+        id: "RFD-88209", 
+        customer: "James Okafor", 
+        email: "james.okafor@mail.com", 
+        phone: "+1 (212) 554-7734",
+        amount: 460, 
+        reason: "Wrong color variant delivered", 
+        shortReason: "Wrong Variant",
+        status: "Approved",
+        date: "01 Jun 2026",
+        avatarColor: "avatar-teal",
+        productName: "Wireless Office Mouse",
+        price: 230,
+        qty: 2,
+        image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=150&q=80",
+        supportingImages: [
+            "https://images.unsplash.com/photo-1625805510665-de0f63b27b3d?w=80&q=80"
+        ],
+        timeline: [
+            { event: "Refund Link Generated", date: "01 Jun 2026 09:12" },
+            { event: "Visual evidence reviewed & approved", date: "01 Jun 2026 14:30" }
+        ],
+        address: "72 Grand St, New York, NY 10013"
+    },
+    { 
+        id: "RFD-88208", 
+        customer: "David Park", 
+        email: "david.park@kmail.kr", 
+        phone: "+82 10-4455-7812",
+        amount: 2100, 
+        reason: "Order canceled by customer before dispatch", 
+        shortReason: "Order Cancellation",
+        status: "Processed",
+        date: "30 May 2026",
+        avatarColor: "avatar-orange",
+        productName: "Premium USB-C Docking Station",
+        price: 2100,
+        qty: 1,
+        image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=150&q=80",
+        supportingImages: [],
+        timeline: [
+            { event: "Cancellation triggered in dashboard", date: "30 May 2026 18:02" },
+            { event: "Bank ledger transaction reversed", date: "31 May 2026 10:15" }
+        ],
+        address: "12 Garosu-gil, Gangnam-gu, Seoul, Korea"
+    },
+    { 
+        id: "RFD-88207", 
+        customer: "Elena Petrov", 
+        email: "e.petrov@euronet.eu", 
+        phone: "+44 7911 123456",
+        amount: 890, 
+        reason: "Duplicate billing transaction error", 
+        shortReason: "Duplicate Billing",
+        status: "Rejected",
+        date: "29 May 2026",
+        avatarColor: "avatar-rose",
+        productName: "Wired USB Type-C Earphones",
+        price: 890,
+        qty: 1,
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&q=80",
+        supportingImages: [],
+        timeline: [
+            { event: "Duplicate checkout reported", date: "29 May 2026 08:30" },
+            { event: "Rejected: Verified single capture settlement", date: "29 May 2026 16:45" }
+        ],
+        address: "24 Park Ln, London W1K 1PR, UK"
+    }
 ];
 
 function statusClass(status) {
     switch (status) {
-        case "Paid":      return "status-pill status-paid";
+        case "Paid":
+        case "Approved":  return "status-pill status-paid";
         case "Pending":   return "status-pill status-pending";
-        case "Failed":    return "status-pill status-failed";
-        case "Refunded":  return "status-pill status-refunded";
+        case "Failed":
+        case "Rejected":  return "status-pill status-failed";
+        case "Refunded":
+        case "Processed": return "status-pill status-refunded";
         default:          return "status-pill";
     }
 }
@@ -336,7 +432,68 @@ function methodIcon(method) {
     }
 }
 
+function methodBadge(method) {
+    let emoji = "💳";
+    let bg = "#F1F5F9";
+    let color = "#334155";
+    switch (method) {
+        case "Card":
+            emoji = "💳";
+            bg = "#EEF2FF";
+            color = "#4F46E5";
+            break;
+        case "Bank":
+            emoji = "🏦";
+            bg = "#F0FDF4";
+            color = "#16A34A";
+            break;
+        case "UPI":
+            emoji = "📱";
+            bg = "#ECFDF5";
+            color = "#059669";
+            break;
+        case "COD":
+            emoji = "💰";
+            bg = "#FEF3C7";
+            color = "#D97706";
+            break;
+        case "Wallet":
+            emoji = "👛";
+            bg = "#FDF2F8";
+            color = "#DB2777";
+            break;
+        default:
+            emoji = "💳";
+            bg = "#F1F5F9";
+            color = "#334155";
+    }
+    return (
+        <span className="billing-method-badge" style={{ backgroundColor: bg, color: color }}>
+            <span style={{ marginRight: "4px" }}>{emoji}</span> {method}
+        </span>
+    );
+}
+
+
 function BillingPage() {
+    const [chartHeight, setChartHeight] = useState(320);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const width = window.innerWidth;
+            if (width < 768) {
+                setChartHeight(220); // Mobile: 220px
+            } else if (width >= 768 && width < 1024) {
+                setChartHeight(280); // Tablet: 280px
+            } else {
+                setChartHeight(320); // Desktop: 320px
+            }
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     const [invoicesList, setInvoicesList] = useState(INITIAL_INVOICES);
     const [selectedInvoices, setSelectedInvoices] = useState([]);
     
@@ -354,11 +511,21 @@ function BillingPage() {
 
     // Drawer States
     const [selectedInvoiceForDrawer, setSelectedInvoiceForDrawer] = useState(null);
+    const [selectedRefundForDrawer, setSelectedRefundForDrawer] = useState(null);
+    const [refundNotes, setRefundNotes] = useState({
+        "RFD-88210": "Packaging damage verified by carrier transit logs."
+    });
 
     // Active tab in Refunds Management
     const [activeRefundTab, setActiveRefundTab] = useState("Pending");
     const [refundsList, setRefundsList] = useState(mockRefunds);
     const [activeDropdownId, setActiveDropdownId] = useState(null);
+    const [refundSearch, setRefundSearch] = useState("");
+    const [refundActiveDropdownId, setRefundActiveDropdownId] = useState(null);
+    const [billingChatHistory, setBillingChatHistory] = useState([
+        { sender: "ai", text: "Welcome to Haatza AI Finance Assistant. Ask me about billing trends, GST sync, refund spikes, or gateway timeouts." }
+    ]);
+    const [billingChatInput, setBillingChatInput] = useState("");
 
     // Refresh animation simulation
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -471,14 +638,50 @@ function BillingPage() {
 
     // Active Refund records based on active refund tab selection
     const displayedRefunds = useMemo(() => {
-        return refundsList.filter(r => r.status === activeRefundTab);
-    }, [refundsList, activeRefundTab]);
+        return refundsList.filter(r => {
+            const matchesTab = r.status === activeRefundTab;
+            const matchesSearch = 
+                r.id.toLowerCase().includes(refundSearch.toLowerCase()) ||
+                r.customer.toLowerCase().includes(refundSearch.toLowerCase()) ||
+                r.email.toLowerCase().includes(refundSearch.toLowerCase()) ||
+                r.reason.toLowerCase().includes(refundSearch.toLowerCase());
+            return matchesTab && matchesSearch;
+        });
+    }, [refundsList, activeRefundTab, refundSearch]);
 
     const handleRefundAction = (id, statusChange) => {
         setRefundsList(prev => 
             prev.map(r => r.id === id ? { ...r, status: statusChange } : r)
         );
         alert(`Refund record ${id} status updated to ${statusChange}!`);
+    };
+
+    const handleBillingChatSubmit = (e) => {
+        if (e) e.preventDefault();
+        if (!billingChatInput.trim()) return;
+
+        const userMsg = billingChatInput.trim();
+        const updatedHistory = [...billingChatHistory, { sender: "user", text: userMsg }];
+        setBillingChatHistory(updatedHistory);
+        setBillingChatInput("");
+
+        // Simulated AI NLP delay
+        setTimeout(() => {
+            const query = userMsg.toLowerCase();
+            let aiText = "I have analyzed your query. To help you better, ask me about 'refund spikes', 'payment success rates', 'GST filing integration', or 'card gateway failures'.";
+
+            if (query.includes("refund") || query.includes("spike") || query.includes("dispute")) {
+                aiText = "Haatza AI Finance Radar: I have identified a refund request spike (+8.2%) primarily centered in the Koramangala Hub related to mechanical keyboards. All other hubs remain well within the healthy 1.5% threshold. I recommend optimizing the packing material and audit logs.";
+            } else if (query.includes("gst") || query.includes("tax") || query.includes("filing")) {
+                aiText = "Haatza AI Tax Desk: Your GST filing synchronization is fully operational. Ledger reconciliation for Q1/Q2 has achieved 100% accuracy across UPI and Card gateways. You can click 'Export GST' to download the reconciled tax statement.";
+            } else if (query.includes("fail") || query.includes("success") || query.includes("timeout") || query.includes("stripe")) {
+                aiText = "Haatza AI Gateway Intelligence: Payment Success Rate is currently at 98.6% (Optimal). However, Stripe Card gateway timeout failures rose slightly to 1.8% over the last 24 hours. COD and UPI gateways are performing at 99.9% uptime.";
+            } else if (query.includes("revenue") || query.includes("sales") || query.includes("volume")) {
+                aiText = "Haatza AI Performance Summary: Gross revenue is up 14.2% MoM. Digital invoices represent ₹93,200 of processed settlements. UPI continues to dominate with a 54% transaction volume share, leading to zero-chargeback clearances.";
+            }
+
+            setBillingChatHistory(prev => [...prev, { sender: "ai", text: aiText }]);
+        }, 500);
     };
 
     const formatCurrency = (val) => {
@@ -563,7 +766,38 @@ function BillingPage() {
 
     // Trigger generic AI insights analyse
     const triggerAiAnalysis = () => {
-        alert("Google Gemini is executing a deep operational SWOT analysis of your billing gateways & ledger trends...");
+        alert("Haatza AI Engine has completed a deep operational audit of your billing gateways: Digital invoicing success rate is at 98.6%, UPI volume represents 54% of transaction share, and invoice settlements are processed under 1.2s. Q1/Q2 Ledger reconciled successfully!");
+    };
+
+    const formatLegendText = (value, entry) => {
+        const percentVal = entry.payload?.value;
+        return (
+            <span style={{ color: "var(--text-main)", fontWeight: "600", marginLeft: "6px", fontSize: "12px" }}>
+                {value} <span style={{ color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>{percentVal}%</span>
+            </span>
+        );
+    };
+
+    const CustomChartTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div style={{
+                    backgroundColor: "#0f172a",
+                    color: "#ffffff",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                }}>
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: data.color || payload[0].color, marginRight: "8px" }}></span>
+                    {data.name}: <span style={{ color: "#38bdf8", marginLeft: "4px" }}>{data.value}%</span>
+                </div>
+            );
+        }
+        return null;
     };
 
     return (
@@ -616,20 +850,21 @@ function BillingPage() {
                 ))}
             </div>
 
-            {/* 2. GEMINI AI BILLING INSIGHTS SECTION */}
-            <div className="dashboard-card billing-ai-insights-card">
-                <div className="card-header">
+            {/* 2. HAATZA AI BILLING INSIGHTS SECTION */}
+            <div className="billing-ai-command-center dashboard-card">
+                {/* Command Center Title Header */}
+                <div className="command-center-header">
                     <div className="card-title-block">
                         <div className="ai-title-wrap">
-                            <Sparkles size={16} className="ai-sparkles-icon" />
-                            <h2>Gemini AI Billing Insights</h2>
+                            <Sparkles size={20} className="ai-sparkles-icon" />
+                            <h2>Haatza AI Finance Assistant</h2>
                         </div>
-                        <p>Google Gemini automated audit of gateways, chargeback risks, and invoice distributions</p>
+                        <p>AI powered monitoring of billing, payments, refunds and gateway health.</p>
                     </div>
                     <div className="ai-action-btn-group">
                         <button className="ai-analyse-btn" onClick={triggerAiAnalysis}>
                             <Sparkles size={14} />
-                            <span>Analyse Payments</span>
+                            <span>Analyse Finance</span>
                         </button>
                         <button className="ai-btn-outline" onClick={() => alert("Generating full executive financial report PDF...")}>
                             <FileText size={13} />
@@ -642,37 +877,300 @@ function BillingPage() {
                     </div>
                 </div>
 
-                <div className="billing-insights-grid">
-                    <div className="billing-insight-card border-success">
-                        <div className="insight-card-header">
-                            <span className="ins-badge badge-success">Revenue Spike</span>
-                            <TrendingUp size={14} className="ins-icon text-success" />
+                {/* SECTION 1: Finance Health Cards */}
+                <div className="ai-finance-health-grid">
+                    {/* Revenue Health */}
+                    <div className="ai-health-card">
+                        <div className="h-card-top">
+                            <span className="h-card-lbl">Revenue Health</span>
+                            <span className="h-card-status healthy">Healthy</span>
                         </div>
-                        <p className="insight-text">Revenue increased by **14.2% MoM** this week, driven by bulk wholesale orders in corporate zones.</p>
+                        <div className="h-card-mid">
+                            <span className="h-card-score">₹93.2k</span>
+                            <span className="h-card-trend trend-up">
+                                <TrendingUp size={11} /> +14.2% MoM
+                            </span>
+                        </div>
+                        <div className="h-card-sparkline">
+                            <ResponsiveContainer width="100%" height={24}>
+                                <AreaChart data={[{val: 1200}, {val: 1900}, {val: 800}, {val: 1500}, {val: 3200}, {val: 2100}]}>
+                                    <Area type="monotone" dataKey="val" stroke="#10B981" strokeWidth={1.5} fillOpacity={0.05} fill="#10B981" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    <div className="billing-insight-card border-warning">
-                        <div className="insight-card-header">
-                            <span className="ins-badge badge-warning">Refund Alert</span>
-                            <RotateCcw size={14} className="ins-icon text-warning" />
+                    {/* Payment Success Rate */}
+                    <div className="ai-health-card">
+                        <div className="h-card-top">
+                            <span className="h-card-lbl">Payment Success</span>
+                            <span className="h-card-status optimal">Optimal</span>
                         </div>
-                        <p className="insight-text">Refunds spike in Koramangala Hub detected (**+8.2% vs last month**). Investigate product freshness logs.</p>
+                        <div className="h-card-mid">
+                            <span className="h-card-score">98.6%</span>
+                            <span className="h-card-trend trend-up">
+                                <TrendingUp size={11} /> +0.2% MoM
+                            </span>
+                        </div>
+                        <div className="h-card-sparkline">
+                            <ResponsiveContainer width="100%" height={24}>
+                                <AreaChart data={[{val: 97.2}, {val: 97.8}, {val: 98.1}, {val: 98.4}, {val: 98.6}, {val: 98.6}]}>
+                                    <Area type="monotone" dataKey="val" stroke="#2563EB" strokeWidth={1.5} fillOpacity={0.05} fill="#2563EB" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    <div className="billing-insight-card border-blue">
-                        <div className="insight-card-header">
-                            <span className="ins-badge badge-blue">UPI Volume Leader</span>
-                            <CreditCard size={14} className="ins-icon text-blue" />
+                    {/* Refund Risk */}
+                    <div className="ai-health-card">
+                        <div className="h-card-top">
+                            <span className="h-card-lbl">Refund Risk</span>
+                            <span className="h-card-status alert">Alert</span>
                         </div>
-                        <p className="insight-text">UPI payments represent **54% of total ledger transactions**. Payment settlement time is 1.2s.</p>
+                        <div className="h-card-mid">
+                            <span className="h-card-score">2.4%</span>
+                            <span className="h-card-trend trend-down">
+                                <TrendingUp size={11} /> +8% MoM
+                            </span>
+                        </div>
+                        <div className="h-card-sparkline">
+                            <ResponsiveContainer width="100%" height={24}>
+                                <AreaChart data={[{val: 1.5}, {val: 1.8}, {val: 1.4}, {val: 2.1}, {val: 2.3}, {val: 2.4}]}>
+                                    <Area type="monotone" dataKey="val" stroke="#EF4444" strokeWidth={1.5} fillOpacity={0.05} fill="#EF4444" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
-                    <div className="billing-insight-card border-danger">
-                        <div className="insight-card-header">
-                            <span className="ins-badge badge-danger">Gateway Warning</span>
-                            <ShieldAlert size={14} className="ins-icon text-danger" />
+                    {/* Gateway Uptime */}
+                    <div className="ai-health-card">
+                        <div className="h-card-top">
+                            <span className="h-card-lbl">Gateway Health</span>
+                            <span className="h-card-status healthy">Stable</span>
                         </div>
-                        <p className="insight-text">Failed transactions rose to **1.8% in Card payments** due to Stripe gateway bank timeout drops.</p>
+                        <div className="h-card-mid">
+                            <span className="h-card-score">99.9%</span>
+                            <span className="h-card-trend stable">Stable</span>
+                        </div>
+                        <div className="h-card-sparkline">
+                            <ResponsiveContainer width="100%" height={24}>
+                                <AreaChart data={[{val: 99.9}, {val: 99.8}, {val: 99.9}, {val: 99.9}, {val: 99.9}, {val: 99.9}]}>
+                                    <Area type="monotone" dataKey="val" stroke="#6366F1" strokeWidth={1.5} fillOpacity={0.05} fill="#6366F1" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Middle Grid containing SECTION 2 (Summary) and SECTION 3 (Actions) */}
+                <div className="ai-middle-analytics-grid">
+                    {/* SECTION 2: AI Executive Summary */}
+                    <div className="ai-executive-summary-panel">
+                        <div className="panel-title-block-light">
+                            <Activity size={15} className="text-primary" />
+                            <h3>AI Executive Summary</h3>
+                        </div>
+                        <div className="ai-summary-bullets">
+                            <div className="ai-summary-bullet-item">
+                                <span className="bullet-pulse-green"></span>
+                                <span className="bullet-desc"><strong>Revenue Health</strong>: Monthly gross billing volume increased by <strong>14.2% MoM</strong>, driven by corporate checkout volumes.</span>
+                            </div>
+                            <div className="ai-summary-bullet-item">
+                                <span className="bullet-pulse-blue"></span>
+                                <span className="bullet-desc"><strong>Transaction Share</strong>: UPI continues to dominate your gateway settlements contributing <strong>54% of payments</strong>, followed by Cards at 28%.</span>
+                            </div>
+                            <div className="ai-summary-bullet-item">
+                                <span className="bullet-pulse-red"></span>
+                                <span className="bullet-desc"><strong>Dispute Center Warning</strong>: Refund requests increased by <strong>8% MoM</strong>, with Koramangala packages logging keyboard shipping damages.</span>
+                            </div>
+                            <div className="ai-summary-bullet-item">
+                                <span className="bullet-pulse-orange"></span>
+                                <span className="bullet-desc"><strong>Gateway Monitoring</strong>: Stripe Card credit card authentication drops are placing failures slightly <strong>above the normal threshold (1.8%)</strong>.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECTION 3: Recommended Actions */}
+                    <div className="ai-recommended-actions-panel">
+                        <div className="panel-title-block-light">
+                            <Settings size={15} className="text-primary" />
+                            <h3>Recommended Actions</h3>
+                        </div>
+                        <div className="ai-action-cards-list">
+                            {/* Action 1 */}
+                            <div className="ai-action-card">
+                                <div className="act-card-icon-circle bg-red-light">
+                                    <RotateCcw size={14} className="text-danger" />
+                                </div>
+                                <div className="act-card-text">
+                                    <h4>Investigate refund spike</h4>
+                                    <p>Freshness audits and box damage checks for Koramangala Hub keyboard deliveries.</p>
+                                </div>
+                                <button className="act-card-btn" onClick={() => alert("Opening Refund Dispute audits inside drawer...")}>Investigate</button>
+                            </div>
+
+                            {/* Action 2 */}
+                            <div className="ai-action-card">
+                                <div className="act-card-icon-circle bg-blue-light">
+                                    <Activity size={14} className="text-primary" />
+                                </div>
+                                <div className="act-card-text">
+                                    <h4>Review failed payment routes</h4>
+                                    <p>Stripe timeout warning is rising. Toggle back up to secondary Razorpay routes.</p>
+                                </div>
+                                <button className="act-card-btn" onClick={() => alert("Re-routing secondary payment gateways...")}>Review</button>
+                            </div>
+
+                            {/* Action 3 */}
+                            <div className="ai-action-card">
+                                <div className="act-card-icon-circle bg-green-light">
+                                    <Layers size={14} className="text-success" />
+                                </div>
+                                <div className="act-card-text">
+                                    <h4>Optimize COD zones</h4>
+                                    <p>Limit high return-rate COD areas to UPI payment pre-requisites.</p>
+                                </div>
+                                <button className="act-card-btn" onClick={() => alert("Applying COD checkout limits...")}>Optimize</button>
+                            </div>
+
+                            {/* Action 4 */}
+                            <div className="ai-action-card">
+                                <div className="act-card-icon-circle bg-indigo-light">
+                                    <FileSpreadsheet size={14} className="text-indigo" />
+                                </div>
+                                <div className="act-card-text">
+                                    <h4>Generate audit report</h4>
+                                    <p>Compile a dynamic, ledger-reconciled tax breakdown statement for Q1/Q2.</p>
+                                </div>
+                                <button className="act-card-btn" onClick={() => alert("Generating audit logs...")}>Generate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SECTION 4: Gateway Intelligence Comparison */}
+                <div className="ai-gateway-intelligence-panel">
+                    <div className="panel-title-block-light">
+                        <Layers size={15} className="text-primary" />
+                        <h3>Gateway Intelligence Index</h3>
+                    </div>
+                    <div className="gateway-comparison-table-wrapper">
+                        <table className="gateway-comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Gateway Method</th>
+                                    <th>Volume Share</th>
+                                    <th>Net Revenue</th>
+                                    <th>Success Rate</th>
+                                    <th>Refund Rate</th>
+                                    <th style={{ width: "120px" }}>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className="font-bold">📱 UPI</td>
+                                    <td>54%</td>
+                                    <td className="font-bold">₹78,420</td>
+                                    <td className="text-success font-bold">99.9%</td>
+                                    <td>0.8%</td>
+                                    <td>
+                                        <div style={{ width: "80px" }}>
+                                            <ResponsiveContainer width="100%" height={16}>
+                                                <AreaChart data={[{val: 50}, {val: 52}, {val: 53}, {val: 54}]}>
+                                                    <Area type="monotone" dataKey="val" stroke="#16a34a" strokeWidth={1} fillOpacity={0} dot={false} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="font-bold">💳 Cards</td>
+                                    <td>28%</td>
+                                    <td className="font-bold">₹41,200</td>
+                                    <td className="text-warning font-bold">98.2%</td>
+                                    <td>1.2%</td>
+                                    <td>
+                                        <div style={{ width: "80px" }}>
+                                            <ResponsiveContainer width="100%" height={16}>
+                                                <AreaChart data={[{val: 30}, {val: 29}, {val: 28}, {val: 28}]}>
+                                                    <Area type="monotone" dataKey="val" stroke="#d97706" strokeWidth={1} fillOpacity={0} dot={false} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="font-bold">💼 Wallets</td>
+                                    <td>12%</td>
+                                    <td className="font-bold">₹18,540</td>
+                                    <td className="text-success font-bold">99.5%</td>
+                                    <td>2.1%</td>
+                                    <td>
+                                        <div style={{ width: "80px" }}>
+                                            <ResponsiveContainer width="100%" height={16}>
+                                                <AreaChart data={[{val: 10}, {val: 11}, {val: 11}, {val: 12}]}>
+                                                    <Area type="monotone" dataKey="val" stroke="#2563eb" strokeWidth={1} fillOpacity={0} dot={false} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td className="font-bold">💵 Cash on Delivery (COD)</td>
+                                    <td>6%</td>
+                                    <td className="font-bold">₹9,840</td>
+                                    <td className="text-success font-bold">99.9%</td>
+                                    <td>5.4%</td>
+                                    <td>
+                                        <div style={{ width: "80px" }}>
+                                            <ResponsiveContainer width="100%" height={16}>
+                                                <AreaChart data={[{val: 8}, {val: 7}, {val: 6}, {val: 6}]}>
+                                                    <Area type="monotone" dataKey="val" stroke="#ef4444" strokeWidth={1} fillOpacity={0} dot={false} />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* SECTION 5: AI Chat Assistant */}
+                <div className="ai-chat-assistant-panel">
+                    <div className="panel-title-block-light">
+                        <HelpCircle size={15} className="text-primary" />
+                        <h3>AI Chat Assistant</h3>
+                    </div>
+                    <p className="chat-subtitle">Ask about billing trends, GST reports, refund spikes, payment failures, or gateway performance.</p>
+
+                    <div className="chat-box-area">
+                        <div className="chat-messages-container">
+                            {billingChatHistory.map((chat, idx) => (
+                                <div key={idx} className={`chat-msg-bubble ${chat.sender}`}>
+                                    <div className="msg-avatar-icon">
+                                        {chat.sender === "ai" ? <Sparkles size={11} /> : "U"}
+                                    </div>
+                                    <div className="msg-text-content">
+                                        {chat.text}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <form className="chat-input-wrapper-dock" onSubmit={handleBillingChatSubmit}>
+                            <input
+                                type="text"
+                                className="chat-dock-input"
+                                placeholder="Ask AI about billing trends, success rates, or refund spikes..."
+                                value={billingChatInput}
+                                onChange={(e) => setBillingChatInput(e.target.value)}
+                            />
+                            <button type="submit" className="chat-dock-send-btn">
+                                <Send size={12} />
+                                <span>Ask AI</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -731,21 +1229,31 @@ function BillingPage() {
                                 <span className="chart-item-sub">Transaction volume share (%)</span>
                             </div>
                             <div className="chart-wrapper flex-center-chart">
-                                <ResponsiveContainer width="100%" height={200}>
+                                <ResponsiveContainer width="100%" height={chartHeight}>
                                     <PieChart>
                                         <Pie
                                             data={paymentMethodBreakdown}
-                                            innerRadius={60}
-                                            outerRadius={80}
-                                            paddingAngle={4}
+                                            innerRadius="55%"
+                                            outerRadius="80%"
+                                            paddingAngle={3}
                                             dataKey="value"
+                                            isAnimationActive={true}
+                                            animationDuration={800}
+                                            animationEasing="ease-out"
                                         >
                                             {paymentMethodBreakdown.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
-                                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+                                        <Tooltip content={<CustomChartTooltip />} />
+                                        <Legend 
+                                            verticalAlign="bottom" 
+                                            align="center" 
+                                            iconType="circle" 
+                                            iconSize={8} 
+                                            formatter={formatLegendText}
+                                            wrapperStyle={{ paddingTop: "20px" }}
+                                        />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -777,19 +1285,29 @@ function BillingPage() {
                                 <span className="chart-item-sub">Settlement states ratio (%)</span>
                             </div>
                             <div className="chart-wrapper flex-center-chart">
-                                <ResponsiveContainer width="100%" height={200}>
+                                <ResponsiveContainer width="100%" height={chartHeight}>
                                     <PieChart>
                                         <Pie
                                             data={invoiceStatusDistribution}
-                                            outerRadius={75}
+                                            outerRadius="80%"
                                             dataKey="value"
+                                            isAnimationActive={true}
+                                            animationDuration={800}
+                                            animationEasing="ease-out"
                                         >
                                             {invoiceStatusDistribution.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
-                                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+                                        <Tooltip content={<CustomChartTooltip />} />
+                                        <Legend 
+                                            verticalAlign="bottom" 
+                                            align="center" 
+                                            iconType="circle" 
+                                            iconSize={8} 
+                                            formatter={formatLegendText}
+                                            wrapperStyle={{ paddingTop: "20px" }}
+                                        />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -863,6 +1381,30 @@ function BillingPage() {
                     </div>
                 </div>
 
+                {/* FINANCE SUMMARY BAR */}
+                <div className="finance-summary-bar">
+                    <div className="fin-summary-chip">
+                        <span className="fin-chip-lbl">Invoices:</span>
+                        <span className="fin-chip-val">245</span>
+                    </div>
+                    <div className="fin-summary-chip fin-chip-paid">
+                        <span className="fin-chip-lbl">Paid:</span>
+                        <span className="fin-chip-val">₹1,58,400</span>
+                    </div>
+                    <div className="fin-summary-chip fin-chip-pending">
+                        <span className="fin-chip-lbl">Pending:</span>
+                        <span className="fin-chip-val">₹12,450</span>
+                    </div>
+                    <div className="fin-summary-chip fin-chip-refunded">
+                        <span className="fin-chip-lbl">Refunded:</span>
+                        <span className="fin-chip-val">₹3,200</span>
+                    </div>
+                    <div className="fin-summary-chip fin-chip-failed">
+                        <span className="fin-chip-lbl">Failed:</span>
+                        <span className="fin-chip-val">₹2,100</span>
+                    </div>
+                </div>
+
                 {/* FLOATING BULK DESK */}
                 {selectedInvoices.length > 0 && (
                     <div className="floating-bulk-actions-desk fade-in-up">
@@ -897,7 +1439,7 @@ function BillingPage() {
                     <table className="billing-table">
                         <thead>
                             <tr>
-                                <th style={{ width: "40px" }} className="align-center-cell">
+                                <th style={{ width: "4%" }} className="align-center-cell">
                                     <input 
                                         type="checkbox"
                                         className="cust-checkbox"
@@ -906,32 +1448,65 @@ function BillingPage() {
                                         aria-label="Select all invoices on page"
                                     />
                                 </th>
-                                <th>Invoice ID</th>
-                                <th>Customer</th>
-                                <th>Billing Date</th>
-                                <th>Total Amount</th>
-                                <th>Payment Method</th>
-                                <th>Status</th>
-                                <th className="align-center-header">Download</th>
-                                <th className="align-center-header">Actions</th>
+                                <th style={{ width: "14%" }}>Invoice ID</th>
+                                <th style={{ width: "24%" }}>Customer</th>
+                                <th style={{ width: "14%" }}>Billing Date</th>
+                                <th style={{ width: "14%" }}>Total Amount</th>
+                                <th style={{ width: "14%" }}>Payment Method</th>
+                                <th style={{ width: "120px" }} className="align-center-header">Status</th>
+                                <th style={{ width: "60px" }} className="align-center-header col-download">Download</th>
+                                <th style={{ width: "60px" }} className="align-center-header col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {displayedInvoices.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="billing-empty-row no-records-cell">
-                                        <Info size={16} />
-                                        <span>No matching invoices found.</span>
+                                    <td colSpan={9} className="billing-empty-row-premium">
+                                        <div className="billing-empty-state-container">
+                                            <div className="billing-empty-illustration">
+                                                <FileSpreadsheet size={32} className="empty-state-icon" />
+                                            </div>
+                                            <h3>No invoices found</h3>
+                                            <p>Your search or filters did not yield any invoice entries.</p>
+                                            <button 
+                                                className="billing-create-invoice-btn"
+                                                onClick={() => {
+                                                    const newId = `#INV-00${invoicesList.length + 415}`;
+                                                    const newInv = {
+                                                        id: newId,
+                                                        customer: "Priya Sharma",
+                                                        email: "priya.sharma@gmail.com",
+                                                        phone: "+91 98452 90123",
+                                                        date: "28 May 2026",
+                                                        amount: 18400,
+                                                        method: "Card",
+                                                        status: "Paid",
+                                                        txnId: "TXN8283921045",
+                                                        billingAddress: "Flat 402, Prestige Shantiniketan, Whitefield, Bangalore",
+                                                        items: [{ name: "Quick Reconciled Invoice", qty: 1, price: 18400 }],
+                                                        subtotal: 15593,
+                                                        gst: 2807,
+                                                        deliveryFee: 0,
+                                                        paymentHistory: [{ event: "Invoice Created", time: "28 May 2026" }],
+                                                        refundReason: ""
+                                                    };
+                                                    setInvoicesList(prev => [newInv, ...prev]);
+                                                    alert("New mock invoice created and added successfully!");
+                                                }}
+                                            >
+                                                Create Invoice
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
-                                displayedInvoices.map((inv) => (
+                                displayedInvoices.map((inv, index) => (
                                     <tr 
                                         key={inv.id} 
                                         className={`interactive-table-row ${selectedInvoices.includes(inv.id) ? "row-checked" : ""}`}
                                         onClick={() => handleOpenDrawer(inv)}
                                     >
-                                        <td className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td data-label="Select" className="align-center-cell" onClick={(e) => e.stopPropagation()}>
                                             <input 
                                                 type="checkbox"
                                                 className="cust-checkbox"
@@ -940,39 +1515,38 @@ function BillingPage() {
                                                 aria-label={`Select ${inv.id}`}
                                             />
                                         </td>
-                                        <td className="billing-inv-id">{inv.id}</td>
-                                        <td>
+                                        <td data-label="Invoice ID" className="col-inv-id">
+                                            <span className="billing-inv-id">{inv.id}</span>
+                                        </td>
+                                        <td data-label="Customer">
                                             <div className="billing-customer-cell">
                                                 <div className="billing-avatar">
                                                     {getInitials(inv.customer)}
                                                 </div>
                                                 <div className="billing-customer-info">
-                                                    <span className="billing-customer-name">{inv.customer}</span>
-                                                    <span className="billing-customer-email">{inv.email}</span>
+                                                    <span className="billing-customer-name" title={inv.customer}>{inv.customer}</span>
+                                                    <span className="billing-customer-email" title={inv.email}>{inv.email}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="billing-date">{inv.date}</td>
-                                        <td className="billing-amount">{formatCurrency(inv.amount)}</td>
-                                        <td>
-                                            <div className="billing-method-cell">
-                                                {methodIcon(inv.method)}
-                                                <span className="billing-method-label">{inv.method}</span>
-                                            </div>
+                                        <td data-label="Billing Date" className="billing-date">{inv.date}</td>
+                                        <td data-label="Total Amount" className="billing-amount">{formatCurrency(inv.amount)}</td>
+                                        <td data-label="Payment Method">
+                                            {methodBadge(inv.method)}
                                         </td>
-                                        <td>
+                                        <td data-label="Status" className="align-center-cell col-status">
                                             <span className={statusClass(inv.status)}>{inv.status}</span>
                                         </td>
-                                        <td className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td data-label="Download" className="align-center-cell col-download" onClick={(e) => e.stopPropagation()}>
                                             <button 
-                                                className="billing-download-btn" 
+                                                className="billing-download-btn-icon-only" 
                                                 onClick={() => alert(`Downloading PDF Invoice for ${inv.id}...`)}
-                                                aria-label={`Download PDF invoice ${inv.id}`}
+                                                title="Download Invoice"
                                             >
                                                 <Download size={14} />
                                             </button>
                                         </td>
-                                        <td style={{ position: "relative" }} className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td data-label="Actions" style={{ position: "relative" }} className="align-center-cell col-actions" onClick={(e) => e.stopPropagation()}>
                                             <button 
                                                 className="billing-action-btn" 
                                                 onClick={(e) => toggleDropdown(inv.id, e)}
@@ -980,11 +1554,14 @@ function BillingPage() {
                                             >
                                                 <MoreVertical size={14} />
                                             </button>
-
+ 
                                             {activeDropdownId === inv.id && (
                                                 <>
                                                     <div className="global-dropdown-overlay" onClick={() => setActiveDropdownId(null)} />
-                                                    <div className="global-action-dropdown">
+                                                    <div 
+                                                        className="global-action-dropdown"
+                                                        style={index >= displayedInvoices.length - 2 && displayedInvoices.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                    >
                                                         <button 
                                                             className="global-dropdown-item"
                                                             onClick={() => {
@@ -993,22 +1570,48 @@ function BillingPage() {
                                                             }}
                                                         >
                                                             <Layers size={13} />
-                                                            <span>Preview Drawer</span>
+                                                            <span>View Invoice</span>
                                                         </button>
                                                         <button 
                                                             className="global-dropdown-item"
-                                                            onClick={(e) => handleChangeStatus(inv.id, inv.status === "Paid" ? "Pending" : "Paid", e)}
+                                                            onClick={() => {
+                                                                alert(`Downloading PDF Invoice for ${inv.id}...`);
+                                                                setActiveDropdownId(null);
+                                                            }}
                                                         >
-                                                            <CheckCircle2 size={13} />
-                                                            <span>Toggle Status</span>
+                                                            <Download size={13} />
+                                                            <span>Download PDF</span>
+                                                        </button>
+                                                        <button 
+                                                            className="global-dropdown-item"
+                                                            onClick={() => {
+                                                                alert(`Invoice sent successfully to ${inv.email}!`);
+                                                                setActiveDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <Send size={13} />
+                                                            <span>Send Invoice</span>
+                                                        </button>
+                                                        <button 
+                                                            className="global-dropdown-item"
+                                                            onClick={(e) => {
+                                                                handleChangeStatus(inv.id, "Refunded", e);
+                                                                setActiveDropdownId(null);
+                                                            }}
+                                                        >
+                                                            <RotateCcw size={13} />
+                                                            <span>Refund Payment</span>
                                                         </button>
                                                         <div className="global-dropdown-divider"></div>
                                                         <button 
                                                             className="global-dropdown-item global-dropdown-item-danger"
-                                                            onClick={(e) => handleRemoveInvoice(inv.id, e)}
+                                                            onClick={(e) => {
+                                                                handleRemoveInvoice(inv.id, e);
+                                                                setActiveDropdownId(null);
+                                                            }}
                                                         >
                                                             <Trash2 size={13} />
-                                                            <span>Delete Ledger</span>
+                                                            <span>Delete Invoice</span>
                                                         </button>
                                                     </div>
                                                 </>
@@ -1193,6 +1796,167 @@ function BillingPage() {
                 </div>
             )}
 
+            {/* 5b. REFUND DETAIL SLIDING DESK DRAWER */}
+            {selectedRefundForDrawer && (
+                <div className="cust-drawer-overlay-backdrop" onClick={() => setSelectedRefundForDrawer(null)}>
+                    <div className="cust-drawer-panel" onClick={(e) => e.stopPropagation()}>
+                        <div className="drawer-header-row">
+                            <div className="drawer-title-block">
+                                <span className="drawer-subtitle" style={{ color: "#dc2626" }}>Disputes Center</span>
+                                <div className="drawer-title-badge-group">
+                                    <h2>Refund Request</h2>
+                                    <span className={statusClass(selectedRefundForDrawer.status)}>
+                                        {selectedRefundForDrawer.status}
+                                    </span>
+                                </div>
+                                <span className="drawer-cust-id">{selectedRefundForDrawer.id}</span>
+                            </div>
+                            <button className="drawer-close-btn" onClick={() => setSelectedRefundForDrawer(null)}>✕</button>
+                        </div>
+
+                        <div className="drawer-scrollable-body">
+                            {/* Refund Visual Overview */}
+                            <div className="drawer-visual-section" style={{ backgroundColor: "#FEF2F2", borderColor: "rgba(239, 68, 68, 0.15)" }}>
+                                <div className="visual-stat-item">
+                                    <span className="v-stat-val" style={{ color: "#b91c1c" }}>{formatCurrency(selectedRefundForDrawer.amount)}</span>
+                                    <span className="v-stat-lbl" style={{ color: "#ef4444" }}>Claimed Amount</span>
+                                </div>
+                                <div className="visual-stat-item">
+                                    <span className="v-stat-val" style={{ color: "#334155" }}>Rajesh K.</span>
+                                    <span className="v-stat-lbl">Assigned Agent</span>
+                                </div>
+                            </div>
+
+                            {/* Customer Profile Info card */}
+                            <div className="drawer-info-group">
+                                <h3>Customer details</h3>
+                                <div className="drawer-info-card">
+                                    <div className="info-row font-bold">
+                                        <span>{selectedRefundForDrawer.customer}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <Mail size={13} className="info-icon" />
+                                        <span>{selectedRefundForDrawer.email}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <Phone size={13} className="info-icon" />
+                                        <span>{selectedRefundForDrawer.phone || "+1 (415) 823-9201"}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <MapPin size={13} className="info-icon" />
+                                        <span className="info-address">{selectedRefundForDrawer.address || "450 Mission St, San Francisco, CA 94105"}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Order Details with Product Image */}
+                            <div className="drawer-info-group">
+                                <h3>Order details</h3>
+                                <div className="drawer-product-layout">
+                                    <img src={selectedRefundForDrawer.image} alt="Product" className="drawer-product-img" />
+                                    <div className="drawer-product-details">
+                                        <span className="drawer-product-name">{selectedRefundForDrawer.productName}</span>
+                                        <span className="drawer-product-price">Qty: {selectedRefundForDrawer.qty} × {formatCurrency(selectedRefundForDrawer.price)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Refund Reason Description */}
+                            <div className="drawer-info-group">
+                                <h3>Refund Reason</h3>
+                                <div className="drawer-refund-alert-card" style={{ padding: "14px", borderRadius: "12px", border: "1px solid var(--border-color)", backgroundColor: "#ffffff" }}>
+                                    <span style={{ fontSize: "13px", color: "#475569", lineHeight: "1.5" }}>{selectedRefundForDrawer.reason}</span>
+                                </div>
+                            </div>
+
+                            {/* Supporting Visual Evidence */}
+                            {selectedRefundForDrawer.supportingImages && selectedRefundForDrawer.supportingImages.length > 0 && (
+                                <div className="drawer-info-group">
+                                    <h3>Supporting Images</h3>
+                                    <div className="drawer-photos-grid">
+                                        {selectedRefundForDrawer.supportingImages.map((imgUrl, idx) => (
+                                            <img key={idx} src={imgUrl} alt="Evidence" className="drawer-supporting-photo" />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Admin Notes Section */}
+                            <div className="drawer-info-group">
+                                <h3>Admin Notes</h3>
+                                <textarea
+                                    className="drawer-admin-notes-textarea"
+                                    placeholder="Add internal verification notes, carrier reports, or resolution logs..."
+                                    value={refundNotes[selectedRefundForDrawer.id] || ""}
+                                    onChange={(e) => setRefundNotes(prev => ({
+                                        ...prev,
+                                        [selectedRefundForDrawer.id]: e.target.value
+                                    }))}
+                                />
+                            </div>
+
+                            {/* Operational Event Timeline */}
+                            <div className="drawer-info-group">
+                                <h3>Timeline</h3>
+                                <div className="payment-history-timeline">
+                                    {selectedRefundForDrawer.timeline?.map((hist, idx) => (
+                                        <div key={idx} className="timeline-node">
+                                            <span className="timeline-dot" style={{ backgroundColor: "#dc2626" }}></span>
+                                            <div className="timeline-content">
+                                                <span className="t-event">{hist.event}</span>
+                                                <span className="t-time">{hist.date}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Drawer Bottom Controls Panel */}
+                        <div className="drawer-footer-actions">
+                            <button 
+                                className="drawer-footer-btn outline-btn"
+                                onClick={() => alert(`Downloading full refund audit report for ${selectedRefundForDrawer.id}...`)}
+                            >
+                                <Download size={13} />
+                                <span>Audit Report</span>
+                            </button>
+                            {selectedRefundForDrawer.status === "Pending" ? (
+                                <>
+                                    <button 
+                                        className="drawer-footer-btn"
+                                        style={{ backgroundColor: "var(--color-success)", color: "#ffffff" }}
+                                        onClick={() => {
+                                            handleRefundAction(selectedRefundForDrawer.id, "Approved");
+                                            setSelectedRefundForDrawer(null);
+                                        }}
+                                    >
+                                        Approve Refund
+                                    </button>
+                                    <button 
+                                        className="drawer-footer-btn block-btn"
+                                        onClick={() => {
+                                            handleRefundAction(selectedRefundForDrawer.id, "Rejected");
+                                            setSelectedRefundForDrawer(null);
+                                        }}
+                                    >
+                                        Reject Request
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    className="drawer-footer-btn outline-btn" 
+                                    disabled 
+                                    style={{ gridColumn: "span 2", cursor: "not-allowed" }}
+                                >
+                                    Settled as {selectedRefundForDrawer.status}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 6. PAYMENT METHOD DESK CARDS SECTION */}
             <div className="billing-payment-methods-panel">
                 <div className="panel-title-row">
@@ -1271,106 +2035,119 @@ function BillingPage() {
                 </div>
             </div>
 
-            {/* 7. REFUND MANAGEMENT DESK SUB-PANEL */}
+            {/* 7. REFUND REQUEST TRACKING DESK SUB-PANEL */}
             <div className="billing-refunds-section-wrapper">
                 <div className="refunds-panel-card dashboard-card">
                     <div className="refunds-panel-header">
                         <div className="panel-title-block">
                             <div className="refunds-section-title">
                                 <RotateCcw size={16} className="text-danger" />
-                                <h2>Refund request tracking</h2>
+                                <h2>Refund Requests</h2>
                             </div>
-                            <p>Verify customer chargebacks, damaged packages, or checkout double billing triggers</p>
+                            <p>Manage customer return and refund cases</p>
                         </div>
 
-                        {/* Refund Tabs */}
-                        <div className="refund-tabs-pills">
-                            {["Pending", "Approved", "Processed", "Rejected"].map(tab => (
-                                <button
-                                    key={tab}
-                                    className={`refund-tab-pill ${activeRefundTab === tab ? "active" : ""}`}
-                                    onClick={() => setActiveRefundTab(tab)}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
+                        {/* Search, Filter tabs and Export controls */}
+                        <div className="refunds-controls-row">
+                            <div className="billing-search-wrap">
+                                <Search size={14} className="billing-search-icon" />
+                                <input
+                                    type="text"
+                                    className="billing-search-input"
+                                    placeholder="Search ID, customer..."
+                                    value={refundSearch}
+                                    onChange={(e) => setRefundSearch(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="refund-tabs-pills">
+                                {["Pending", "Approved", "Processed", "Rejected"].map(tab => {
+                                    const baseCounts = {
+                                        Pending: refundsList.filter(r => r.status === "Pending").length + 23,
+                                        Approved: refundsList.filter(r => r.status === "Approved").length + 55,
+                                        Processed: refundsList.filter(r => r.status === "Processed").length + 17,
+                                        Rejected: refundsList.filter(r => r.status === "Rejected").length + 4,
+                                    };
+                                    return (
+                                        <button
+                                            key={tab}
+                                            className={`refund-tab-pill-premium ${activeRefundTab === tab ? "active" : ""}`}
+                                            onClick={() => setActiveRefundTab(tab)}
+                                        >
+                                            <span>{tab}</span>
+                                            <span className="tab-count-badge">{baseCounts[tab]}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <button className="cust-btn-outline" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }} onClick={() => alert("Exporting refund statements as CSV...")}>
+                                <Download size={13} />
+                                <span>Export</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div className="table-responsive">
-                        <table className="refunds- desk-table">
-                            <thead>
-                                <tr>
-                                    <th>Refund ID</th>
-                                    <th>Customer</th>
-                                    <th>Claim Amount</th>
-                                    <th>Return Reason Details</th>
-                                    <th>Request State</th>
-                                    <th className="align-center-header">Action Desk</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {displayedRefunds.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="billing-empty-row no-records-cell">
-                                            <Info size={15} />
-                                            <span>No refund requests found in {activeRefundTab}.</span>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    displayedRefunds.map(ref => (
-                                        <tr key={ref.id} className="interactive-table-row">
-                                            <td className="refund-id-cell">{ref.id}</td>
-                                            <td>
-                                                <div className="refund-customer-block">
-                                                    <span className="r-c-name">{ref.customer}</span>
-                                                    <span className="r-c-email">{ref.email}</span>
-                                                </div>
-                                            </td>
-                                            <td className="refund-amount-cell font-bold">{formatCurrency(ref.amount)}</td>
-                                            <td className="refund-reason-cell">{ref.reason}</td>
-                                            <td>
-                                                <span className={`status-pill status-${ref.status.toLowerCase()}`}>
-                                                    {ref.status}
-                                                </span>
-                                            </td>
-                                            <td className="align-center-cell">
-                                                {ref.status === "Pending" && (
-                                                    <div className="refund-action-desk-group">
-                                                        <button 
-                                                            className="refund-act-btn approve" 
-                                                            onClick={() => handleRefundAction(ref.id, "Approved")}
-                                                        >
-                                                            Approve
-                                                        </button>
-                                                        <button 
-                                                            className="refund-act-btn reject" 
-                                                            onClick={() => handleRefundAction(ref.id, "Rejected")}
-                                                        >
-                                                            Reject
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                {ref.status === "Approved" && (
-                                                    <button 
-                                                        className="refund-act-btn process" 
-                                                        onClick={() => handleRefundAction(ref.id, "Processed")}
-                                                    >
-                                                        Process payout
-                                                    </button>
-                                                )}
-                                                {ref.status === "Processed" && (
-                                                    <span className="ledger-logged-success">✓ Logged in bank ledger</span>
-                                                )}
-                                                {ref.status === "Rejected" && (
-                                                    <span className="ledger-logged-rejected">✕ Claim rejected</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                    {/* Cards Grid */}
+                    <div className="refund-cards-grid">
+                        {displayedRefunds.length === 0 ? (
+                            <div className="billing-empty-state-container" style={{ gridColumn: "1 / -1", padding: "40px 20px" }}>
+                                <RotateCcw size={32} className="empty-state-icon text-muted" style={{ marginBottom: "12px" }} />
+                                <h3>No refunds found</h3>
+                                <p>Your search did not yield any refund request entries in {activeRefundTab}.</p>
+                            </div>
+                        ) : (
+                            displayedRefunds.map(ref => (
+                                <div key={ref.id} className="refund-card" onClick={() => setSelectedRefundForDrawer(ref)}>
+                                    <div className="refund-card-header">
+                                        <span className="refund-card-id">{ref.id}</span>
+                                        <span className={statusClass(ref.status)}>{ref.status}</span>
+                                    </div>
+                                    
+                                    <div className="refund-card-customer">
+                                        <div className={`billing-avatar ${ref.avatarColor || "avatar-indigo"}`}>
+                                            {getInitials(ref.customer)}
+                                        </div>
+                                        <div className="refund-card-cust-info">
+                                            <span className="refund-card-cust-name">{ref.customer}</span>
+                                            <span className="refund-card-cust-email">{ref.email}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="refund-card-body">
+                                        <div className="refund-card-reason">
+                                            <span className="reason-label">Reason:</span>
+                                            <span className="reason-value">{ref.shortReason || ref.reason}</span>
+                                        </div>
+                                        <div className="refund-card-amount">
+                                            <span className="amount-label">Claimed Amount:</span>
+                                            <span className="amount-value">{formatCurrency(ref.amount)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="refund-card-actions" onClick={(e) => e.stopPropagation()}>
+                                        <button className="ref-card-btn view-details" onClick={() => setSelectedRefundForDrawer(ref)}>
+                                            View Details
+                                        </button>
+                                        {ref.status === "Pending" && (
+                                            <>
+                                                <button className="ref-card-btn approve" onClick={() => handleRefundAction(ref.id, "Approved")}>
+                                                    Approve
+                                                </button>
+                                                <button className="ref-card-btn reject" onClick={() => handleRefundAction(ref.id, "Rejected")}>
+                                                    Reject
+                                                </button>
+                                            </>
+                                        )}
+                                        {ref.status === "Approved" && (
+                                            <button className="ref-card-btn process" onClick={() => handleRefundAction(ref.id, "Processed")}>
+                                                Process payout
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

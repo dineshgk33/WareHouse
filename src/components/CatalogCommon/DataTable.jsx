@@ -55,7 +55,7 @@ function DataTable({
                             </td>
                         </tr>
                     ) : (
-                        data.map((row) => {
+                        data.map((row, index) => {
                             const rowId = row[rowIdKey];
                             return (
                                 <tr 
@@ -94,7 +94,7 @@ function DataTable({
                                                     />
                                                     <div 
                                                         className="global-action-dropdown" 
-                                                        style={{ right: "12px", top: "32px" }}
+                                                        style={index >= data.length - 2 && data.length > 2 ? { right: "12px", bottom: "32px", top: "auto" } : { right: "12px", top: "32px" }}
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         {actions(row, () => setActiveDropdownId(null))}

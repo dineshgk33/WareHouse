@@ -328,7 +328,7 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginated.map((product) => (
+                  {paginated.map((product, index) => (
                     <tr key={product.id}>
                       {/* Product cell */}
                       <td>
@@ -371,7 +371,10 @@ export default function ProductsPage() {
                         {activeDropdownId === product.id && (
                           <>
                             <div className="global-dropdown-overlay" onClick={() => setActiveDropdownId(null)} />
-                            <div className="global-action-dropdown">
+                            <div 
+                              className="global-action-dropdown"
+                              style={index >= paginated.length - 2 && paginated.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                            >
                               <button 
                                 className="global-dropdown-item"
                                 onClick={() => handleToggleProductStatus(product.id)}

@@ -2,7 +2,7 @@
 
 .sidebar {
   width: 260px;
-  background-color: #2563EB; /* Seller Zone polished blue */
+  background-color: #020079; /* Rich royal indigo blue */
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
@@ -157,26 +157,26 @@
   transition: transform var(--transition-fast);
 }
 
-.nav-link:hover:not(.active) {
+.nav-link:hover {
   background-color: rgba(255, 255, 255, 0.08) !important; /* Soft white highlight on hover */
   color: #ffffff !important;
 }
 
-.nav-link:hover:not(.active) .nav-icon {
+.nav-link:hover .nav-icon {
   transform: scale(1.05);
   color: #ffffff !important;
 }
 
 .nav-link.active {
   background-color: #ffffff !important; /* Pure white active pill */
-  color: #2563EB !important; /* Brand blue active text */
+  color: #020079 !important; /* Custom dark blue active text */
   font-weight: 600;
   border-radius: 18px !important;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
 }
 
 .nav-link.active .nav-icon {
-  color: #2563EB !important; /* Active icon is brand blue */
+  color: #020079 !important; /* Active icon is custom dark blue */
 }
 
 .sidebar.collapsed .nav-link {
@@ -209,7 +209,7 @@
 }
 
 .nav-link.active .submenu-indicator-arrow {
-  color: #2563EB !important;
+  color: #020079 !important;
 }
 
 /* ─── Wix Studio-Style Floating Flyout Submenu Panel ──────────────────────── */
@@ -383,4 +383,215 @@
 /* Darkhouses-specific Popover Submenu Flyout adjustments */
 .darkhouses-flyout-panel {
   width: 300px !important;
+}
+
+/* Floating expand button & Collapsed avatar circle */
+.sidebar-expand-floating-btn {
+  position: absolute;
+  top: 32px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  background-color: #2563EB;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all var(--transition-fast);
+  z-index: 101;
+}
+
+.sidebar-expand-floating-btn:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.1);
+}
+
+.collapsed-logo-only-container {
+  width: 44px; /* Maintain touch target minimum */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.collapsed-logo-only-container:hover {
+  transform: scale(1.08);
+}
+
+.collapsed-logo-img {
+  width: 32px !important; /* Minimized small logo symbol (matches nav icons size) */
+  height: 32px !important;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* Collapsed Active Pill Styling */
+.sidebar.collapsed .nav-link.active {
+  background-color: #2563EB !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+
+.sidebar.collapsed .nav-link.active .nav-icon {
+  color: #ffffff !important;
+}
+
+/* ================================================= */
+/* RESPONSIVE LAYOUT & SIDEBAR STYLES                */
+/* ================================================= */
+
+/* User Profile Card inside Sidebar (Drawer on mobile) */
+.sidebar-profile-card {
+  display: none; /* Hidden on Desktop & Tablet by default */
+  align-items: center;
+  gap: 12px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+
+.sidebar-profile-avatar {
+  width: 44px; /* Touch target size / premium feel */
+  height: 44px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-profile-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.sidebar-profile-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sidebar-profile-role {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+
+/* TABLET (768px–1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Collapsed sidebar styling strictly for tablet */
+  .sidebar {
+    width: 80px !important;
+    padding: 24px 12px !important;
+  }
+  .sidebar .nav-label,
+  .sidebar .submenu-indicator-arrow,
+  .sidebar .logo-text-main {
+    display: none !important;
+  }
+  .sidebar-brand-container {
+    justify-content: center !important;
+  }
+  .sidebar-brand {
+    justify-content: center !important;
+  }
+  .sidebar-header-toggle {
+    display: none !important;
+  }
+  .sidebar .nav-link {
+    justify-content: center !important;
+    padding: 12px 0 !important;
+  }
+  .sidebar-expand-floating-btn {
+    display: none !important;
+  }
+  
+  /* Collapsed active pill styling */
+  .sidebar .nav-link.active {
+    background-color: #2563EB !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+  }
+  .sidebar .nav-link.active .nav-icon {
+    color: #ffffff !important;
+  }
+}
+
+/* MOBILE (<768px) */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important; /* Drawer Width: 280px */
+    height: 100vh !important;
+    transform: translateX(-100%) !important; /* Hidden offscreen to left */
+    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1) !important; /* Smooth 250ms animation */
+    z-index: 2000 !important;
+    padding: 24px 16px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .layout-container.mobile-sidebar-active .sidebar {
+    transform: translateX(0) !important; /* Slide-in Drawer */
+  }
+
+  /* Show Logo & User Profile inside Drawer */
+  .sidebar-profile-card {
+    display: flex !important; /* Show User Profile inside Drawer on Mobile */
+  }
+
+  .sidebar .nav-label,
+  .sidebar .logo-text-main {
+    display: inline !important; /* Never display icon-only navigation on mobile devices */
+  }
+
+  .sidebar .submenu-indicator-arrow {
+    display: block !important;
+  }
+
+  .sidebar-brand-container {
+    justify-content: space-between !important;
+  }
+
+  .sidebar-brand {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  .sidebar-header-toggle {
+    display: none !important; /* Hide sidebar close toggle on mobile header - closed by clicking backdrop */
+  }
+
+  .sidebar .nav-link {
+    justify-content: flex-start !important;
+    padding: 13px 16px !important; /* Touch target vertical padding */
+    min-height: 44px !important; /* Touch target minimum: 44px x 44px */
+    box-sizing: border-box !important;
+  }
+
+  /* Reset active pill color on mobile drawer (back to normal active pill style) */
+  .sidebar .nav-link.active {
+    background-color: #ffffff !important;
+    color: #020079 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+  }
+  .sidebar .nav-link.active .nav-icon {
+    color: #020079 !important;
+  }
 }

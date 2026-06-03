@@ -14,17 +14,21 @@ import {
     PanelLeftOpen,
     Warehouse,
     BookOpen,
-    ChevronRight
+    ChevronRight,
+    FileText,
+    Activity
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
+import avatarImg from "../../assets/dinesh.png";
 import FlyoutMenu from "./FlyoutMenu";
 import InventoryFlyout from "./InventoryFlyout";
 import OrdersFlyout from "./OrdersFlyout";
 import DarkhouseFlyout from "./DarkhouseFlyout";
+import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
 
-// ─── Sidebar Menu Configuration ───────────────────────────────────────────────
-const SIDEBAR_MENU = [
+// ─── Complete Master Sidebar Menu Configuration ───────────────────────────────────────────────
+const ALL_SIDEBAR_MENU = [
     {
         id: "dashboard",
         label: "Dashboard",
@@ -96,10 +100,22 @@ const SIDEBAR_MENU = [
         label: "Analytics",
         path: "/analytics",
         icon: BarChart3,
+    },
+    {
+        id: "reports",
+        label: "Reports",
+        path: "/reports",
+        icon: FileText,
+    },
+    {
+        id: "operations",
+        label: "Operations",
+        path: "/operations",
+        icon: Activity,
     }
 ];
 
-const BOTTOM_MENU = [
+const ALL_BOTTOM_MENU = [
     {
         id: "settings",
         label: "Settings",
@@ -121,13 +137,50 @@ const BOTTOM_MENU = [
     }
 ];
 
-function Sidebar({ isCollapsed, toggleSidebar }) {
+function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const location = useLocation();
+    const { user, selectedRoleName } = useAuth();
     
     // Hover & Flyout states
     const [hoveredMenu, setHoveredMenu] = useState(null);
     const [flyoutPosition, setFlyoutPosition] = useState(null);
     const leaveTimeoutRef = useRef(null);
+
+    // Dynamic configuration based on active role
+    const userName = user ? `${user.firstName} ${user.lastName}` : "";
+    const userRole = selectedRoleName || "";
+    const profileImage = user?.ProfileImage || avatarImg;
+
+    // Filter main menu and bottom menu items
+    const getFilteredMenus = (role) => {
+        let allowedIds = [];
+        let allowedBottomIds = ["support"];
+
+        if (role === "Administrator" || role === "Super Admin") {
+            allowedIds = ["dashboard", "catalog", "inventory", "orders", "customers", "darkhouses", "analytics", "billing"];
+            allowedBottomIds = ["settings", "support"];
+        } else if (role === "Store Manager") {
+            allowedIds = ["dashboard", "catalog", "inventory", "orders", "darkhouses"];
+            allowedBottomIds = ["support"];
+        } else if (role === "Operation Head") {
+            allowedIds = ["dashboard", "analytics", "reports", "operations"];
+            allowedBottomIds = ["support"];
+        } else if (role) {
+            // Support dynamic roles returned from future API updates
+            allowedIds = ["dashboard", "catalog", "inventory", "orders", "darkhouses"];
+            allowedBottomIds = ["support"];
+        } else {
+            allowedIds = ["dashboard"];
+            allowedBottomIds = ["support"];
+        }
+
+        const filteredMain = ALL_SIDEBAR_MENU.filter(item => allowedIds.includes(item.id));
+        const filteredBottom = ALL_BOTTOM_MENU.filter(item => allowedBottomIds.includes(item.id));
+
+        return { main: filteredMain, bottom: filteredBottom };
+    };
+
+    const { main: activeSidebarMenu, bottom: activeBottomMenu } = getFilteredMenus(userRole);
 
     // Helper to check active highlighting on parents
     const isParentActive = (item) => {
@@ -164,7 +217,7 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
             setHoveredMenu(item);
             
             // Detect if item is at the bottom (e.g. settings) to align from the bottom upward
-            const isBottomItem = BOTTOM_MENU.some(b => b.id === item.id);
+            const isBottomItem = activeBottomMenu.some(b => b.id === item.id);
             if (isBottomItem && e.currentTarget.offsetParent) {
                 const sidebarHeight = e.currentTarget.offsetParent.offsetHeight;
                 const bottomOffset = sidebarHeight - e.currentTarget.offsetTop - e.currentTarget.offsetHeight;
@@ -180,7 +233,7 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
     const handleParentMouseLeave = () => {
         leaveTimeoutRef.current = setTimeout(() => {
             setHoveredMenu(null);
-        }, 180); // 180ms delay gives seamless crossing buffer
+        }, 180);
     };
 
     const handleFlyoutMouseEnter = () => {
@@ -196,6 +249,9 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
 
     const handleSubmenuItemClick = () => {
         setHoveredMenu(null);
+        if (setMobileOpen) {
+            setMobileOpen(false);
+        }
     };
 
     const renderMenuItem = (item) => {
@@ -206,7 +262,7 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
             <>
                 <Icon size={18} className="nav-icon" />
                 {!isCollapsed && <span className="nav-label">{item.label}</span>}
-                {!isCollapsed && (
+                {!isCollapsed && item.submenu && (
                     <ChevronRight size={14} className="submenu-indicator-arrow" />
                 )}
             </>
@@ -224,12 +280,14 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
                         to={item.path}
                         className={`nav-link ${isActive ? "active" : ""}`}
                         onClick={handleSubmenuItemClick}
+                        title={isCollapsed ? item.label : undefined}
                     >
                         {content}
                     </Link>
                 ) : (
                     <div
                         className={`nav-link clickable-parent ${isActive ? "active" : ""}`}
+                        title={isCollapsed ? item.label : undefined}
                     >
                         {content}
                     </div>
@@ -240,17 +298,23 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
 
     return (
         <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+            {isCollapsed && (
+                <button 
+                    className="sidebar-expand-floating-btn" 
+                    onClick={toggleSidebar} 
+                    aria-label="Expand Sidebar"
+                    title="Expand Sidebar"
+                >
+                    <ChevronRight size={14} />
+                </button>
+            )}
+
             {/* Logo/Brand Header with Integrated Toggle */}
             <div className={`sidebar-brand-container ${isCollapsed ? "collapsed-brand" : ""}`}>
                 {isCollapsed ? (
-                    <button 
-                        className="collapsed-logo-btn" 
-                        onClick={toggleSidebar} 
-                        aria-label="Expand Sidebar"
-                        title="Expand Sidebar"
-                    >
-                        <img src={logoImg} className="brand-logo-img" alt="HAATZA Logo" />
-                    </button>
+                    <div className="collapsed-logo-only-container" onClick={toggleSidebar}>
+                        <img src={logoImg} className="brand-logo-img collapsed-logo-img" alt="HAATZA Logo" />
+                    </div>
                 ) : (
                     <div className="sidebar-brand">
                         <div className="brand-logo-group">
@@ -266,17 +330,33 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
                 )}
             </div>
 
+            {/* User Profile Card - Mobile Drawer / Desktop Sidebar */}
+            <div className="sidebar-profile-card">
+                <img 
+                    src={profileImage} 
+                    alt={`${userName} Profile`} 
+                    className="sidebar-profile-avatar"
+                    onError={(e) => {
+                        e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+                    }}
+                />
+                <div className="sidebar-profile-info">
+                    <span className="sidebar-profile-name">{userName}</span>
+                    <span className="sidebar-profile-role">{userRole}</span>
+                </div>
+            </div>
+
             {/* Navigation links */}
             <nav className="sidebar-nav">
                 <ul className="nav-list">
-                    {SIDEBAR_MENU.map(renderMenuItem)}
+                    {activeSidebarMenu.map(renderMenuItem)}
                 </ul>
             </nav>
 
             {/* Bottom menu links */}
             <div className="sidebar-footer">
                 <ul className="nav-list">
-                    {BOTTOM_MENU.map(renderMenuItem)}
+                    {activeBottomMenu.map(renderMenuItem)}
                 </ul>
             </div>
 

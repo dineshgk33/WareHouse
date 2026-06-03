@@ -1,0 +1,94 @@
+.error-boundary-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-app, #F6F8FF);
+    padding: 24px;
+}
+
+.error-boundary-card {
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 16px;
+    padding: 48px 40px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.error-boundary-icon {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.error-boundary-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main, #111827);
+    margin-bottom: 12px;
+    letter-spacing: -0.4px;
+}
+
+.error-boundary-desc {
+    font-size: 14px;
+    color: var(--text-muted, #6B7280);
+    line-height: 1.65;
+    margin-bottom: 20px;
+}
+
+.error-boundary-code {
+    display: block;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    text-align: left;
+    word-break: break-word;
+    font-family: monospace;
+}
+
+.error-boundary-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-btn-primary {
+    background: var(--primary, #1e60ff);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.error-btn-primary:hover {
+    background: var(--primary-hover, #0f4cda);
+}
+
+.error-btn-secondary {
+    background: transparent;
+    color: var(--text-main, #111827);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.error-btn-secondary:hover {
+    background: var(--bg-hover, #f8fafc);
+    border-color: #94a3b8;
+}

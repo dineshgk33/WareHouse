@@ -502,12 +502,15 @@
 .cust-table-responsive {
   width: 100%;
   overflow-x: auto;
+  min-height: 240px; /* Crucial height fallback to avoid dropdown clipping */
 }
 
 .cust-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  table-layout: fixed;
+  min-width: 1100px; /* SaaS quality wide-screen layout scrollable wrapper */
 }
 
 .cust-table thead th {
@@ -523,21 +526,29 @@
   white-space: nowrap;
 }
 
+.cust-table tbody tr {
+  height: 76px; /* Row height equalized between 72px and 80px */
+}
+
 .cust-table tbody td {
-  padding: 14px 16px;
+  height: 76px;
+  padding: 0 16px;
   font-size: 13px;
   color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .interactive-table-row {
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: background-color 0.2s ease;
 }
 
 .interactive-table-row:hover {
-  background-color: var(--bg-hover);
+  background-color: #F8FBFF !important; /* Premium light blue SaaS hover background */
 }
 
 .row-checked {
@@ -570,6 +581,280 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* Upgraded SaaS Customers Table Styles */
+.cust-name-single {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  display: block;
+}
+
+.cust-id-small {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.cust-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+/* Avatar colors palette */
+.avatar-indigo { background-color: #e0e7ff; color: #4338ca; }
+.avatar-teal   { background-color: #ccfbf1; color: #0f766e; }
+.avatar-rose   { background-color: #ffe4e6; color: #be123c; }
+.avatar-amber  { background-color: #fef3c7; color: #b45309; }
+.avatar-violet { background-color: #ede9fe; color: #6d28d9; }
+.avatar-sky    { background-color: #e0f2fe; color: #0369a1; }
+.avatar-green  { background-color: #dcfce7; color: #15803d; }
+.avatar-orange { background-color: #ffedd5; color: #c2410c; }
+
+.cust-email-link {
+  color: #475569;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-weight: 500;
+}
+
+.cust-email-link:hover {
+  color: var(--primary) !important;
+}
+
+.cust-email-text-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.cust-email-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.cust-cell-phone {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.cust-cell-location {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  color: var(--text-muted);
+}
+
+.cust-location-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.cust-orders-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F8FAFC;
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  min-width: 32px;
+}
+
+.spent-cell-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.high-spender-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Badges */
+.cust-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  min-width: 68px;
+  text-align: center;
+}
+
+.cust-badge.badge-active {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid rgba(21, 128, 61, 0.15);
+}
+
+.cust-badge.badge-inactive {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid rgba(71, 85, 105, 0.15);
+}
+
+.cust-badge.badge-blocked {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.15);
+}
+
+.cust-badge.badge-vip {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+/* Action Dots and Dropdown menu */
+.cust-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cust-action-btn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.cust-action-btn:active {
+  transform: scale(0.95);
+}
+
+.cust-dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: transparent;
+}
+
+.cust-action-dropdown {
+  position: absolute;
+  right: 16px;
+  top: 40px;
+  width: 180px;
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.04);
+  z-index: 20;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.dropdown-item svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.dropdown-item:hover svg {
+  color: #0f172a;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 4px 0;
+}
+
+.dropdown-item-danger {
+  color: #df1c1c;
+}
+
+.dropdown-item-danger:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.dropdown-item-danger svg {
+  color: #ef4444;
+}
+
+.dropdown-item-danger:hover svg {
+  color: #b91c1c;
 }
 
 /* CIRCULAR CUSTOMER PROFILE DRAWER sliding from right */

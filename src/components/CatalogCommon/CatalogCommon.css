@@ -155,6 +155,7 @@
 .cat-table-responsive {
   overflow-x: auto;
   width: 100%;
+  min-height: 240px;
 }
 
 .cat-table {
