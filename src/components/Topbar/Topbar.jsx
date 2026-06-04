@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Globe, Bell, ChevronDown, LogOut, Settings, User, Menu } from "lucide-react";
+import { Search, Globe, Bell, ChevronDown, LogOut, Settings, User, Menu, Building2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import SwitchWorkspaceModal from "./SwitchWorkspaceModal";
 import avatarImg from "../../assets/dinesh.png";
 import logoImg from "../../assets/logo.jpeg";
 import "./Topbar.css";
@@ -10,6 +11,7 @@ function Topbar({ onOpenMobileSidebar }) {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+    const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
 
     const { user, selectedRoleName, selectedWarehouseName, logout } = useAuth();
     
@@ -46,7 +48,7 @@ function Topbar({ onOpenMobileSidebar }) {
             <div className="topbar-welcome">
                 <h1>Welcome, {userName}</h1>
                 <p className="welcome-desc">
-                    Role: <strong style={{ color: "#0020E6" }}>{userRole}</strong> &nbsp;|&nbsp; Warehouse: <strong style={{ color: "#0020E6" }}>{warehouseName}</strong>
+                    {userRole} • {warehouseName}
                 </p>
             </div>
 
@@ -102,7 +104,7 @@ function Topbar({ onOpenMobileSidebar }) {
                         />
                         <div className="profile-details">
                             <span className="profile-name">{userName}</span>
-                            <span className="profile-role">{userRole}</span>
+                            <span className="profile-role">{userRole} • {warehouseName}</span>
                         </div>
                         <ChevronDown size={14} className={`dropdown-arrow ${isDropdownOpen ? "arrow-rotate" : ""}`} />
                     </div>
@@ -113,7 +115,7 @@ function Topbar({ onOpenMobileSidebar }) {
                             <div className="topbar-profile-dropdown">
                                 <div className="dropdown-user-header">
                                     <span className="user-name-title">{userName}</span>
-                                    <span className="user-role-subtitle">{userRole}</span>
+                                    <span className="user-role-subtitle">{userRole} • {warehouseName}</span>
                                 </div>
                                 <div className="dropdown-divider"></div>
                                 
@@ -124,6 +126,11 @@ function Topbar({ onOpenMobileSidebar }) {
                                     <span className="dropdown-notification-badge">3 new</span>
                                 </button>
                                 
+                                <button className="dropdown-btn" onClick={() => { setIsDropdownOpen(false); setIsSwitchModalOpen(true); }}>
+                                    <Building2 size={15} />
+                                    <span>Switch Workspace</span>
+                                </button>
+
                                 <button className="dropdown-btn" onClick={() => { setIsDropdownOpen(false); navigate("/settings"); }}>
                                     <Settings size={15} />
                                     <span>Account Settings</span>
@@ -155,6 +162,10 @@ function Topbar({ onOpenMobileSidebar }) {
                         <button className="mobile-search-overlay-close-btn" onClick={() => setIsMobileSearchOpen(false)}>✕</button>
                     </div>
                 </div>
+            )}
+
+            {isSwitchModalOpen && (
+                <SwitchWorkspaceModal onClose={() => setIsSwitchModalOpen(false)} />
             )}
         </header>
     );

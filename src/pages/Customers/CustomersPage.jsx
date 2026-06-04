@@ -750,7 +750,7 @@ function CustomersPage() {
                     <table className="cust-table">
                         <thead>
                             <tr>
-                                <th style={{ width: "4%" }} className="align-center-cell">
+                                <th style={{ width: "48px", minWidth: "48px", maxWidth: "48px" }} className="align-center-cell sticky-col-1 sticky-col-header">
                                     <input 
                                         type="checkbox"
                                         className="cust-checkbox"
@@ -759,15 +759,15 @@ function CustomersPage() {
                                         aria-label="Select all customers on page"
                                     />
                                 </th>
-                                <th style={{ width: "22%" }}>Customer</th>
-                                <th style={{ width: "22%" }}>Email</th>
-                                <th style={{ width: "14%" }}>Phone</th>
-                                <th style={{ width: "14%" }}>Location</th>
+                                <th style={{ width: "220px", minWidth: "220px", maxWidth: "220px" }} className="sticky-col-2 sticky-col-header">Customer</th>
+                                <th style={{ width: "20%" }}>Email</th>
+                                <th style={{ width: "15%" }}>Phone</th>
+                                <th style={{ width: "15%" }}>Location</th>
                                 <th style={{ width: "8%" }} className="align-center-header">Orders</th>
-                                <th style={{ width: "10%" }}>Total Spent</th>
-                                <th style={{ width: "10%" }}>Last Order</th>
-                                <th style={{ width: "8%" }}>Status</th>
-                                <th style={{ width: "6%" }} className="align-center-header">Actions</th>
+                                <th style={{ width: "12%" }}>Total Spent</th>
+                                <th style={{ width: "12%" }}>Last Order</th>
+                                <th style={{ width: "10%" }}>Status</th>
+                                <th style={{ width: "8%" }} className="align-center-header">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -785,7 +785,7 @@ function CustomersPage() {
                                         onClick={() => handleOpenDrawer(customer)}
                                     >
                                         {/* Checkbox column */}
-                                        <td className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td className="align-center-cell sticky-col-1" onClick={(e) => e.stopPropagation()}>
                                             <input 
                                                 type="checkbox" 
                                                 className="cust-checkbox"
@@ -796,7 +796,7 @@ function CustomersPage() {
                                         </td>
 
                                         {/* Customer avatar and ID details */}
-                                        <td data-label="Customer">
+                                        <td data-label="Customer" className="sticky-col-2">
                                             <div className="cust-identity">
                                                 <div className={`cust-avatar ${customer.avatarColor}`}>
                                                     {getInitials(customer.name)}
@@ -863,7 +863,7 @@ function CustomersPage() {
                                         </td>
 
                                         {/* Row actions dots */}
-                                        <td data-label="Actions" style={{ position: "relative" }} className="align-center-cell" onClick={(e) => e.stopPropagation()}>
+                                        <td data-label="Actions" style={{ position: "relative", overflow: "visible" }} className="align-center-cell" onClick={(e) => e.stopPropagation()}>
                                             <button
                                                 className="cust-action-btn"
                                                 aria-label={`More actions for ${customer.name}`}

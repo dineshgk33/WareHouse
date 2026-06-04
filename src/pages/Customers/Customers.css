@@ -528,6 +528,7 @@
 
 .cust-table tbody tr {
   height: 76px; /* Row height equalized between 72px and 80px */
+  background-color: #ffffff;
 }
 
 .cust-table tbody td {
@@ -536,6 +537,7 @@
   font-size: 13px;
   color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
+  background-color: inherit; /* inherit from tr to keep hover effects while being solid for sticky cells */
   vertical-align: middle;
   box-sizing: border-box;
   overflow: hidden;
@@ -544,6 +546,7 @@
 
 .interactive-table-row {
   cursor: pointer;
+  background-color: #ffffff;
   transition: background-color 0.2s ease;
 }
 
@@ -553,6 +556,25 @@
 
 .row-checked {
   background-color: rgba(37, 99, 235, 0.02) !important;
+}
+
+/* Sticky columns implementation */
+.sticky-col-1 {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+}
+
+.sticky-col-2 {
+  position: sticky;
+  left: 48px; /* Width of sticky-col-1 */
+  z-index: 4;
+  border-right: 1px solid rgba(0,0,0,0.05); /* Slight separation when scrolling */
+}
+
+/* Header sticky cols need higher z-index than td sticky cols */
+.cust-table thead th.sticky-col-header {
+  z-index: 10;
 }
 
 /* Loyalty Tags */
