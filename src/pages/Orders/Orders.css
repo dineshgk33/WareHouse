@@ -1580,7 +1580,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    height: 52px;
+    height: 80px;
 }
 
 .label-footer-info {
@@ -1613,13 +1613,13 @@
 }
 
 .label-qr-code {
-    width: 52px;
-    height: 52px;
+    width: 80px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e5e7eb;
-    padding: 2px;
+    border: 1.5px solid #000000;
+    padding: 4px;
     background: #ffffff;
     flex-shrink: 0;
 }
@@ -1765,7 +1765,7 @@
     font-size: 15px !important;
 }
 .grid-1x1 .label-footer-section {
-    height: 76px !important;
+    height: 120px !important;
 }
 .grid-1x1 .footer-info-row {
     font-size: 12px !important;
@@ -1776,8 +1776,10 @@
     font-size: 11px !important;
 }
 .grid-1x1 .label-qr-code {
-    width: 76px !important;
-    height: 76px !important;
+    width: 120px !important;
+    height: 120px !important;
+    border: 1.5px solid #000000 !important;
+    padding: 6px !important;
 }
 
 /* 1x2 Custom label layout */
@@ -1812,7 +1814,7 @@
     font-size: 13.5px !important;
 }
 .grid-1x2 .label-footer-section {
-    height: 68px !important;
+    height: 105px !important;
 }
 .grid-1x2 .footer-info-row {
     font-size: 11px !important;
@@ -1822,8 +1824,10 @@
     font-size: 10px !important;
 }
 .grid-1x2 .label-qr-code {
-    width: 68px !important;
-    height: 68px !important;
+    width: 105px !important;
+    height: 105px !important;
+    border: 1.5px solid #000000 !important;
+    padding: 5px !important;
 }
 
 /* 2x2 Custom label layout */
@@ -1858,7 +1862,7 @@
     font-size: 13px !important;
 }
 .grid-2x2 .label-footer-section {
-    height: 68px !important;
+    height: 105px !important;
 }
 .grid-2x2 .footer-info-row {
     font-size: 11px !important;
@@ -1868,8 +1872,21 @@
     font-size: 10px !important;
 }
 .grid-2x2 .label-qr-code {
-    width: 68px !important;
-    height: 68px !important;
+    width: 105px !important;
+    height: 105px !important;
+    border: 1.5px solid #000000 !important;
+    padding: 5px !important;
+}
+
+/* 3x4 Custom label layout */
+.grid-3x4 .label-footer-section {
+    height: 60px !important;
+}
+.grid-3x4 .label-qr-code {
+    width: 60px !important;
+    height: 60px !important;
+    border: 1.5px solid #000000 !important;
+    padding: 3px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════

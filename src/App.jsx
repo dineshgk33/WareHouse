@@ -163,6 +163,7 @@ function App() {
                                 </Route>
                                 <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="ORDERS" />}>
                                     <Route path="orders" element={<Orders />} />
+                                    <Route path="orders/pending" element={<Orders />} />
                                 </Route>
                                 <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="INVENTORY" />}>
                                     <Route path="inventory"  element={<Inventory />} />

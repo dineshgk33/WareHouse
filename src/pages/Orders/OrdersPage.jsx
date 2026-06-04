@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import {
     Search,
     Filter,
@@ -56,7 +56,9 @@ const ROWS_PER_PAGE = 7;
 
 function OrdersPage() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const activeTab = searchParams.get("tab") || "orders";
+    const location = useLocation();
+    const navigate = useNavigate();
+    const activeTab = location.pathname === "/orders/pending" ? "pending" : (searchParams.get("tab") || "orders");
 
     // ─── States ───────────────────────────────────────────────────────────────
     const [orders, setOrders] = useState(MOCK_ORDERS);
@@ -66,6 +68,10 @@ function OrdersPage() {
 
     // Dynamic Active Dropdowns (per row)
     const [activeRowMenuId, setActiveRowMenuId] = useState(null);
+
+    // Filters Pending Orders
+    const [pendingSearch, setPendingSearch] = useState("");
+    const [pendingPage, setPendingPage] = useState(1);
 
     // Filters All Orders
     const [ordSearch, setOrdSearch] = useState("");
@@ -187,6 +193,8 @@ function OrdersPage() {
         setPackPage(1);
         setDlvPage(1);
         setHistPage(1);
+        setPendingPage(1);
+        setPendingSearch("");
         setActiveRowMenuId(null);
         setSelectedOrderIds([]); // Clear selection when switching tabs
     }, [activeTab]);
@@ -244,6 +252,23 @@ function OrdersPage() {
         const delivered = orders.filter(o => o.status === "Delivered").length;
         return { total, pending, picking, packing, readyToDispatch, shipped, delivered };
     }, [orders]);
+
+    // Filters Pending Orders
+    const filteredPendingOrders = useMemo(() => {
+        return orders.filter(o => {
+            if (o.status !== "Pending") return false;
+            const query = pendingSearch.toLowerCase();
+            const matchesId = o.id.toLowerCase().includes(query);
+            const matchesCustomer = o.customer.toLowerCase().includes(query);
+            const matchesMobile = o.mobile ? o.mobile.toLowerCase().includes(query) : false;
+            return matchesId || matchesCustomer || matchesMobile;
+        });
+    }, [orders, pendingSearch]);
+
+    const paginatedPendingOrders = useMemo(() => {
+        const start = (pendingPage - 1) * ROWS_PER_PAGE;
+        return filteredPendingOrders.slice(start, start + ROWS_PER_PAGE);
+    }, [filteredPendingOrders, pendingPage]);
 
     // ─── 2. Filtering Picking ─────────────────────────────────────────────────
     const filteredPicks = useMemo(() => {
@@ -369,15 +394,15 @@ function OrdersPage() {
     };
 
     const toggleSelectAll = () => {
-        const pendingOnPage = paginatedOrders.filter(o => o.status === "Pending" || o.status === "Label Generated");
-        if (pendingOnPage.length === 0) return;
+        const targetList = activeTab === "pending" ? paginatedPendingOrders : paginatedOrders.filter(o => o.status === "Pending" || o.status === "Label Generated");
+        if (targetList.length === 0) return;
         
-        const allSelected = pendingOnPage.every(o => selectedOrderIds.includes(o.id));
+        const allSelected = targetList.every(o => selectedOrderIds.includes(o.id));
         if (allSelected) {
-            const toRemove = pendingOnPage.map(o => o.id);
+            const toRemove = targetList.map(o => o.id);
             setSelectedOrderIds(prev => prev.filter(id => !toRemove.includes(id)));
         } else {
-            const toAdd = pendingOnPage.map(o => o.id).filter(id => !selectedOrderIds.includes(id));
+            const toAdd = targetList.map(o => o.id).filter(id => !selectedOrderIds.includes(id));
             setSelectedOrderIds(prev => [...prev, ...toAdd]);
         }
     };
@@ -429,36 +454,49 @@ function OrdersPage() {
         setTriggerImmediatePrint(true);
     };
 
-    const handleBulkMarkReadyForPacking = () => {
+       const handleCardClick = (status) => {
+        if (status === "Pending") {
+            navigate("/orders/pending");
+        } else {
+            navigate("/orders");
+            setSelectedStatus(status);
+            setOrdPage(1);
+        }
+        setSelectedOrderIds([]);
+    };
+
+    const handleBulkMarkReadyForPicking = () => {
         if (selectedOrderIds.length === 0) {
             showToast("No orders selected.");
             return;
         }
         
-        setOrders(prev => prev.map(o => {
-            if (selectedOrderIds.includes(o.id) && (o.status === "Pending" || o.status === "Label Generated")) {
-                return { ...o, status: "Processing" };
-            }
-            return o;
-        }));
-        
-        showToast(`Marked ${selectedOrderIds.length} orders as Ready for Packing.`);
-        setSelectedOrderIds([]);
-    };
-
-    const handleCardClick = (status) => {
-        setSelectedStatus(status);
-        setOrdPage(1);
-        
-        // Auto-select pending orders if "Pending" card is clicked
-        if (status === "Pending") {
-            const pendingOrders = orders.filter(o => o.status === "Pending");
-            if (pendingOrders.length > 0) {
-                setSelectedOrderIds(pendingOrders.map(o => o.id));
-            }
-        } else {
-            setSelectedOrderIds([]);
+        const selectedOrders = orders.filter(o => selectedOrderIds.includes(o.id) && o.status === "Pending");
+        if (selectedOrders.length === 0) {
+            showToast("No pending orders selected.");
+            return;
         }
+
+        const newPicks = selectedOrders.map((o, idx) => ({
+            id: `PCK-${4100 + picks.length + idx}`,
+            orderId: o.id,
+            customer: o.customer,
+            picker: "Unassigned",
+            productsCount: o.items || 1,
+            status: "Pending"
+        }));
+
+        setOrders(prev => prev.map(order => {
+            if (selectedOrderIds.includes(order.id) && order.status === "Pending") {
+                return { ...order, status: "Picking" };
+            }
+            return order;
+        }));
+
+        setPicks(prev => [...prev, ...newPicks]);
+
+        showToast(`Marked ${selectedOrders.length} orders as Ready for Picking.`);
+        setSelectedOrderIds([]);
     };
 
     const handleCreateTestOrders = () => {
@@ -490,7 +528,8 @@ function OrdersPage() {
                 items: 1 + (i % 4),
                 amount: `₹${(100 + (i * 12.5)).toFixed(2)}`,
                 payment: paymentMethods[payIdx],
-                status: "Pending"
+                status: "Pending",
+                mobile: `+91 99880 ${10000 + i}`
             });
         }
         
@@ -665,7 +704,11 @@ function OrdersPage() {
     };
 
     const handleTabClick = (tabKey) => {
-        setSearchParams({ tab: tabKey });
+        if (tabKey === "pending") {
+            navigate("/orders/pending");
+        } else {
+            navigate(`/orders?tab=${tabKey}`);
+        }
     };
 
     return (
@@ -699,6 +742,7 @@ function OrdersPage() {
                 <div className="orders-header-left">
                     <h1 className="orders-header-title">
                         {activeTab === "orders" && "All Orders"}
+                        {activeTab === "pending" && "Pending Orders"}
                         {activeTab === "picking" && "Order Picking Control"}
                         {activeTab === "packing" && "Order Packing & Labeling"}
                         {activeTab === "tracking" && "Real-Time Delivery Tracking"}
@@ -706,6 +750,7 @@ function OrdersPage() {
                     </h1>
                     <p className="orders-header-subtitle">
                         {activeTab === "orders" && "Track customer invoices, payment statuses, and overall execution lifecycle."}
+                        {activeTab === "pending" && "Track and manage all newly placed orders awaiting warehouse processing."}
                         {activeTab === "picking" && "Dispatch inventory pickers to gather mapped items across darkhouse bins."}
                         {activeTab === "packing" && "Box, seal, and generate custom package barcode tags for active riders."}
                         {activeTab === "tracking" && "Monitor dispatch riders, ETAs, active locations, and package handovers."}
@@ -727,10 +772,10 @@ function OrdersPage() {
 
             {/* Summary Stat Grid */}
             <div className="orders-stats-grid">
-                {activeTab === "orders" && (
+                {(activeTab === "orders" || activeTab === "pending") && (
                     <>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "ALL" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "ALL" ? "active" : ""}`}
                             onClick={() => handleCardClick("ALL")}
                         >
                             <span className="stat-dot dot-info" />
@@ -740,17 +785,17 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Pending" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "pending" || (activeTab === "orders" && selectedStatus === "Pending") ? "active" : ""}`}
                             onClick={() => handleCardClick("Pending")}
                         >
                             <span className="stat-dot dot-pending" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.pending}</span>
-                                <span className="stat-card-label">Pending</span>
+                                <span className="stat-card-label">Pending Orders</span>
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Picking" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Picking" ? "active" : ""}`}
                             onClick={() => handleCardClick("Picking")}
                         >
                             <span className="stat-dot dot-info" style={{ backgroundColor: "#3b82f6" }} />
@@ -760,7 +805,7 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Packing" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Packing" ? "active" : ""}`}
                             onClick={() => handleCardClick("Packing")}
                         >
                             <span className="stat-dot dot-pending" style={{ backgroundColor: "#f97316" }} />
@@ -770,7 +815,7 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Ready To Dispatch" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Ready To Dispatch" ? "active" : ""}`}
                             onClick={() => handleCardClick("Ready To Dispatch")}
                         >
                             <span className="stat-dot dot-shipped" style={{ backgroundColor: "#10b981" }} />
@@ -780,7 +825,7 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Shipped" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Shipped" ? "active" : ""}`}
                             onClick={() => handleCardClick("Shipped")}
                         >
                             <span className="stat-dot dot-shipped" />
@@ -790,7 +835,7 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${selectedStatus === "Delivered" ? "active" : ""}`}
+                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Delivered" ? "active" : ""}`}
                             onClick={() => handleCardClick("Delivered")}
                         >
                             <span className="stat-dot dot-delivered" />
@@ -942,6 +987,14 @@ function OrdersPage() {
                         </button>
                         <button
                             role="tab"
+                            aria-selected={activeTab === "pending"}
+                            className={`orders-tab ${activeTab === "pending" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("pending")}
+                        >
+                            Pending Orders
+                        </button>
+                        <button
+                            role="tab"
                             aria-selected={activeTab === "picking"}
                             className={`orders-tab ${activeTab === "picking" ? "orders-tab--active" : ""}`}
                             onClick={() => handleTabClick("picking")}
@@ -976,6 +1029,18 @@ function OrdersPage() {
 
                     {/* Toolbar Search / Select Filters */}
                     <div className="orders-toolbar__actions">
+                        {activeTab === "pending" && (
+                            <div className="orders-search-wrap">
+                                <Search size={14} className="orders-search-icon" />
+                                <input
+                                    type="text"
+                                    className="orders-search-input"
+                                    placeholder="Search ID, customer, or mobile..."
+                                    value={pendingSearch}
+                                    onChange={(e) => { setPendingSearch(e.target.value); setPendingPage(1); }}
+                                />
+                            </div>
+                        )}
                         {activeTab === "orders" && (
                             <>
                                 <div className="orders-search-wrap">
@@ -1099,9 +1164,118 @@ function OrdersPage() {
                 </div>
 
                 {/* Table Data Grid */}
-                <div className="orders-table-responsive">
-                    <table className="orders-data-table">
-                        {activeTab === "orders" && (
+                {activeTab === "pending" && filteredPendingOrders.length === 0 ? (
+                    <div className="orders-empty-state-container" style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "60px 20px",
+                        textAlign: "center"
+                    }}>
+                        <CheckCircle size={48} style={{ color: "#10b981", marginBottom: "16px" }} />
+                        <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
+                            No Pending Orders
+                        </h3>
+                        <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
+                            All orders have been processed successfully.
+                        </p>
+                        <button 
+                            className="orders-inline-btn" 
+                            onClick={() => handleTabClick("orders")}
+                            style={{ padding: "10px 24px", fontSize: "13px" }}
+                        >
+                            View All Orders
+                        </button>
+                    </div>
+                ) : (
+                    <div className="orders-table-responsive">
+                        <table className="orders-data-table">
+                            {activeTab === "pending" && (
+                                <>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
+                                                <input 
+                                                    type="checkbox"
+                                                    className="orders-checkbox-main"
+                                                    checked={
+                                                        paginatedPendingOrders.length > 0 &&
+                                                        paginatedPendingOrders.every(o => selectedOrderIds.includes(o.id))
+                                                    }
+                                                    onChange={toggleSelectAll}
+                                                    title="Select all Pending orders on this page"
+                                                />
+                                            </th>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Items</th>
+                                            <th>Amount</th>
+                                            <th>Payment</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: "right" }}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedPendingOrders.map((order, index) => (
+                                            <tr key={order.id} className="orders-row-hover">
+                                                <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="orders-checkbox-row"
+                                                        checked={selectedOrderIds.includes(order.id)}
+                                                        onChange={() => toggleSelectOrder(order.id)}
+                                                    />
+                                                </td>
+                                                <td className="odt-id">{order.id}</td>
+                                                <td>
+                                                    <div className="odt-customer">
+                                                        <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
+                                                            {order.initials}
+                                                        </span>
+                                                        <span className="odt-customer-name">{order.customer}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="odt-date">{order.date}</td>
+                                                <td className="odt-items">{order.items} items</td>
+                                                <td className="odt-amount">{order.amount}</td>
+                                                <td className="odt-payment">{order.payment}</td>
+                                                <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
+                                                <td style={{ position: "relative" }}>
+                                                    <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
+                                                        <MoreVertical size={14} />
+                                                    </button>
+                                                    {activeRowMenuId === order.id && (
+                                                        <>
+                                                            <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
+                                                            <div 
+                                                                className="global-action-dropdown"
+                                                                style={index >= paginatedPendingOrders.length - 2 && paginatedPendingOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                            >
+                                                                <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
+                                                                    <Eye size={13} />
+                                                                    <span>View Details</span>
+                                                                </button>
+                                                                <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
+                                                                    <Edit2 size={13} />
+                                                                    <span>Edit Order</span>
+                                                                </button>
+                                                                <div className="global-dropdown-divider"></div>
+                                                                <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
+                                                                    <Trash2 size={13} />
+                                                                    <span>Cancel Order</span>
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </>
+                            )}
+                            {activeTab === "orders" && (
                             <>
                                 <thead>
                                     <tr>
@@ -1441,9 +1615,11 @@ function OrdersPage() {
                         )}
                     </table>
                 </div>
+            )}
 
                 {/* Pagination Controls */}
                 {((activeTab === "orders" && filteredOrders.length > ROWS_PER_PAGE) ||
+                  (activeTab === "pending" && filteredPendingOrders.length > ROWS_PER_PAGE) ||
                   (activeTab === "picking" && filteredPicks.length > ROWS_PER_PAGE) ||
                   (activeTab === "packing" && filteredPacks.length > ROWS_PER_PAGE) ||
                   (activeTab === "tracking" && filteredDeliveries.length > ROWS_PER_PAGE) ||
@@ -1452,18 +1628,21 @@ function OrdersPage() {
                         <span className="orders-pagination-info">
                             Showing <strong>{
                                 activeTab === "orders" ? Math.min(filteredOrders.length, (ordPage - 1) * ROWS_PER_PAGE + 1) :
+                                activeTab === "pending" ? Math.min(filteredPendingOrders.length, (pendingPage - 1) * ROWS_PER_PAGE + 1) :
                                 activeTab === "picking" ? Math.min(filteredPicks.length, (pickPage - 1) * ROWS_PER_PAGE + 1) :
                                 activeTab === "packing" ? Math.min(filteredPacks.length, (packPage - 1) * ROWS_PER_PAGE + 1) :
                                 activeTab === "tracking" ? Math.min(filteredDeliveries.length, (dlvPage - 1) * ROWS_PER_PAGE + 1) :
                                 Math.min(labelHistory.length, (histPage - 1) * ROWS_PER_PAGE + 1)
                             }</strong> to <strong>{
                                 activeTab === "orders" ? Math.min(filteredOrders.length, ordPage * ROWS_PER_PAGE) :
+                                activeTab === "pending" ? Math.min(filteredPendingOrders.length, pendingPage * ROWS_PER_PAGE) :
                                 activeTab === "picking" ? Math.min(filteredPicks.length, pickPage * ROWS_PER_PAGE) :
                                 activeTab === "packing" ? Math.min(filteredPacks.length, packPage * ROWS_PER_PAGE) :
                                 activeTab === "tracking" ? Math.min(filteredDeliveries.length, dlvPage * ROWS_PER_PAGE) :
                                 Math.min(labelHistory.length, histPage * ROWS_PER_PAGE)
                             }</strong> of <strong>{
                                 activeTab === "orders" ? filteredOrders.length :
+                                activeTab === "pending" ? filteredPendingOrders.length :
                                 activeTab === "picking" ? filteredPicks.length :
                                 activeTab === "packing" ? filteredPacks.length :
                                 activeTab === "tracking" ? filteredDeliveries.length :
@@ -1476,6 +1655,7 @@ function OrdersPage() {
                                 className="orders-page-btn"
                                 onClick={() => {
                                     if (activeTab === "orders") setOrdPage(p => Math.max(1, p - 1));
+                                    else if (activeTab === "pending") setPendingPage(p => Math.max(1, p - 1));
                                     else if (activeTab === "picking") setPickPage(p => Math.max(1, p - 1));
                                     else if (activeTab === "packing") setPackPage(p => Math.max(1, p - 1));
                                     else if (activeTab === "tracking") setDlvPage(p => Math.max(1, p - 1));
@@ -1483,6 +1663,7 @@ function OrdersPage() {
                                 }}
                                 disabled={
                                     activeTab === "orders" ? ordPage === 1 :
+                                    activeTab === "pending" ? pendingPage === 1 :
                                     activeTab === "picking" ? pickPage === 1 :
                                     activeTab === "packing" ? packPage === 1 :
                                     activeTab === "tracking" ? dlvPage === 1 :
@@ -1494,6 +1675,7 @@ function OrdersPage() {
 
                             {Array.from({ length:
                                 activeTab === "orders" ? Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
+                                activeTab === "pending" ? Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
                                 activeTab === "picking" ? Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
                                 activeTab === "packing" ? Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
                                 activeTab === "tracking" ? Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
@@ -1503,6 +1685,7 @@ function OrdersPage() {
                                     key={page}
                                     className={`orders-page-btn orders-page-number ${
                                         (activeTab === "orders" && ordPage === page) ||
+                                        (activeTab === "pending" && pendingPage === page) ||
                                         (activeTab === "picking" && pickPage === page) ||
                                         (activeTab === "packing" && packPage === page) ||
                                         (activeTab === "tracking" && dlvPage === page) ||
@@ -1511,8 +1694,11 @@ function OrdersPage() {
                                     }`}
                                     onClick={() => {
                                         if (activeTab === "orders") setOrdPage(page);
+                                        else if (activeTab === "pending") setPendingPage(page);
                                         else if (activeTab === "picking") setPickPage(page);
-                                        else if (activeTab === "packing" ? setPackPage(page) : activeTab === "tracking" ? setDlvPage(page) : setHistPage(page));
+                                        else if (activeTab === "packing") setPackPage(page);
+                                        else if (activeTab === "tracking") setDlvPage(page);
+                                        else setHistPage(page);
                                     }}
                                 >
                                     {page}
@@ -1523,6 +1709,7 @@ function OrdersPage() {
                                 className="orders-page-btn"
                                 onClick={() => {
                                     if (activeTab === "orders") setOrdPage(p => Math.min(Math.ceil(filteredOrders.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activeTab === "pending") setPendingPage(p => Math.min(Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE), p + 1));
                                     else if (activeTab === "picking") setPickPage(p => Math.min(Math.ceil(filteredPicks.length / ROWS_PER_PAGE), p + 1));
                                     else if (activeTab === "packing") setPackPage(p => Math.min(Math.ceil(filteredPacks.length / ROWS_PER_PAGE), p + 1));
                                     else if (activeTab === "tracking") setDlvPage(p => Math.min(Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE), p + 1));
@@ -1530,6 +1717,7 @@ function OrdersPage() {
                                 }}
                                 disabled={
                                     activeTab === "orders" ? ordPage === Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
+                                    activeTab === "pending" ? pendingPage === Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
                                     activeTab === "picking" ? pickPage === Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
                                     activeTab === "packing" ? packPage === Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
                                     activeTab === "tracking" ? dlvPage === Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
@@ -1732,7 +1920,7 @@ function OrdersPage() {
             )}
 
             {/* ─── FLOATING BULK ACTIONS TOOLBAR ─── */}
-            {selectedOrderIds.length > 0 && activeTab === "orders" && (
+            {selectedOrderIds.length > 0 && (activeTab === "orders" || activeTab === "pending") && (
                 <div className="orders-bulk-toolbar fade-in-up print-btn-no-print">
                     <div className="bulk-toolbar-info">
                         <div className="bulk-count-badge">{selectedOrderIds.length}</div>
@@ -1746,9 +1934,15 @@ function OrdersPage() {
                             <Printer size={13} />
                             <span>Print Labels</span>
                         </button>
-                        <button className="bulk-action-btn info" onClick={handleBulkMarkReadyForPacking}>
-                            Mark Ready For Packing
-                        </button>
+                        {activeTab === "pending" ? (
+                            <button className="bulk-action-btn info" onClick={handleBulkMarkReadyForPicking}>
+                                Mark Ready For Picking
+                            </button>
+                        ) : (
+                            <button className="bulk-action-btn info" onClick={handleBulkMarkReadyForPacking}>
+                                Mark Ready For Packing
+                            </button>
+                        )}
                         <button className="bulk-action-btn cancel" onClick={() => setSelectedOrderIds([])}>
                             Cancel
                         </button>
@@ -1831,7 +2025,7 @@ function OrdersPage() {
                                                                     warehouse: label.warehouse,
                                                                     packedDate: label.packedDate,
                                                                     status: label.status
-                                                                }), { size: 76, margin: 0 })
+                                                                }), { size: 150, margin: 3 })
                                                             }}
                                                         />
                                                     </div>
@@ -1900,7 +2094,7 @@ function OrdersPage() {
                                                     warehouse: label.warehouse,
                                                     packedDate: label.packedDate,
                                                     status: label.status
-                                                }), { size: 76, margin: 0 })
+                                                }), { size: 150, margin: 3 })
                                             }}
                                         />
                                     </div>

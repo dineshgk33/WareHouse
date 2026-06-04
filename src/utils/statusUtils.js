@@ -24,9 +24,10 @@ export function getOrderStatusClass(status) {
         case "Packing":
         case "Out for Delivery":
             return "orders-pill orders-pill--warning";
-        case "Pending":
         case "Waiting":
             return "orders-pill orders-pill--info";
+        case "Pending":
+            return "orders-pill orders-pill--warning";
         case "Cancelled":
         case "Failed":
             return "orders-pill orders-pill--danger";

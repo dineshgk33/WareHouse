@@ -69,6 +69,7 @@ const ALL_SIDEBAR_MENU = [
         icon: ShoppingBag,
         submenu: [
             { label: "All Orders", path: "/orders" },
+            { label: "Pending Orders", path: "/orders/pending" },
             { label: "Picking", path: "/orders?tab=picking" },
             { label: "Packing", path: "/orders?tab=packing" },
             { label: "Delivery Tracking", path: "/orders?tab=tracking" }

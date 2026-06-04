@@ -11,6 +11,7 @@ export const MOCK_ORDERS = [
         amount: "₹249.00",
         payment: "Credit Card",
         status: "Delivered",
+        mobile: "+91 98765 43210"
     },
     {
         id: "#ORD-8820",
@@ -22,6 +23,7 @@ export const MOCK_ORDERS = [
         amount: "₹59.95",
         payment: "PayPal",
         status: "Shipped",
+        mobile: "+91 87654 32109"
     },
     {
         id: "#ORD-8819",
@@ -33,6 +35,7 @@ export const MOCK_ORDERS = [
         amount: "₹512.40",
         payment: "Transfer Bank",
         status: "Processing",
+        mobile: "+91 76543 21098"
     },
     {
         id: "#ORD-8818",
@@ -44,6 +47,7 @@ export const MOCK_ORDERS = [
         amount: "₹134.99",
         payment: "COD",
         status: "Pending",
+        mobile: "+91 99880 12345"
     },
     {
         id: "#ORD-8817",
@@ -55,6 +59,7 @@ export const MOCK_ORDERS = [
         amount: "₹389.00",
         payment: "Credit Card",
         status: "Delivered",
+        mobile: "+91 65432 10987"
     },
     {
         id: "#ORD-8816",
@@ -66,6 +71,7 @@ export const MOCK_ORDERS = [
         amount: "₹78.50",
         payment: "PayPal",
         status: "Cancelled",
+        mobile: "+91 54321 09876"
     },
     {
         id: "#ORD-8815",
@@ -77,6 +83,7 @@ export const MOCK_ORDERS = [
         amount: "₹730.20",
         payment: "Transfer Bank",
         status: "Shipped",
+        mobile: "+91 43210 98765"
     },
     {
         id: "#ORD-8814",
@@ -88,6 +95,7 @@ export const MOCK_ORDERS = [
         amount: "₹199.00",
         payment: "COD",
         status: "Pending",
+        mobile: "+91 99880 54321"
     }
 ];
 

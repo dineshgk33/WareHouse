@@ -676,6 +676,7 @@
   resize: vertical;
 }
 
+
 .input-error {
   border-color: var(--color-danger) !important;
   background-color: #fffafb !important;
@@ -1059,6 +1060,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+
+  
 }
 
 .dkh-action-btn-secondary:hover {
@@ -1329,3 +1332,5 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+
+
