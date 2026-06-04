@@ -16,7 +16,8 @@ import {
     BookOpen,
     ChevronRight,
     FileText,
-    Activity
+    Activity,
+    Shield
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -102,6 +103,15 @@ const ALL_SIDEBAR_MENU = [
         icon: BarChart3,
     },
     {
+        id: "admin",
+        label: "Admin",
+        icon: Shield,
+        submenu: [
+            { label: "Members", path: "/admin/members" },
+            { label: "User Roles", path: "/admin/roles" }
+        ]
+    },
+    {
         id: "reports",
         label: "Reports",
         path: "/reports",
@@ -124,9 +134,7 @@ const ALL_BOTTOM_MENU = [
             { label: "General", path: "/settings" },
             { label: "Notifications", path: "/settings?tab=notifications" },
             { label: "Billing Plans", path: "/settings?tab=billing" },
-            { label: "Login & Security", path: "/settings?tab=security" },
-            { label: "Members", path: "/settings?tab=members" },
-            { label: "User Roles", path: "/settings?tab=roles" }
+            { label: "Login & Security", path: "/settings?tab=security" }
         ]
     },
     {
@@ -139,7 +147,7 @@ const ALL_BOTTOM_MENU = [
 
 function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const location = useLocation();
-    const { user, selectedRoleName } = useAuth();
+    const { user, selectedRoleName, canView } = useAuth();
     
     // Hover & Flyout states
     const [hoveredMenu, setHoveredMenu] = useState(null);
@@ -152,35 +160,22 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const profileImage = user?.ProfileImage || avatarImg;
 
     // Filter main menu and bottom menu items
-    const getFilteredMenus = (role) => {
-        let allowedIds = [];
-        let allowedBottomIds = ["support"];
-
-        if (role === "Administrator" || role === "Super Admin") {
-            allowedIds = ["dashboard", "catalog", "inventory", "orders", "customers", "darkhouses", "analytics", "billing"];
-            allowedBottomIds = ["settings", "support"];
-        } else if (role === "Store Manager") {
-            allowedIds = ["dashboard", "catalog", "inventory", "orders", "darkhouses"];
-            allowedBottomIds = ["support"];
-        } else if (role === "Operation Head") {
-            allowedIds = ["dashboard", "analytics", "reports", "operations"];
-            allowedBottomIds = ["support"];
-        } else if (role) {
-            // Support dynamic roles returned from future API updates
-            allowedIds = ["dashboard", "catalog", "inventory", "orders", "darkhouses"];
-            allowedBottomIds = ["support"];
-        } else {
-            allowedIds = ["dashboard"];
-            allowedBottomIds = ["support"];
+    const getFilteredMenus = () => {
+        const filteredMain = ALL_SIDEBAR_MENU.filter(item => {
+            return canView(item.id.toUpperCase());
+        });
+        
+        const allowedBottomIds = ["support"];
+        if (canView("SETTINGS")) {
+            allowedBottomIds.push("settings");
         }
-
-        const filteredMain = ALL_SIDEBAR_MENU.filter(item => allowedIds.includes(item.id));
+        
         const filteredBottom = ALL_BOTTOM_MENU.filter(item => allowedBottomIds.includes(item.id));
 
         return { main: filteredMain, bottom: filteredBottom };
     };
 
-    const { main: activeSidebarMenu, bottom: activeBottomMenu } = getFilteredMenus(userRole);
+    const { main: activeSidebarMenu, bottom: activeBottomMenu } = getFilteredMenus();
 
     // Helper to check active highlighting on parents
     const isParentActive = (item) => {

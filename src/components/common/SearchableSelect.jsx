@@ -113,9 +113,9 @@ function SearchableSelect({
                 </div>
                 <div className="select-actions" style={{ display: 'flex', alignItems: 'center' }}>
                     {selectedOption && !disabled && (
-                        <button type="button" onClick={handleClear} aria-label="Clear selection" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', padding: '0 4px', color: '#64748b' }}>
+                        <span role="button" onClick={handleClear} aria-label="Clear selection" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', padding: '0 4px', color: '#64748b' }}>
                             ✕
-                        </button>
+                        </span>
                     )}
                     <ChevronDown size={16} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", marginLeft: '4px', color: '#64748b' }} />
                 </div>

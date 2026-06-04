@@ -25,6 +25,7 @@ import {
 import { MOCK_WAREHOUSE_STOCK, MOCK_DARKHOUSE_STOCK, MOCK_STOCK_TRANSFERS } from "../../data/inventoryData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
 import { getInventoryStatusClass } from "../../utils/statusUtils";
+import { useAuth } from "../../context/AuthContext";
 import "./Inventory.css";
 
 const ROWS_PER_PAGE = 6;
@@ -32,6 +33,7 @@ const ROWS_PER_PAGE = 6;
 function InventoryPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get("tab") || "warehouse";
+    const { canCreate, canEdit, canApprove } = useAuth();
 
     // ─── States ───────────────────────────────────────────────────────────────
     const [warehouseStock, setWarehouseStock] = useState(MOCK_WAREHOUSE_STOCK);
@@ -346,7 +348,7 @@ function InventoryPage() {
                     </p>
                 </div>
                 <div className="inv-header-actions-group">
-                    {activeTab === "transfers" && (
+                    {activeTab === "transfers" && canCreate("INVENTORY") && (
                         <button className="inv-action-btn-primary" onClick={openNewTransfer}>
                             <Plus size={15} />
                             <span>New Stock Transfer</span>
@@ -652,12 +654,16 @@ function InventoryPage() {
                                                         <button className="inv-row-action-btn" title="View details" onClick={() => openWhView(item)}>
                                                             <Eye size={13} />
                                                         </button>
-                                                        <button className="inv-row-action-btn" title="Edit" onClick={() => openWhEdit(item)}>
-                                                            <Edit2 size={13} />
-                                                        </button>
-                                                        <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openWhAdjust(item)}>
-                                                            <SlidersHorizontal size={13} />
-                                                        </button>
+                                                        {canEdit("INVENTORY") && (
+                                                            <>
+                                                                <button className="inv-row-action-btn" title="Edit" onClick={() => openWhEdit(item)}>
+                                                                    <Edit2 size={13} />
+                                                                </button>
+                                                                <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openWhAdjust(item)}>
+                                                                    <SlidersHorizontal size={13} />
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -708,9 +714,11 @@ function InventoryPage() {
                                                         <button className="inv-row-action-btn" title="View details" onClick={() => openDhView(item)}>
                                                             <Eye size={13} />
                                                         </button>
-                                                        <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openDhAdjust(item)}>
-                                                            <SlidersHorizontal size={13} />
-                                                        </button>
+                                                        {canEdit("INVENTORY") && (
+                                                            <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openDhAdjust(item)}>
+                                                                <SlidersHorizontal size={13} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -756,7 +764,7 @@ function InventoryPage() {
                                                 <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
                                                 <td>
                                                     <div className="inv-actions-cell">
-                                                        {item.status === "Pending" && (
+                                                        {item.status === "Pending" && canApprove("INVENTORY") && (
                                                             <>
                                                                 <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
                                                                     Approve
@@ -766,7 +774,7 @@ function InventoryPage() {
                                                                 </button>
                                                             </>
                                                         )}
-                                                        {item.status === "Dispatched" && (
+                                                        {item.status === "Dispatched" && canApprove("INVENTORY") && (
                                                             <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleReceiveTransfer(item.id)}>
                                                                 Mark Received
                                                             </button>

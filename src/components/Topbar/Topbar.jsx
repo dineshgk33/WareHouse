@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Globe, Bell, ChevronDown, LogOut, Settings, User, Menu, Building2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import SwitchWorkspaceModal from "./SwitchWorkspaceModal";
@@ -9,6 +9,7 @@ import "./Topbar.css";
 
 function Topbar({ onOpenMobileSidebar }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -25,6 +26,21 @@ function Topbar({ onOpenMobileSidebar }) {
         navigate("/login");
     };
 
+    const getPageTitle = () => {
+        const path = location.pathname.toLowerCase();
+        if (path.includes('/dashboard')) return 'Dashboard';
+        if (path.includes('/inventory')) return 'Inventory';
+        if (path.includes('/orders')) return 'Orders';
+        if (path.includes('/customers')) return 'Customers';
+        if (path.includes('/settings')) return 'Settings';
+        if (path.includes('/admin')) return 'Admin';
+        if (path.includes('/catalog')) return 'Catalog';
+        if (path.includes('/billing')) return 'Billing';
+        if (path.includes('/analytics')) return 'Analytics';
+        if (path.includes('/darkhouses')) return 'Darkhouses';
+        return 'Dashboard';
+    };
+
     return (
         <header className="topbar">
             {/* Offscreen dummy inputs to satisfy Chrome's password manager and prevent it from binding to the search input */}
@@ -33,7 +49,7 @@ function Topbar({ onOpenMobileSidebar }) {
                 <input type="password" name="chrome-password-dummy" autoComplete="current-password" tabIndex={-1} />
             </div>
 
-            {/* Left Section: Mobile Hamburger menu & Logo */}
+            {/* Left Section: Mobile Hamburger menu, Logo & Dynamic Title */}
             <div className="topbar-left-wrapper">
                 <button className="topbar-hamburger-btn" onClick={onOpenMobileSidebar} aria-label="Open menu">
                     <Menu size={20} />
@@ -42,31 +58,26 @@ function Topbar({ onOpenMobileSidebar }) {
                     <img src={logoImg} className="topbar-mobile-logo-img" alt="HAATZA Logo" />
                     <span className="topbar-mobile-logo-text">HAATZA</span>
                 </div>
+                <h1 className="topbar-page-title">{getPageTitle()}</h1>
             </div>
 
-            {/* Welcome banner text */}
-            <div className="topbar-welcome">
-                <h1>Welcome, {userName}</h1>
-                <p className="welcome-desc">
-                    {userRole} • {warehouseName}
-                </p>
-            </div>
-
-            {/* Actions: Search, Language, Notification, User Profile */}
-            <div className="topbar-actions">
-                {/* Search Bar */}
-                <div className="search-container">
+            {/* Center Section: Global Search */}
+            <div className="topbar-center-wrapper">
+                <div className="global-search-container">
                     <Search className="search-icon" size={16} />
                     <input 
                         type="search" 
-                        placeholder="Search anything..." 
+                        placeholder="Search products, orders, customers..." 
                         className="topbar-search-input"
                         autoComplete="new-password"
                         name="topbar-search"
                     />
                     <kbd className="search-kbd">/</kbd>
                 </div>
+            </div>
 
+            {/* Right Section: Actions, Workspace & Profile */}
+            <div className="topbar-actions">
                 {/* Mobile Search Trigger Icon */}
                 <button className="topbar-mobile-search-btn" onClick={() => setIsMobileSearchOpen(true)} aria-label="Search">
                     <Search size={18} />
@@ -76,7 +87,6 @@ function Topbar({ onOpenMobileSidebar }) {
                 <div className="action-item language-selector">
                     <Globe size={18} />
                     <span>EN</span>
-                    <ChevronDown size={14} className="dropdown-arrow" />
                 </div>
 
                 {/* Notifications Bell */}
@@ -85,10 +95,16 @@ function Topbar({ onOpenMobileSidebar }) {
                     <span className="notification-dot"></span>
                 </div>
 
-                {/* Vertical Divider */}
-                <div className="vertical-divider"></div>
+                {/* Workspace Switcher */}
+                <div className="workspace-switcher-btn" onClick={() => setIsSwitchModalOpen(true)}>
+                    <div className="ws-switcher-info">
+                        <span className="ws-name">{warehouseName}</span>
+                        <span className="ws-role">{userRole}</span>
+                    </div>
+                    <ChevronDown size={14} className="ws-dropdown-icon" />
+                </div>
 
-                {/* Admin Profile with Interactive Dropdown */}
+                {/* Simplified Admin Profile */}
                 <div className="topbar-profile-wrapper">
                     <div 
                         className={`profile-container ${isDropdownOpen ? "dropdown-active" : ""}`}
@@ -102,10 +118,7 @@ function Topbar({ onOpenMobileSidebar }) {
                                 e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
                             }}
                         />
-                        <div className="profile-details">
-                            <span className="profile-name">{userName}</span>
-                            <span className="profile-role">{userRole} • {warehouseName}</span>
-                        </div>
+                        <span className="profile-name-simple">{userName}</span>
                         <ChevronDown size={14} className={`dropdown-arrow ${isDropdownOpen ? "arrow-rotate" : ""}`} />
                     </div>
 
@@ -113,11 +126,12 @@ function Topbar({ onOpenMobileSidebar }) {
                         <>
                             <div className="topbar-dropdown-overlay" onClick={() => setIsDropdownOpen(false)}></div>
                             <div className="topbar-profile-dropdown">
-                                <div className="dropdown-user-header">
+                                {/* Mobile-only user header */}
+                                <div className="dropdown-user-header-mobile">
                                     <span className="user-name-title">{userName}</span>
                                     <span className="user-role-subtitle">{userRole} • {warehouseName}</span>
+                                    <div className="dropdown-divider"></div>
                                 </div>
-                                <div className="dropdown-divider"></div>
                                 
                                 {/* Mobile-only notifications section */}
                                 <button className="dropdown-btn dropdown-notifications-item" onClick={() => { setIsDropdownOpen(false); alert("Opening Notifications Dashboard..."); }}>
@@ -126,7 +140,8 @@ function Topbar({ onOpenMobileSidebar }) {
                                     <span className="dropdown-notification-badge">3 new</span>
                                 </button>
                                 
-                                <button className="dropdown-btn" onClick={() => { setIsDropdownOpen(false); setIsSwitchModalOpen(true); }}>
+                                {/* Mobile-only workspace switch */}
+                                <button className="dropdown-btn dropdown-workspace-item" onClick={() => { setIsDropdownOpen(false); setIsSwitchModalOpen(true); }}>
                                     <Building2 size={15} />
                                     <span>Switch Workspace</span>
                                 </button>
@@ -152,7 +167,7 @@ function Topbar({ onOpenMobileSidebar }) {
                         <Search className="mobile-search-overlay-icon" size={16} />
                         <input 
                             type="search" 
-                            placeholder="Search anything..." 
+                            placeholder="Search products, orders, customers..." 
                             className="mobile-search-overlay-field"
                             autoFocus
                             onKeyDown={(e) => {

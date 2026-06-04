@@ -5,7 +5,7 @@ import SearchableSelect from "../common/SearchableSelect";
 import "./SwitchWorkspaceModal.css";
 
 function SwitchWorkspaceModal({ onClose }) {
-    const { user, warehouseRoles, completeSetup, selectedWarehouseId: currentWarehouseId, selectedRoleId: currentRoleId } = useAuth();
+    const { user, warehouseRoles, completeSetup, selectedWarehouseId: currentWarehouseId, selectedRoleId: currentRoleId, setPermissionsFromApi } = useAuth();
     
     const [selectedWarehouseId, setSelectedWarehouseId] = useState(currentWarehouseId || "");
     const [selectedRoleId, setSelectedRoleId] = useState(currentRoleId || "");
@@ -59,7 +59,7 @@ function SwitchWorkspaceModal({ onClose }) {
         setSelectedRoleId(val);
     };
 
-    const handleSwitch = (e) => {
+    const handleSwitch = async (e) => {
         e.preventDefault();
         if (!selectedWarehouseId || !selectedRoleId) return;
 
@@ -75,11 +75,40 @@ function SwitchWorkspaceModal({ onClose }) {
         }
 
         setIsLoading(true);
+
+        try {
+            // Call your secure API to get permissions
+            const apiUrl = import.meta.env.VITE_PERMISSIONS_API_URL;
+            const apiKey = import.meta.env.VITE_PERMISSIONS_API_KEY;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    warehouseId: selectedWhObj.warehouseId,
+                    roleId: selectedRlObj.roleId
+                })
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Set the permissions in the context
+                setPermissionsFromApi(data.message.accessiblePages);
+            } else {
+                console.error("API returned an error:", data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch permissions", error);
+        }
+
         setTimeout(() => {
             setIsLoading(false);
             completeSetup(selectedWhObj, selectedRlObj);
             onClose(); // Close modal immediately after state update
-        }, 800);
+        }, 500);
     };
 
     return (

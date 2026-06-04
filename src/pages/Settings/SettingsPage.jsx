@@ -40,7 +40,7 @@ function SettingsPage() {
     const { user, selectedRole, selectedRoleName } = useAuth();
     
     // Determine initial tab from query parameters
-    const initialTab = queryTab && ["general", "notifications", "billing", "security", "members", "roles"].includes(queryTab)
+    const initialTab = queryTab && ["general", "notifications", "billing", "security"].includes(queryTab)
         ? queryTab
         : "general";
 
@@ -49,7 +49,7 @@ function SettingsPage() {
 
     // Sync activeTab state when URL query parameters change
     useEffect(() => {
-        if (queryTab && ["general", "notifications", "billing", "security", "members", "roles"].includes(queryTab)) {
+        if (queryTab && ["general", "notifications", "billing", "security"].includes(queryTab)) {
             setActiveTab(queryTab);
         } else if (!queryTab) {
             setActiveTab("general");
@@ -103,9 +103,7 @@ function SettingsPage() {
         { id: "general", label: "General", icon: User },
         { id: "notifications", label: "Notifications", icon: Bell },
         { id: "billing", label: "Billing plans", icon: CreditCard },
-        { id: "security", label: "Login & security", icon: Shield },
-        { id: "members", label: "Members", icon: Users },
-        { id: "roles", label: "User roles", icon: Briefcase }
+        { id: "security", label: "Login & security", icon: Shield }
     ];
 
     // Render corresponding settings panel based on activeTab
@@ -599,77 +597,6 @@ function SettingsPage() {
                         </div>
                     </div>
                 );
-            case "members":
-                return (
-                    <div className="tab-panel-content fade-in">
-                        <div className="panel-title-block flex-between-header">
-                            <div>
-                                <h3>Team Members</h3>
-                                <p>Invite teammates and manage their permissions and roles.</p>
-                            </div>
-                            <button className="btn-add-member">
-                                <Plus size={14} />
-                                <span>Add Member</span>
-                            </button>
-                        </div>
-
-                        {/* Members list */}
-                        <div className="members-listing-block">
-                            <div className="member-card-item">
-                                <img src={user?.ProfileImage || avatarImg} alt={`${name} avatar`} className="member-thumb-img" />
-                                <div className="member-info">
-                                    <span className="member-name">{name}</span>
-                                    <span className="member-email">{email}</span>
-                                    <div className="member-meta">
-                                        <span className="member-join">Joined 3 months ago</span>
-                                    </div>
-                                </div>
-                                <span className="role-tag-badge owner-role">{selectedRole ? selectedRole.roleName : "Owner"}</span>
-                                <div className="member-actions">
-                                    <button className="btn-icon-action" title="Edit">
-                                        <MoreHorizontal size={16} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="member-card-item">
-                                <div className="member-thumb-placeholder text-bg-pink">SC</div>
-                                <div className="member-info">
-                                    <span className="member-name">Sarah Connor</span>
-                                    <span className="member-email">s.connor@haatza.com</span>
-                                    <div className="member-meta">
-                                        <span className="member-join">Joined 2 months ago</span>
-                                    </div>
-                                </div>
-                                <span className="role-tag-badge admin-role">Administrator</span>
-                                <div className="member-actions">
-                                    <button className="btn-icon-action" title="Edit">
-                                        <MoreHorizontal size={16} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="member-card-item">
-                                <div className="member-thumb-placeholder text-bg-blue">AJ</div>
-                                <div className="member-info">
-                                    <span className="member-name">Alex Jackson</span>
-                                    <span className="member-email">alex.j@haatza.com</span>
-                                    <div className="member-meta">
-                                        <span className="member-join">Joined 1 month ago</span>
-                                    </div>
-                                </div>
-                                <span className="role-tag-badge rep-role">Developer</span>
-                                <div className="member-actions">
-                                    <button className="btn-icon-action" title="Edit">
-                                        <MoreHorizontal size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case "roles":
-                return <UserRolesSection showToast={showToast} />;
             default:
                 return null;
         }

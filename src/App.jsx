@@ -29,6 +29,7 @@ const OperationsPage          = lazy(() => import("./pages/Operations/Operations
 // Auth & Setup Pages
 const LoginPage               = lazy(() => import("./pages/Auth/LoginPage.jsx"));
 const OrgRoleSelectionPage    = lazy(() => import("./pages/Auth/OrgRoleSelectionPage.jsx"));
+const AccessDeniedPage        = lazy(() => import("./pages/Auth/AccessDeniedPage.jsx"));
 const SellerZoneDashboard     = lazy(() => import("./pages/Dashboard/SellerZoneDashboard.jsx"));
 
 // Catalog Module Sub-Pages
@@ -67,19 +68,29 @@ function PageLoader() {
 }
 
 // ─── Protected Route Wrapper ──────────────────────────────────────────────────
-function ProtectedRoute({ allowedRoles }) {
-    const { isAuthenticated, userRole } = useAuth();
+function ProtectedRoute({ allowedRoles, pageId }) {
+    const { isAuthenticated, userRole, canView, permissionsLoading } = useAuth();
+
+    if (permissionsLoading) {
+        return <PageLoader />;
+    }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    if (!userRole || !ALL_ENTERPRISE_ROLES.includes(userRole)) {
-        return <Navigate to="/connect" replace />;
-    }
+    if (pageId) {
+        if (!canView(pageId)) {
+            return <Navigate to="/403" replace />;
+        }
+    } else {
+        if (!userRole || !ALL_ENTERPRISE_ROLES.includes(userRole)) {
+            return <Navigate to="/connect" replace />;
+        }
 
-    if (allowedRoles && !allowedRoles.includes(userRole)) {
-        return <Navigate to="/seller-zone" replace />;
+        if (allowedRoles && !allowedRoles.includes(userRole)) {
+            return <Navigate to="/seller-zone" replace />;
+        }
     }
 
     return <Outlet />;
@@ -132,6 +143,7 @@ function App() {
                         {/* Public Auth & Connection Selection Routes */}
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/connect" element={<OrgRoleSelectionPage />} />
+                        <Route path="/403" element={<AccessDeniedPage />} />
 
                         {/* Protected Enterprise Routes */}
                         <Route element={<ProtectedRoute allowedRoles={ALL_ENTERPRISE_ROLES} />}>
@@ -140,18 +152,24 @@ function App() {
                                 <Route path="seller-zone" element={<SellerZoneDashboard />} />
 
                                 {/* Shared Dashboard View */}
-                                <Route element={<ProtectedRoute allowedRoles={DASHBOARD_ROLES} />}>
+                                <Route element={<ProtectedRoute allowedRoles={DASHBOARD_ROLES} pageId="DASHBOARD" />}>
                                     <Route index element={<Dashboard />} />
                                     <Route path="dashboard" element={<Dashboard />} />
                                 </Route>
 
                                 {/* Store Managers and Administrators */}
-                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} />}>
+                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="DARKHOUSES" />}>
                                     <Route path="darkhouses" element={<Darkhouses />} />
+                                </Route>
+                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="ORDERS" />}>
                                     <Route path="orders" element={<Orders />} />
+                                </Route>
+                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="INVENTORY" />}>
                                     <Route path="inventory"  element={<Inventory />} />
+                                </Route>
 
-                                    {/* Catalog Module Routes */}
+                                {/* Catalog Module Routes */}
+                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="CATALOG" />}>
                                     <Route path="catalog/products"   element={<CatalogProducts />} />
                                     <Route path="catalog/categories" element={<CatalogCategories />} />
                                     <Route path="catalog/brands"     element={<CatalogBrands />} />
@@ -168,20 +186,26 @@ function App() {
                                 </Route>
 
                                 {/* Operation Heads and Administrators */}
-                                <Route element={<ProtectedRoute allowedRoles={ANALYTICS_ROLES} />}>
+                                <Route element={<ProtectedRoute allowedRoles={ANALYTICS_ROLES} pageId="ANALYTICS" />}>
                                     <Route path="analytics"  element={<Analytics />} />
                                 </Route>
 
                                 {/* Administrator Exclusive Pages */}
-                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} />}>
+                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="CUSTOMERS" />}>
                                     <Route path="customers"  element={<Customers />} />
+                                </Route>
+                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="BILLING" />}>
                                     <Route path="billing"    element={<Billing />} />
+                                </Route>
+                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="SETTINGS" />}>
                                     <Route path="settings"   element={<Settings />} />
                                 </Route>
 
                                 {/* Operation Head Exclusive Pages */}
-                                <Route element={<ProtectedRoute allowedRoles={OPERATION_HEAD_ONLY} />}>
+                                <Route element={<ProtectedRoute allowedRoles={OPERATION_HEAD_ONLY} pageId="REPORTS" />}>
                                     <Route path="reports" element={<ReportsPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute allowedRoles={OPERATION_HEAD_ONLY} pageId="OPERATIONS" />}>
                                     <Route path="operations" element={<OperationsPage />} />
                                 </Route>
                             </Route>

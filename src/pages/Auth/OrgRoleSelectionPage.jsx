@@ -51,7 +51,7 @@ function OrgRoleSelectionPage() {
         setSelectedRoleId(val);
     };
 
-    const handleContinue = (e) => {
+    const handleContinue = async (e) => {
         e.preventDefault();
         if (!selectedWarehouseId || !selectedRoleId) return;
 
@@ -61,11 +61,38 @@ function OrgRoleSelectionPage() {
         if (!selectedWhObj || !selectedRlObj) return;
 
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            completeSetup(selectedWhObj, selectedRlObj);
-            navigate("/dashboard");
-        }, 1200);
+        
+        const pages = await completeSetup(selectedWhObj, selectedRlObj);
+        
+        let targetPath = "/403";
+        
+        if (pages && pages.length > 0) {
+            const hasDashboard = pages.some(p => p.pageId && p.pageId.toUpperCase() === "DASHBOARD" && p.canView);
+            if (hasDashboard) {
+                targetPath = "/dashboard";
+            } else {
+                const firstPage = pages.find(p => p.canView);
+                const firstPageId = firstPage ? (firstPage.pageId ? firstPage.pageId.toUpperCase() : "") : "";
+                switch (firstPageId) {
+                    case "ORDERS": targetPath = "/orders"; break;
+                    case "INVENTORY": targetPath = "/inventory"; break;
+                    case "CATALOG": targetPath = "/catalog/products"; break;
+                    case "CUSTOMERS": targetPath = "/customers"; break;
+                    case "BILLING": targetPath = "/billing"; break;
+                    case "SETTINGS": targetPath = "/settings"; break;
+                    case "ANALYTICS": targetPath = "/analytics"; break;
+                    case "REPORTS": targetPath = "/reports"; break;
+                    case "OPERATIONS": targetPath = "/operations"; break;
+                    case "DARKHOUSES": targetPath = "/darkhouses"; break;
+                    default: targetPath = "/connect"; break; // Safely return to connect instead of 403
+                }
+            }
+        } else {
+            targetPath = "/connect"; // No permissions returned
+        }
+        
+        setIsLoading(false);
+        navigate(targetPath);
     };
 
     const currentStep = !selectedWarehouseId ? 1 : (!selectedRoleId ? 2 : 3);

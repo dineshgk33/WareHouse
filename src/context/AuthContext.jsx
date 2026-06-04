@@ -22,6 +22,16 @@ export function AuthProvider({ children }) {
             return [];
         }
     });
+
+    const [accessiblePages, setAccessiblePages] = useState(() => {
+        try {
+            const saved = localStorage.getItem("accessiblePages");
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+    const [permissionsLoading, setPermissionsLoading] = useState(false);
     
     // Explicit selection session properties
     const [selectedWarehouseId, setSelectedWarehouseId] = useState(
@@ -55,46 +65,37 @@ export function AuthProvider({ children }) {
         }
     });
 
-    const getPermissionsForRole = (roleName) => {
-        if (!roleName) return [];
-        switch (roleName) {
-            case "Administrator":
-                return [
-                    "View Dashboard",
-                    "View Inventory", "Manage Inventory", "Adjust Stock Levels",
-                    "View Orders", "Update Order Status", "Generate Labels", "Print Labels",
-                    "View Darkhouses", "Manage Darkhouses",
-                    "View Customers", "Edit Customer Profiles", "Verify Customers",
-                    "View Analytics", "Export Analytics Reports",
-                    "View Billing", "Manage Billing Plans", "View Invoices",
-                    "View Settings", "Edit Role", "Create Role", "Delete Role",
-                    "View Users", "Manage Users", "Assign User Roles"
-                ];
-            case "Store Manager":
-                return [
-                    "View Dashboard",
-                    "View Inventory", "Manage Inventory", "Adjust Stock Levels",
-                    "View Orders", "Update Order Status", "Generate Labels", "Print Labels",
-                    "View Darkhouses", "Manage Darkhouses"
-                ];
-            case "Operation Head":
-                return [
-                    "View Dashboard",
-                    "View Analytics", "Export Analytics Reports",
-                    "View Reports", "View Operations"
-                ];
-            default:
-                // Fallback permissions matching typical WMS operations for other roles
-                return [
-                    "View Dashboard",
-                    "View Inventory",
-                    "View Orders",
-                    "View Darkhouses"
-                ];
-        }
-    };
+    // Helper methods for RBAC
+    const getPagePermission = useCallback((pageId) => {
+        return accessiblePages.find(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+    }, [accessiblePages]);
 
-    const permissions = selectedRoleName ? getPermissionsForRole(selectedRoleName) : [];
+    const canView = useCallback((pageId) => {
+        const p = getPagePermission(pageId);
+        return p ? p.canView : false;
+    }, [getPagePermission]);
+
+    const canCreate = useCallback((pageId) => {
+        const p = getPagePermission(pageId);
+        return p ? p.canCreate : false;
+    }, [getPagePermission]);
+
+    const canEdit = useCallback((pageId) => {
+        const p = getPagePermission(pageId);
+        return p ? p.canEdit : false;
+    }, [getPagePermission]);
+
+    const canDelete = useCallback((pageId) => {
+        const p = getPagePermission(pageId);
+        return p ? p.canDelete : false;
+    }, [getPagePermission]);
+
+    const canApprove = useCallback((pageId) => {
+        const p = getPagePermission(pageId);
+        return p ? p.canApprove : false;
+    }, [getPagePermission]);
+
+    const permissions = selectedRoleName ? [] : []; // Kept for backwards compatibility but unused
 
     const login = useCallback((responseData) => {
         const userProfile = responseData.message;
@@ -109,7 +110,28 @@ export function AuthProvider({ children }) {
         setWarehouseRoles(roles);
     }, []);
 
-    const completeSetup = useCallback((warehouse, role) => {
+    const completeSetup = useCallback(async (warehouse, role) => {
+        setPermissionsLoading(true);
+        let pages = [];
+        try {
+            const { authService } = await import("../services/authService");
+            const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId);
+            if (res.status === "success") {
+                pages = res.message.accessiblePages || [];
+                setAccessiblePages(pages);
+                localStorage.setItem("accessiblePages", JSON.stringify(pages));
+            } else {
+                setAccessiblePages([]);
+                localStorage.setItem("accessiblePages", "[]");
+            }
+        } catch (error) {
+            console.error("Failed to fetch permissions", error);
+            setAccessiblePages([]);
+            localStorage.setItem("accessiblePages", "[]");
+        } finally {
+            setPermissionsLoading(false);
+        }
+
         localStorage.setItem("selectedWarehouseId", warehouse.warehouseId);
         localStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
         localStorage.setItem("selectedRoleId", role.roleId);
@@ -129,6 +151,8 @@ export function AuthProvider({ children }) {
         localStorage.setItem("userRole", role.roleName);
         localStorage.setItem("userName", user ? `${user.firstName} ${user.lastName}` : "");
         localStorage.setItem("userOrg", user?.Organization || "");
+        
+        return pages;
     }, [user]);
 
     const logout = useCallback(() => {
@@ -145,6 +169,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("userName");
         localStorage.removeItem("userOrg");
         localStorage.removeItem("userLoc");
+        localStorage.removeItem("accessiblePages");
         
         setIsAuthenticated(false);
         setUser(null);
@@ -155,6 +180,7 @@ export function AuthProvider({ children }) {
         setSelectedRoleName("");
         setSelectedWarehouse(null);
         setSelectedRole(null);
+        setAccessiblePages([]);
     }, []);
 
     const value = {
@@ -173,6 +199,13 @@ export function AuthProvider({ children }) {
         logout,
         userName: user ? `${user.firstName} ${user.lastName}` : "",
         userRole: selectedRoleName,
+        accessiblePages,
+        permissionsLoading,
+        canView,
+        canCreate,
+        canEdit,
+        canDelete,
+        canApprove
     };
 
     return (
