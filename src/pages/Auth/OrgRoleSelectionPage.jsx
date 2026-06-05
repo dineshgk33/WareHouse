@@ -4,6 +4,7 @@ import { ArrowRight, Activity, Building2, Users, Building, ShieldCheck, Clock, S
 import { useAuth } from "../../context/AuthContext";
 import logoImg from "../../assets/logo.jpeg";
 import SearchableSelect from "../../components/common/SearchableSelect";
+import { authService } from "../../services/authService";
 import "./OrgRoleSelectionPage.css";
 
 
@@ -14,6 +15,9 @@ function OrgRoleSelectionPage() {
     const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
     const [selectedRoleId, setSelectedRoleId] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [fetchedRoles, setFetchedRoles] = useState([]);
+    const [rolesLoading, setRolesLoading] = useState(false);
+    const [roleErrorText, setRoleErrorText] = useState("");
 
     useEffect(() => {
         if (!user) {
@@ -21,13 +25,54 @@ function OrgRoleSelectionPage() {
         }
     }, [user, navigate]);
 
+    useEffect(() => {
+        if (!selectedWarehouseId) {
+            setFetchedRoles([]);
+            setSelectedRoleId("");
+            setRoleErrorText("");
+            return;
+        }
+
+        setRolesLoading(true);
+        setFetchedRoles([]);
+        setSelectedRoleId("");
+        setRoleErrorText("");
+
+        authService.getWarehouseRoles(selectedWarehouseId)
+            .then(res => {
+                if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
+                    setFetchedRoles(res.message.roles);
+                } else {
+                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                    if (fallback.length > 0) {
+                        setFetchedRoles(fallback);
+                    } else {
+                        setFetchedRoles([]);
+                        setRoleErrorText("No roles available");
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load roles:", err);
+                const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                if (fallback.length > 0) {
+                    setFetchedRoles(fallback);
+                } else {
+                    setFetchedRoles([]);
+                    setRoleErrorText("No roles available");
+                }
+            })
+            .finally(() => {
+                setRolesLoading(false);
+            });
+    }, [selectedWarehouseId]);
+
     if (!user) return null;
 
     const uniqueWarehouses = [
         ...new Map(warehouseRoles.map(item => [item.warehouseId, item])).values()
     ];
 
-    const filteredRoles = warehouseRoles.filter(role => role.warehouseId === selectedWarehouseId);
     const totalUniqueRoles = new Set(warehouseRoles.map(r => r.roleId)).size;
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
@@ -35,6 +80,12 @@ function OrgRoleSelectionPage() {
         label: wh.warehouseName,
         rawObj: wh
     }));
+
+    const userRoleIds = warehouseRoles
+        .filter(r => r.warehouseId === selectedWarehouseId)
+        .map(r => r.roleId);
+
+    const filteredRoles = fetchedRoles.filter(role => userRoleIds.includes(role.roleId));
 
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,
@@ -149,11 +200,11 @@ function OrgRoleSelectionPage() {
                         <div className="selector-field-group">
                             <label>Role</label>
                             <SearchableSelect
-                                placeholder="Select Role"
+                                placeholder={rolesLoading ? "Loading Roles..." : roleErrorText ? "No Roles Available" : "Select Role"}
                                 options={roleOptions}
                                 value={selectedRoleId}
                                 onChange={handleRoleChange}
-                                disabled={!selectedWarehouseId}
+                                disabled={!selectedWarehouseId || rolesLoading || fetchedRoles.length === 0}
                                 iconType="role"
                             />
                         </div>

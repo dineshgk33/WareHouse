@@ -21,7 +21,16 @@ function AccessDeniedPage() {
             const firstPageId = firstPage ? (firstPage.pageId ? firstPage.pageId.toUpperCase() : "") : "";
             switch (firstPageId) {
                 case "ORDERS": navigate("/orders"); break;
-                case "INVENTORY": navigate("/inventory"); break;
+                case "INVENTORY":
+                case "WAREHOUSE_INVENTORY":
+                    navigate("/inventory");
+                    break;
+                case "DARKHOUSE_INVENTORY":
+                    navigate("/inventory?tab=darkhouse");
+                    break;
+                case "STOCK_TRANSFERS":
+                    navigate("/inventory?tab=transfers");
+                    break;
                 case "CATALOG": navigate("/catalog/products"); break;
                 case "CUSTOMERS": navigate("/customers"); break;
                 case "BILLING": navigate("/billing"); break;
@@ -30,6 +39,8 @@ function AccessDeniedPage() {
                 case "REPORTS": navigate("/reports"); break;
                 case "OPERATIONS": navigate("/operations"); break;
                 case "DARKHOUSES": navigate("/darkhouses"); break;
+                case "EMPLOYEES": navigate("/employees"); break;
+                case "ADMIN": navigate("/admin/members"); break;
                 default: navigate("/connect"); break;
             }
         }

@@ -37,11 +37,17 @@ function InventoryPage() {
     // Determine the active tab: respect URL param first, then fall back based on permissions
     const getDefaultTab = () => {
         const paramTab = searchParams.get("tab");
-        if (paramTab) return paramTab;
+        if (paramTab) {
+            if (paramTab === "warehouse" && canView("WAREHOUSE_INVENTORY")) return "warehouse";
+            if (paramTab === "darkhouse" && canView("DARKHOUSE_INVENTORY")) return "darkhouse";
+            if (paramTab === "transfers" && canView("STOCK_TRANSFERS")) return "transfers";
+        }
         // If user has warehouse inventory access, default to it
         if (canView("WAREHOUSE_INVENTORY")) return "warehouse";
         // Otherwise fall back to darkhouse if available
         if (canView("DARKHOUSE_INVENTORY")) return "darkhouse";
+        // Otherwise fall back to transfers if available
+        if (canView("STOCK_TRANSFERS")) return "transfers";
         return "warehouse";
     };
 
@@ -360,7 +366,7 @@ function InventoryPage() {
                     </p>
                 </div>
                 <div className="inv-header-actions-group">
-                    {activeTab === "transfers" && canCreate("WAREHOUSE_INVENTORY") && (
+                    {activeTab === "transfers" && canCreate("STOCK_TRANSFERS") && (
                         <button className="inv-action-btn-primary" onClick={openNewTransfer}>
                             <Plus size={15} />
                             <span>New Stock Transfer</span>
@@ -516,7 +522,7 @@ function InventoryPage() {
                                 Darkhouse Inventory
                             </button>
                         )}
-                        {canView("WAREHOUSE_INVENTORY") && (
+                        {canView("STOCK_TRANSFERS") && (
                             <button
                                 role="tab"
                                 aria-selected={activeTab === "transfers"}
@@ -782,7 +788,7 @@ function InventoryPage() {
                                                 <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
                                                 <td>
                                                     <div className="inv-actions-cell">
-                                                        {item.status === "Pending" && canApprove("WAREHOUSE_INVENTORY") && (
+                                                        {item.status === "Pending" && canApprove("STOCK_TRANSFERS") && (
                                                             <>
                                                                 <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
                                                                     Approve
@@ -792,7 +798,7 @@ function InventoryPage() {
                                                                 </button>
                                                             </>
                                                         )}
-                                                        {item.status === "Dispatched" && canApprove("WAREHOUSE_INVENTORY") && (
+                                                        {item.status === "Dispatched" && canApprove("STOCK_TRANSFERS") && (
                                                             <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleReceiveTransfer(item.id)}>
                                                                 Mark Received
                                                             </button>

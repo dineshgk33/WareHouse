@@ -23,6 +23,10 @@ export function AuthProvider({ children }) {
         }
     });
 
+    const [userPassword, setUserPassword] = useState(
+        () => sessionStorage.getItem("userPassword") || ""
+    );
+
     const [accessiblePages, setAccessiblePages] = useState(() => {
         try {
             // Only restore saved pages if they belong to the CURRENT selected role.
@@ -81,40 +85,56 @@ export function AuthProvider({ children }) {
     });
 
     // Helper methods for RBAC
-    const getPagePermission = useCallback((pageId) => {
-        return accessiblePages.find(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+    const canView = useCallback((pageId) => {
+        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canView);
     }, [accessiblePages]);
 
-    const canView = useCallback((pageId) => {
-        const p = getPagePermission(pageId);
-        return p ? p.canView : false;
-    }, [getPagePermission]);
-
     const canCreate = useCallback((pageId) => {
-        const p = getPagePermission(pageId);
-        return p ? p.canCreate : false;
-    }, [getPagePermission]);
+        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canCreate);
+    }, [accessiblePages]);
 
     const canEdit = useCallback((pageId) => {
-        const p = getPagePermission(pageId);
-        return p ? p.canEdit : false;
-    }, [getPagePermission]);
+        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canEdit);
+    }, [accessiblePages]);
 
     const canDelete = useCallback((pageId) => {
-        const p = getPagePermission(pageId);
-        return p ? p.canDelete : false;
-    }, [getPagePermission]);
+        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canDelete);
+    }, [accessiblePages]);
 
     const canApprove = useCallback((pageId) => {
-        const p = getPagePermission(pageId);
-        return p ? p.canApprove : false;
-    }, [getPagePermission]);
+        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canApprove);
+    }, [accessiblePages]);
 
     const permissions = selectedRoleName ? [] : []; // Kept for backwards compatibility but unused
 
-    const login = useCallback((responseData) => {
-        const userProfile = responseData.message;
-        const roles = userProfile?.warehouseRoles || [];
+    const login = useCallback((responseData, password) => {
+        const messageObj = responseData.message || {};
+        
+        // Support both object-based response and direct arrays
+        const userProfile = typeof messageObj === "object" && messageObj !== null && !Array.isArray(messageObj)
+            ? { ...messageObj }
+            : {};
+            
+        let roles = [];
+        if (Array.isArray(userProfile.roles)) {
+            roles = userProfile.roles;
+        } else if (Array.isArray(userProfile.warehouseRoles)) {
+            roles = userProfile.warehouseRoles;
+        } else if (Array.isArray(responseData.message)) {
+            roles = responseData.message;
+        } else if (responseData && Array.isArray(responseData.roles)) {
+            roles = responseData.roles;
+        } else if (responseData && Array.isArray(responseData.warehouseRoles)) {
+            roles = responseData.warehouseRoles;
+        }
+        
+        // Ensure both fields are set for backward compatibility
+        userProfile.warehouseRoles = roles;
+        userProfile.roles = roles;
+        
+        // Ensure user details fallback elegantly if missing
+        if (!userProfile.firstName) userProfile.firstName = "Warehouse";
+        if (!userProfile.lastName) userProfile.lastName = "User";
         
         // On every fresh login, wipe the previous session's permissions immediately.
         // This prevents stale accessiblePages (from an old role) from leaking into the
@@ -127,6 +147,11 @@ export function AuthProvider({ children }) {
         localStorage.setItem("authUser", JSON.stringify(userProfile));
         localStorage.setItem("warehouseRoles", JSON.stringify(roles));
         
+        if (password) {
+            setUserPassword(password);
+            sessionStorage.setItem("userPassword", password);
+        }
+
         setIsAuthenticated(true);
         setUser(userProfile);
         setWarehouseRoles(roles);
@@ -197,6 +222,9 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("accessiblePages");
         localStorage.removeItem("permissionsVersion");
         
+        sessionStorage.removeItem("userPassword");
+        setUserPassword("");
+
         setIsAuthenticated(false);
         setUser(null);
         setWarehouseRoles([]);
@@ -225,6 +253,7 @@ export function AuthProvider({ children }) {
         logout,
         userName: user ? `${user.firstName} ${user.lastName}` : "",
         userRole: selectedRoleName,
+        userPassword,
         accessiblePages,
         permissionsLoading,
         canView,

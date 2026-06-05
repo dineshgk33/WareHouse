@@ -29,11 +29,11 @@ function LoginPage() {
 
         try {
             const data = await authService.login(email, password);
-            if (data.status === "success" && data.message.loginEnabled) {
-                login(data);
+            if (data.status === "success" && data.message && data.message.loginEnabled !== false) {
+                login(data, password);
                 navigate("/connect");
             } else {
-                setError(data.message || "Login failed. Please check your credentials.");
+                setError(data && typeof data.message === "string" ? data.message : "Login failed. Please check your credentials.");
             }
         } catch (err) {
             setError("An error occurred during authentication. Please try again.");

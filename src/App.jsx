@@ -88,7 +88,10 @@ function ProtectedRoute({ allowedRoles, pageId }) {
         if (accessiblePages.length === 0) {
             return <Navigate to="/connect" replace />;
         }
-        if (!canView(pageId)) {
+        const hasAccess = Array.isArray(pageId)
+            ? pageId.some(id => canView(id))
+            : canView(pageId);
+        if (!hasAccess) {
             return <Navigate to="/403" replace />;
         }
     } else {
@@ -171,8 +174,8 @@ function App() {
                                     <Route path="orders/pending" element={<Orders />} />
                                 </Route>
 
-                                {/* Warehouse Inventory */}
-                                <Route element={<ProtectedRoute pageId="WAREHOUSE_INVENTORY" />}>
+                                {/* Warehouse & Darkhouse Inventory */}
+                                <Route element={<ProtectedRoute pageId={["WAREHOUSE_INVENTORY", "DARKHOUSE_INVENTORY", "STOCK_TRANSFERS"]} />}>
                                     <Route path="inventory" element={<Inventory />} />
                                 </Route>
 

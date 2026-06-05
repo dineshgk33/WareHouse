@@ -40,11 +40,14 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Picking") return "/orders?tab=picking";
             if (pageName === "Packing") return "/orders?tab=packing";
             if (pageName === "Delivery Tracking") return "/orders?tab=tracking";
+            if (pageName === "Label History") return "/orders?tab=label-history";
             return "/orders";
         case "WAREHOUSE_INVENTORY":
             return "/inventory";
         case "DARKHOUSE_INVENTORY":
             return "/inventory?tab=darkhouse";
+        case "STOCK_TRANSFERS":
+            return "/inventory?tab=transfers";
         case "EMPLOYEES":
             return "/employees";
         case "REPORTS":
@@ -120,6 +123,18 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const [flyoutPosition, setFlyoutPosition] = useState(null);
     const leaveTimeoutRef = useRef(null);
 
+    // Responsive states
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [expandedMobileMenu, setExpandedMobileMenu] = useState(null);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     // Dynamic configuration based on active role
     const userName = user ? `${user.firstName} ${user.lastName}` : "";
     const userRole = selectedRoleName || "";
@@ -172,16 +187,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 icon: getIconForModule(moduleName),
             };
 
-            if (moduleName === "Orders") {
-                item.submenu = [
-                    { label: "All Orders", path: "/orders" },
-                    { label: "Pending Orders", path: "/orders/pending" },
-                    { label: "Picking", path: "/orders?tab=picking" },
-                    { label: "Packing", path: "/orders?tab=packing" },
-                    { label: "Delivery Tracking", path: "/orders?tab=tracking" },
-                    { label: "Label History", path: "/orders?tab=label-history" }
-                ];
-            } else if (modulePages.length === 1) {
+            if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
                 item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
             } else {
@@ -286,16 +292,32 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         }
     };
 
+    const handleParentClick = (item, e) => {
+        if (isMobile && item.submenu) {
+            e.preventDefault();
+            setExpandedMobileMenu(prev => prev === item.id ? null : item.id);
+        }
+    };
+
     const renderMenuItem = (item) => {
         const Icon = item.icon;
         const isActive = isParentActive(item);
+        const isExpanded = expandedMobileMenu === item.id;
 
         const content = (
             <>
                 <Icon size={18} className="nav-icon" />
                 {!isCollapsed && <span className="nav-label">{item.label}</span>}
                 {!isCollapsed && item.submenu && (
-                    <ChevronRight size={14} className="submenu-indicator-arrow" />
+                    <ChevronRight 
+                        size={14} 
+                        className="submenu-indicator-arrow" 
+                        style={{
+                            transform: isMobile && isExpanded ? "rotate(90deg)" : "none",
+                            transition: "transform 0.2s ease",
+                            color: isMobile && isExpanded ? "#ffffff" : undefined
+                        }}
+                    />
                 )}
             </>
         );
@@ -304,8 +326,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             <li 
                 key={item.id}
                 className="sidebar-item-container"
-                onMouseEnter={(e) => handleParentMouseEnter(item, e)}
-                onMouseLeave={handleParentMouseLeave}
+                onMouseEnter={!isMobile ? (e) => handleParentMouseEnter(item, e) : undefined}
+                onMouseLeave={!isMobile ? handleParentMouseLeave : undefined}
             >
                 {item.path ? (
                     <Link
@@ -319,10 +341,57 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 ) : (
                     <div
                         className={`nav-link clickable-parent ${isActive ? "active" : ""}`}
+                        onClick={(e) => handleParentClick(item, e)}
                         title={isCollapsed ? item.label : undefined}
                     >
                         {content}
                     </div>
+                )}
+
+                {/* Inline submenu accordion for mobile */}
+                {isMobile && item.submenu && isExpanded && (
+                    <ul className="mobile-submenu-list" style={{
+                        listStyle: "none",
+                        paddingLeft: "30px",
+                        marginTop: "4px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px"
+                    }}>
+                        {item.submenu.map((sub, idx) => {
+                            const currentPath = location.pathname + location.search;
+                            const isSubActive = sub.path.includes("?") 
+                                ? currentPath === sub.path 
+                                : location.pathname === sub.path;
+                            return (
+                                <li key={idx}>
+                                    <Link
+                                        to={sub.path}
+                                        className={`nav-link ${isSubActive ? "active" : ""}`}
+                                        onClick={handleSubmenuItemClick}
+                                        style={{
+                                            padding: "8px 12px",
+                                            fontSize: "13px",
+                                            minHeight: "36px",
+                                            borderRadius: "10px",
+                                            backgroundColor: isSubActive ? "#ffffff" : "transparent",
+                                            color: isSubActive ? "#020079" : "rgba(255, 255, 255, 0.85)"
+                                        }}
+                                    >
+                                        <span className="mobile-submenu-bullet" style={{
+                                            width: "5px",
+                                            height: "5px",
+                                            borderRadius: "50%",
+                                            backgroundColor: isSubActive ? "#020079" : "rgba(255, 255, 255, 0.5)",
+                                            marginRight: "8px",
+                                            flexShrink: 0
+                                        }}></span>
+                                        {sub.label}
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 )}
             </li>
         );
@@ -393,28 +462,28 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             </div>
 
             {/* Wix Studio-Style Floating Submenu flyout */}
-            {hoveredMenu && hoveredMenu.id === "inventory" ? (
+            {!isMobile && hoveredMenu && hoveredMenu.id === "inventory" ? (
                 <InventoryFlyout
                     menu={hoveredMenu}
                     position={flyoutPosition}
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
                 />
-            ) : hoveredMenu && hoveredMenu.id === "orders" ? (
+            ) : !isMobile && hoveredMenu && hoveredMenu.id === "orders" ? (
                 <OrdersFlyout
                     menu={hoveredMenu}
                     position={flyoutPosition}
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
                 />
-            ) : hoveredMenu && hoveredMenu.id === "darkhouses" ? (
+            ) : !isMobile && hoveredMenu && hoveredMenu.id === "darkhouses" ? (
                 <DarkhouseFlyout
                     menu={hoveredMenu}
                     position={flyoutPosition}
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
                 />
-            ) : hoveredMenu && (
+            ) : !isMobile && hoveredMenu && (
                 <FlyoutMenu 
                     menu={hoveredMenu}
                     position={flyoutPosition}

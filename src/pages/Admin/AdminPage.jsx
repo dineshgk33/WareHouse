@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { 
     Users, 
     Briefcase,
+    Warehouse,
     MoreVertical,
     Plus,
     CheckCircle,
@@ -11,18 +12,21 @@ import {
     Upload,
     ChevronLeft,
     ChevronRight,
-    ArrowUpDown
+    ArrowUpDown,
+    Check
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
 import UserRolesSection from "../../components/Roles/UserRolesSection";
+import Modal from "../../components/Roles/Modal";
+import { authService } from "../../services/authService";
 import "../Settings/Settings.css";
 
 function AdminPage() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, selectedRole, selectedRoleName } = useAuth();
+    const { user, selectedRole, selectedRoleName, warehouseRoles } = useAuth();
     
     // Determine active tab from URL path
     const pathParts = location.pathname.split('/');
@@ -64,8 +68,7 @@ function AdminPage() {
     const name = user ? `${user.firstName} ${user.lastName}` : "";
     const email = user?.email || "";
 
-    // Mock Data for table
-    const initialMembers = [
+    const [members, setMembers] = useState(() => [
         { id: '1', name: name, email: email, employeeId: user?.employeeId || "EMP001", role: selectedRoleName || "Owner", warehouse: "Central Hub Alpha", status: "Active", joinedDate: "2026-06-01", avatar: user?.ProfileImage || avatarImg, initials: "", bg: "" },
         { id: '2', name: "Sarah Connor", email: "s.connor@haatza.com", employeeId: "EMP002", role: "Administrator", warehouse: "Central Hub Alpha", status: "Active", joinedDate: "2026-04-15", avatar: "", initials: "SC", bg: "text-bg-pink" },
         { id: '3', name: "Alex Jackson", email: "alex.j@haatza.com", employeeId: "EMP003", role: "Developer", warehouse: "Tech Center", status: "Active", joinedDate: "2026-05-10", avatar: "", initials: "AJ", bg: "text-bg-blue" },
@@ -78,11 +81,218 @@ function AdminPage() {
         { id: '10', name: "Liam Brown", email: "l.brown@haatza.com", employeeId: "EMP010", role: "Developer", warehouse: "Tech Center", status: "Active", joinedDate: "2026-03-22", avatar: "", initials: "LB", bg: "text-bg-yellow" },
         { id: '11', name: "Ava Davis", email: "a.davis@haatza.com", employeeId: "EMP011", role: "Viewer", warehouse: "Central Hub Alpha", status: "Inactive", joinedDate: "2025-09-05", avatar: "", initials: "AD", bg: "text-bg-green" },
         { id: '12', name: "Noah Garcia", email: "n.garcia@haatza.com", employeeId: "EMP012", role: "Administrator", warehouse: "South Facility", status: "Pending", joinedDate: "2026-05-25", avatar: "", initials: "NG", bg: "text-bg-purple" }
-    ];
+    ]);
+
+    // Modal & Form States
+    const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+    const [newMemberName, setNewMemberName] = useState("");
+    const [newMemberEmail, setNewMemberEmail] = useState("");
+    const [newMemberPhone, setNewMemberPhone] = useState("");
+    const [newMemberEmpId, setNewMemberEmpId] = useState("");
+    const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
+    const [selectedRoleId, setSelectedRoleId] = useState(null);
+    const [accountStatus, setAccountStatus] = useState("ACTIVE");
+    const [newMemberDept, setNewMemberDept] = useState("");
+    const [newMemberAccessLevel, setNewMemberAccessLevel] = useState("Standard");
+    const [newMemberManager, setNewMemberManager] = useState("");
+    
+    const [fetchedRoles, setFetchedRoles] = useState([]);
+    const [rolesLoading, setRolesLoading] = useState(false);
+    const [roleErrorText, setRoleErrorText] = useState("");
+    
+    const [permissionsList, setPermissionsList] = useState([]);
+    const [permissionsLoading, setPermissionsLoading] = useState(false);
+    const [isCreatingMember, setIsCreatingMember] = useState(false);
+    const [isEditingPermissions, setIsEditingPermissions] = useState(false);
+    const [customAccessiblePages, setCustomAccessiblePages] = useState([]);
+
+    // Extract unique warehouses dynamically from current user's warehouseRoles context (from login response)
+    const uniqueWarehouses = useMemo(() => {
+        if (!warehouseRoles) return [];
+        const seen = new Set();
+        const list = [];
+        for (const item of warehouseRoles) {
+            if (item.warehouseId && !seen.has(item.warehouseId)) {
+                seen.add(item.warehouseId);
+                list.push({
+                    warehouseId: item.warehouseId,
+                    warehouseName: item.warehouseName
+                });
+            }
+        }
+        return list;
+    }, [warehouseRoles]);
+
+    // Fetch roles dynamically when a warehouse is selected
+    useEffect(() => {
+        if (!selectedWarehouseId) {
+            setFetchedRoles([]);
+            setSelectedRoleId(null);
+            setRoleErrorText("");
+            return;
+        }
+        
+        setRolesLoading(true);
+        setSelectedRoleId(null);
+        setFetchedRoles([]);
+        setRoleErrorText("");
+        
+        authService.getWarehouseRoles(selectedWarehouseId)
+            .then(res => {
+                if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
+                    setFetchedRoles(res.message.roles);
+                } else {
+                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                    if (fallback.length > 0) {
+                        setFetchedRoles(fallback);
+                    } else {
+                        setFetchedRoles([]);
+                        setSelectedRoleId(null);
+                        setRoleErrorText("No roles available for selected warehouse");
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load roles:", err);
+                const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                if (fallback.length > 0) {
+                    setFetchedRoles(fallback);
+                } else {
+                    setFetchedRoles([]);
+                    setSelectedRoleId(null);
+                    setRoleErrorText("No roles available for selected warehouse");
+                }
+            })
+            .finally(() => {
+                setRolesLoading(false);
+            });
+    }, [selectedWarehouseId, warehouseRoles]);
+
+    // Fetch permissions dynamically when a role is selected
+    useEffect(() => {
+        if (!selectedWarehouseId || !selectedRoleId || fetchedRoles.length === 0) {
+            setPermissionsList([]);
+            setCustomAccessiblePages([]);
+            return;
+        }
+        
+        setPermissionsLoading(true);
+        setPermissionsList([]);
+        setCustomAccessiblePages([]);
+        
+        authService.getRolePermissions(selectedWarehouseId, selectedRoleId)
+            .then(res => {
+                if (res.status === "success" && res.message && Array.isArray(res.message.accessiblePages)) {
+                    // Get only pages/modules the user can view
+                    const activeModules = res.message.accessiblePages
+                        .filter(page => page.canView)
+                        .map(page => page.pageName || page.pageId);
+                    setPermissionsList(activeModules);
+                    setCustomAccessiblePages(res.message.accessiblePages);
+                } else {
+                    setPermissionsList([]);
+                    setCustomAccessiblePages([]);
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load permissions:", err);
+                setPermissionsList([]);
+                setCustomAccessiblePages([]);
+            })
+            .finally(() => {
+                setPermissionsLoading(false);
+            });
+    }, [selectedWarehouseId, selectedRoleId, fetchedRoles]);
+
+    const closeAndResetModal = () => {
+        setIsAddMemberModalOpen(false);
+        setNewMemberName("");
+        setNewMemberEmail("");
+        setNewMemberPhone("");
+        setNewMemberEmpId("");
+        setSelectedWarehouseId("");
+        setSelectedRoleId(null);
+        setAccountStatus("ACTIVE");
+        setNewMemberDept("");
+        setNewMemberAccessLevel("Standard");
+        setNewMemberManager("");
+        setFetchedRoles([]);
+        setPermissionsList([]);
+        setRoleErrorText("");
+        setIsEditingPermissions(false);
+        setCustomAccessiblePages([]);
+    };
+
+    const handleAddMemberToLocalList = (payload) => {
+        const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === payload.warehouseId);
+        const selectedRl = fetchedRoles.find(role => role.roleId === payload.roleId);
+        
+        const newMember = {
+            id: `EMP-${Date.now()}`,
+            name: payload.fullName,
+            email: payload.email,
+            employeeId: newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+            role: selectedRl ? selectedRl.roleName : "Member",
+            warehouse: selectedWh ? selectedWh.warehouseName : "Warehouse",
+            status: payload.status === "ACTIVE" ? "Active" : "Pending",
+            joinedDate: new Date().toISOString().split('T')[0],
+            avatar: "",
+            initials: payload.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            bg: ["text-bg-pink", "text-bg-blue", "text-bg-yellow", "text-bg-green", "text-bg-purple", "text-bg-orange"][Math.floor(Math.random() * 6)],
+            accessiblePages: payload.accessiblePages
+        };
+        
+        setMembers(prev => [newMember, ...prev]);
+    };
+
+    const handleCreateMember = async (e) => {
+        e.preventDefault();
+        if (!newMemberName.trim() || !newMemberEmail.trim() || !selectedWarehouseId || !selectedRoleId) {
+            return;
+        }
+        
+        setIsCreatingMember(true);
+        
+        const payload = {
+            fullName: newMemberName.trim(),
+            email: newMemberEmail.trim(),
+            phoneNumber: newMemberPhone.trim(),
+            warehouseId: selectedWarehouseId,
+            roleId: selectedRoleId,
+            status: accountStatus === "ACTIVE" ? "ACTIVE" : "PENDING",
+            department: newMemberDept,
+            accessLevel: newMemberAccessLevel,
+            reportingManager: newMemberManager,
+            accessiblePages: customAccessiblePages
+        };
+        
+        try {
+            const res = await authService.createMember(payload);
+            if (res.status === "success") {
+                showToast?.("Team member created successfully.");
+                handleAddMemberToLocalList(payload);
+                closeAndResetModal();
+            } else {
+                showToast?.(res.message || "Failed to create team member.");
+            }
+        } catch (error) {
+            console.error("Failed to create member:", error);
+            if (!error.response || error.response.status === 404) {
+                // Fallback local simulation for prototype (handles 404 or CORS/Network errors)
+                showToast?.("Member created successfully (Local Simulation).");
+                handleAddMemberToLocalList(payload);
+                closeAndResetModal();
+            } else {
+                showToast?.(error.response?.data?.message || "Failed to create member. Please try again.");
+            }
+        } finally {
+            setIsCreatingMember(false);
+        }
+    };
 
     // Filter logic
     const filteredMembers = useMemo(() => {
-        return initialMembers.filter(member => {
+        return members.filter(member => {
             const searchLower = searchTerm.toLowerCase();
             return member.name.toLowerCase().includes(searchLower) ||
                    member.email.toLowerCase().includes(searchLower) ||
@@ -90,7 +300,7 @@ function AdminPage() {
                    member.role.toLowerCase().includes(searchLower) ||
                    member.warehouse.toLowerCase().includes(searchLower);
         });
-    }, [searchTerm, initialMembers]);
+    }, [searchTerm, members]);
 
     // Sort logic
     const sortedMembers = useMemo(() => {
@@ -170,7 +380,7 @@ function AdminPage() {
                                 <Download size={14} />
                                 <span>Export</span>
                             </button>
-                            <button className="btn-primary-action">
+                            <button className="btn-primary-action" onClick={() => setIsAddMemberModalOpen(true)}>
                                 <Plus size={14} />
                                 <span>Add Member</span>
                             </button>
@@ -303,6 +513,12 @@ function AdminPage() {
         }
         return null;
     };
+
+    const selectedWarehouse = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+    const selectedRoleObj = fetchedRoles.find(role => role.roleId === selectedRoleId);
+    
+    const displayWarehouseName = selectedWarehouse ? selectedWarehouse.warehouseName : "";
+    const displayRoleName = selectedRoleObj ? selectedRoleObj.roleName : "";
 
     return (
         <div className="settings-page-wrapper admin-layout">
@@ -847,6 +1063,351 @@ function AdminPage() {
                         padding: 16px 20px;
                     }
                 }
+
+                /* Add Member Modal Custom Styles */
+                .member-modal-section-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #374151;
+                    margin: 20px 0 12px 0;
+                    border-bottom: 1px solid #e5e7eb;
+                    padding-bottom: 6px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .member-modal-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                }
+                @media (max-width: 640px) {
+                    .member-modal-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+                
+                /* Select fields */
+                .role-form-field select {
+                    width: 100%;
+                    padding: 10px 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 10px;
+                    font-size: 13px;
+                    font-family: inherit;
+                    color: #111827;
+                    box-sizing: border-box;
+                    background-color: #ffffff;
+                    outline: none;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                }
+                .role-form-field select:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+                }
+                .role-form-field select:disabled {
+                    background-color: #f3f4f6;
+                    color: #9ca3af;
+                    cursor: not-allowed;
+                }
+                
+                /* Radio Group */
+                .status-radio-group {
+                    display: flex;
+                    gap: 16px;
+                    margin-top: 8px;
+                }
+                .status-radio-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    color: #374151;
+                }
+                .status-radio-option input {
+                    width: 16px;
+                    height: 16px;
+                    accent-color: #2563eb;
+                    cursor: pointer;
+                    margin: 0;
+                }
+                
+                /* Permissions Summary Card */
+                .permissions-summary-card {
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-top: 20px;
+                }
+                .permissions-summary-title {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 12px 0;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .permissions-summary-item {
+                    font-size: 13px;
+                    color: #475569;
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 6px;
+                }
+                .permissions-summary-item strong {
+                    color: #0f172a;
+                    font-weight: 600;
+                    min-width: 100px;
+                    display: inline-block;
+                }
+                .permissions-summary-item span {
+                    color: #334155;
+                }
+                .permissions-access-tags {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    margin-top: 6px;
+                }
+                .permissions-access-tag {
+                    display: inline-flex;
+                    align-items: center;
+                    padding: 4px 10px;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 600;
+                }
+                .permissions-fallback-text {
+                    font-size: 12px;
+                    color: #64748b;
+                    font-style: italic;
+                }
+
+                /* Redesigned Add Employee Modal Styles */
+                .admin-layout .role-modal:not(.role-modal--compact) {
+                    width: min(760px, 95vw) !important;
+                    max-height: 85vh !important;
+                    border-radius: 20px !important;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+                    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+                    background: #ffffff !important;
+                }
+                .admin-layout .role-modal__header {
+                    padding: 24px 32px !important;
+                    border-bottom: 1px solid #f1f5f9 !important;
+                    background: #ffffff !important;
+                }
+                .admin-layout .role-modal__body {
+                    padding: 24px 32px 32px !important;
+                    background: #ffffff !important;
+                }
+                .admin-layout .role-modal__footer {
+                    padding: 16px 32px !important;
+                    border-top: 1px solid #f1f5f9 !important;
+                    background: #ffffff !important;
+                }
+                
+                .employee-modal-sections {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                
+                .employee-section-card {
+                    background: #f8fafc;
+                    border: 1px solid #f1f5f9;
+                    border-radius: 16px;
+                    padding: 24px;
+                    transition: border-color 0.2s ease;
+                }
+                .employee-section-card:hover {
+                    border-color: #e2e8f0;
+                }
+                
+                .employee-section-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 20px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #475569;
+                    text-transform: uppercase;
+                    letter-spacing: 0.75px;
+                }
+                .employee-section-header svg {
+                    color: #2563eb;
+                }
+                
+                .employee-fields-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                }
+                @media (max-width: 640px) {
+                    .employee-fields-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                    }
+                }
+                
+                .field-full-width {
+                    grid-column: span 2;
+                }
+                @media (max-width: 640px) {
+                    .field-full-width {
+                        grid-column: span 1;
+                    }
+                }
+                
+                .employee-form-field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .employee-form-field label {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #374151;
+                }
+                
+                .employee-form-field input[type="text"],
+                .employee-form-field input[type="email"],
+                .employee-form-field input[type="tel"],
+                .employee-form-field select {
+                    width: 100%;
+                    height: 48px;
+                    padding: 0 16px;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-family: inherit;
+                    color: #1e293b;
+                    background-color: #ffffff;
+                    box-sizing: border-box;
+                    outline: none;
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                
+                .employee-form-field input::placeholder {
+                    color: #94a3b8;
+                    font-weight: 400;
+                }
+                
+                .employee-form-field input:focus,
+                .employee-form-field select:focus {
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+                }
+                
+                .employee-form-field select:disabled {
+                    background-color: #f1f5f9;
+                    color: #94a3b8;
+                    cursor: not-allowed;
+                    border-color: #e2e8f0;
+                }
+                
+                /* Radio Buttons for Status option styling */
+                .employee-status-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                    height: 48px;
+                }
+                .employee-status-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    color: #334155;
+                    font-weight: 500;
+                    user-select: none;
+                }
+                .employee-status-option input {
+                    width: 18px;
+                    height: 18px;
+                    accent-color: #2563eb;
+                    cursor: pointer;
+                }
+                
+                /* Header layout and avatar */
+                .employee-avatar-placeholder {
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+                    transition: transform 0.2s ease;
+                }
+                .employee-avatar-placeholder:hover {
+                    transform: scale(1.05);
+                }
+                
+                /* Close Button Alignment */
+                .admin-layout .role-modal__close {
+                    background: #f8fafc !important;
+                    border: 1px solid #f1f5f9 !important;
+                    color: #64748b !important;
+                }
+                .admin-layout .role-modal__close:hover {
+                    background: #f1f5f9 !important;
+                    color: #0f172a !important;
+                }
+
+                .add-employee-modal-footer {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                    width: 100%;
+                }
+                .add-employee-modal-footer .role-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: inherit;
+                    cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .add-employee-modal-footer .role-btn--ghost {
+                    height: 48px;
+                    padding: 0 20px;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #475569;
+                    border: 1px solid #e2e8f0;
+                    background: #ffffff;
+                }
+                .add-employee-modal-footer .role-btn--ghost:hover:not(:disabled) {
+                    background: #f8fafc;
+                    border-color: #cbd5e1;
+                    color: #0f172a;
+                }
+                .add-employee-modal-footer .role-btn--primary {
+                    height: 48px;
+                    padding: 0 24px;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #ffffff;
+                    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+                    border: none;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+                }
+                .add-employee-modal-footer .role-btn--primary:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+                }
+                .add-employee-modal-footer .role-btn--primary:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+                .add-employee-modal-footer .role-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    transform: none !important;
+                    box-shadow: none !important;
+                }
             `}</style>
             
             {/* Accessible Toast Notification */}
@@ -887,6 +1448,373 @@ function AdminPage() {
                     {renderActiveContent()}
                 </section>
             </div>
+
+            {/* Add Member Modal */}
+            <Modal
+                isOpen={isAddMemberModalOpen}
+                onClose={closeAndResetModal}
+                ariaLabelledBy="add-member-title"
+                header={
+                    <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div className="employee-avatar-placeholder" style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '50%',
+                            backgroundColor: '#eff6ff',
+                            color: '#2563eb',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Users size={22} />
+                        </div>
+                        <div>
+                            <h2 id="add-member-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Add Employee</h2>
+                            <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>Create a new warehouse team member</p>
+                        </div>
+                    </div>
+                }
+                footer={
+                    <div className="add-employee-modal-footer">
+                        <button type="button" className="role-btn role-btn--ghost" onClick={closeAndResetModal} disabled={isCreatingMember}>
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="add-member-form"
+                            className="role-btn role-btn--primary"
+                            disabled={!newMemberName.trim() || !newMemberEmail.trim() || !selectedWarehouseId || !selectedRoleId || isCreatingMember || fetchedRoles.length === 0 || !!roleErrorText}
+                        >
+                            {isCreatingMember ? "Creating..." : "Create Employee"}
+                        </button>
+                    </div>
+                }
+            >
+                <form id="add-member-form" onSubmit={handleCreateMember} className="employee-modal-sections">
+                    {/* Section 1: Personal Information */}
+                    <div className="employee-section-card">
+                        <div className="employee-section-header">
+                            <Users size={16} />
+                            <span>Personal Information</span>
+                        </div>
+                        <div className="employee-fields-grid">
+                            <div className="employee-form-field field-full-width">
+                                <label htmlFor="new-member-name">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                <input
+                                    id="new-member-name"
+                                    type="text"
+                                    required
+                                    placeholder="e.g. John Doe"
+                                    value={newMemberName}
+                                    onChange={(e) => setNewMemberName(e.target.value)}
+                                />
+                            </div>
+                            
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-email">Email Address <span style={{ color: '#ef4444' }}>*</span></label>
+                                <input
+                                    id="new-member-email"
+                                    type="email"
+                                    required
+                                    placeholder="e.g. john.doe@haatza.com"
+                                    value={newMemberEmail}
+                                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-phone">Phone Number</label>
+                                <input
+                                    id="new-member-phone"
+                                    type="tel"
+                                    placeholder="e.g. +91 9876543210"
+                                    value={newMemberPhone}
+                                    onChange={(e) => setNewMemberPhone(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 2: Employment Details */}
+                    <div className="employee-section-card">
+                        <div className="employee-section-header">
+                            <Briefcase size={16} />
+                            <span>Employment Details</span>
+                        </div>
+                        <div className="employee-fields-grid">
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-empid">Employee ID</label>
+                                <input
+                                    id="new-member-empid"
+                                    type="text"
+                                    placeholder="e.g. EMP003"
+                                    value={newMemberEmpId}
+                                    onChange={(e) => setNewMemberEmpId(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-dept">Department</label>
+                                <select
+                                    id="new-member-dept"
+                                    value={newMemberDept}
+                                    onChange={(e) => setNewMemberDept(e.target.value)}
+                                >
+                                    <option value="">&lt;Select Department&gt;</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Logistics">Logistics</option>
+                                    <option value="Inventory">Inventory</option>
+                                    <option value="Administration">Administration</option>
+                                    <option value="Shipping & Receiving">Shipping & Receiving</option>
+                                </select>
+                            </div>
+
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-warehouse">Warehouse <span style={{ color: '#ef4444' }}>*</span></label>
+                                <select
+                                    id="new-member-warehouse"
+                                    required
+                                    value={selectedWarehouseId}
+                                    onChange={(e) => {
+                                        setSelectedWarehouseId(e.target.value);
+                                        setSelectedRoleId(null);
+                                    }}
+                                >
+                                    <option value="">&lt;Select Warehouse&gt;</option>
+                                    {uniqueWarehouses.map(wh => (
+                                        <option key={wh.warehouseId} value={wh.warehouseId}>
+                                            {wh.warehouseName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {selectedWarehouseId && (
+                                <div className="employee-form-field">
+                                    <label htmlFor="new-member-role">Role <span style={{ color: '#ef4444' }}>*</span></label>
+                                    <select
+                                        id="new-member-role"
+                                        required
+                                        disabled={rolesLoading || fetchedRoles.length === 0}
+                                        value={selectedRoleId || ""}
+                                        onChange={(e) => setSelectedRoleId(e.target.value)}
+                                    >
+                                        {rolesLoading ? (
+                                            <option value="">Loading roles...</option>
+                                        ) : fetchedRoles.length === 0 ? (
+                                            <option value="">No roles available</option>
+                                        ) : (
+                                            <>
+                                                <option value="">&lt;Select Role&gt;</option>
+                                                {fetchedRoles.map(role => (
+                                                    <option key={role.roleId} value={role.roleId}>
+                                                        {role.roleName}
+                                                    </option>
+                                                ))}
+                                            </>
+                                        )}
+                                    </select>
+                                    {rolesLoading && <span className="setup-spinner" style={{ marginTop: '4px', width: '16px', height: '16px', border: '2px solid #2563eb', borderTopColor: 'transparent' }}></span>}
+                                    {roleErrorText && (
+                                        <span className="role-error-helper" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px", display: "block" }}>
+                                            {roleErrorText}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="employee-form-field">
+                                <label>Account Status</label>
+                                <div className="employee-status-container">
+                                    <label className="employee-status-option">
+                                        <input
+                                            type="radio"
+                                            name="accountStatus"
+                                            value="ACTIVE"
+                                            checked={accountStatus === "ACTIVE"}
+                                            onChange={() => setAccountStatus("ACTIVE")}
+                                        />
+                                        <span>Active</span>
+                                    </label>
+                                    <label className="employee-status-option">
+                                        <input
+                                            type="radio"
+                                            name="accountStatus"
+                                            value="PENDING"
+                                            checked={accountStatus === "PENDING"}
+                                            onChange={() => setAccountStatus("PENDING")}
+                                        />
+                                        <span>Pending</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Warehouse Assignment */}
+                    <div className="employee-section-card">
+                        <div className="employee-section-header">
+                            <Warehouse size={16} />
+                            <span>Warehouse Assignment</span>
+                        </div>
+                        <div className="employee-fields-grid">
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-access">Access Level</label>
+                                <select
+                                    id="new-member-access"
+                                    value={newMemberAccessLevel}
+                                    onChange={(e) => setNewMemberAccessLevel(e.target.value)}
+                                >
+                                    <option value="Standard">Standard</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <div className="employee-form-field field-full-width">
+                                <label htmlFor="new-member-manager">Reporting Manager</label>
+                                <select
+                                    id="new-member-manager"
+                                    value={newMemberManager}
+                                    onChange={(e) => setNewMemberManager(e.target.value)}
+                                >
+                                    <option value="">&lt;Select Reporting Manager&gt;</option>
+                                    <option value="Dinesh G K">Dinesh G K (Super Admin)</option>
+                                    <option value="Sarah Connor">Sarah Connor (Administrator)</option>
+                                    <option value="Sophia Martinez">Sophia Martinez (Administrator)</option>
+                                    <option value="Noah Garcia">Noah Garcia (Administrator)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Permissions Summary Card */}
+                    <div className="permissions-summary-card" style={{ marginTop: '10px' }}>
+                        <div className="permissions-summary-title">Permissions Summary</div>
+                        <div className="permissions-summary-item">
+                            <strong>Selected Role:</strong>
+                            <span>{displayRoleName || "[Role Name]"}</span>
+                        </div>
+                        <div className="permissions-summary-item">
+                            <strong>Warehouse:</strong>
+                            <span>{displayWarehouseName || "[Warehouse Name]"}</span>
+                        </div>
+                        <div className="permissions-summary-item" style={{ flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '8px' }}>
+                                <strong>Access:</strong>
+                                {selectedRoleId && !permissionsLoading && customAccessiblePages.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="role-btn role-btn--ghost"
+                                        style={{ padding: '4px 12px', fontSize: '12px', height: 'auto', border: '1px solid #d1d5db', cursor: 'pointer' }}
+                                        onClick={() => setIsEditingPermissions(!isEditingPermissions)}
+                                    >
+                                        {isEditingPermissions ? "View Summary" : "Edit Permissions"}
+                                    </button>
+                                )}
+                            </div>
+
+                            {permissionsLoading ? (
+                                <span className="setup-spinner" style={{ marginTop: '4px', width: '16px', height: '16px', border: '2px solid #2563eb', borderTopColor: 'transparent' }}></span>
+                            ) : isEditingPermissions ? (
+                                <div className="custom-permissions-editor" style={{ width: '100%', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f9fafb', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                                    {customAccessiblePages.map((page) => (
+                                        <div key={page.pageId} style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>{page.pageName || page.pageId}</span>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={page.canView}
+                                                        onChange={() => {
+                                                            setCustomAccessiblePages(prev => prev.map(p => {
+                                                                if (p.pageId === page.pageId) {
+                                                                    const nextCanView = !p.canView;
+                                                                    return {
+                                                                        ...p,
+                                                                        canView: nextCanView,
+                                                                        canCreate: nextCanView ? p.canCreate : false,
+                                                                        canEdit: nextCanView ? p.canEdit : false,
+                                                                        canDelete: nextCanView ? p.canDelete : false,
+                                                                        canApprove: nextCanView ? p.canApprove : false
+                                                                    };
+                                                                }
+                                                                return p;
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span style={{ fontSize: '12px', color: '#4b5563' }}>Enabled</span>
+                                                </label>
+                                            </div>
+                                            {page.canView && (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingLeft: '8px', marginTop: '4px' }}>
+                                                    {['canCreate', 'canEdit', 'canDelete', 'canApprove'].map((action) => {
+                                                        const label = action === 'canCreate' ? 'Create' :
+                                                                      action === 'canEdit' ? 'Edit' :
+                                                                      action === 'canDelete' ? 'Delete' : 'Approve';
+                                                        const isActive = page[action] || false;
+                                                        return (
+                                                            <button
+                                                                key={action}
+                                                                type="button"
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '11px',
+                                                                    background: isActive ? '#eff6ff' : '#ffffff',
+                                                                    border: isActive ? '1px solid #3b82f6' : '1px solid #d1d5db',
+                                                                    padding: '3px 8px',
+                                                                    borderRadius: '4px',
+                                                                    color: isActive ? '#2563eb' : '#4b5563',
+                                                                    transition: 'all 0.15s',
+                                                                    fontWeight: isActive ? '600' : 'normal'
+                                                                }}
+                                                                onClick={() => {
+                                                                    setCustomAccessiblePages(prev => prev.map(p => {
+                                                                        if (p.pageId === page.pageId) {
+                                                                            return { ...p, [action]: !p[action] };
+                                                                        }
+                                                                        return p;
+                                                                    }));
+                                                                }}
+                                                            >
+                                                                {isActive && <Check size={10} strokeWidth={3} />}
+                                                                {label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : customAccessiblePages.filter(p => p.canView).length > 0 ? (
+                                <div className="permissions-access-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                    {customAccessiblePages.filter(p => p.canView).map((page, index) => {
+                                        const actions = [];
+                                        if (page.canCreate) actions.push("Create");
+                                        if (page.canEdit) actions.push("Edit");
+                                        if (page.canDelete) actions.push("Delete");
+                                        if (page.canApprove) actions.push("Approve");
+                                        const actionStr = actions.length > 0 ? ` (${actions.join(", ")})` : "";
+                                        return (
+                                            <span key={index} className="permissions-access-tag" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', color: '#374151' }}>
+                                                {page.pageName || page.pageId}{actionStr}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <span className="permissions-fallback-text" style={{ color: '#9ca3af', fontSize: '13px' }}>
+                                    Permissions will be assigned based on selected role.
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }

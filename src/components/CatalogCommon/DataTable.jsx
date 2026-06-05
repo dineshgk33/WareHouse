@@ -56,7 +56,7 @@ function DataTable({
                         </tr>
                     ) : (
                         data.map((row, index) => {
-                            const rowId = row[rowIdKey];
+                            const rowId = (row[rowIdKey] !== undefined && row[rowIdKey] !== null) ? row[rowIdKey] : index;
                             return (
                                 <tr 
                                     key={rowId}

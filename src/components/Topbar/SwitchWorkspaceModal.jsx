@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import SearchableSelect from "../common/SearchableSelect";
+import { authService } from "../../services/authService";
 import "./SwitchWorkspaceModal.css";
 
 function SwitchWorkspaceModal({ onClose }) {
-    const { user, warehouseRoles, completeSetup, selectedWarehouseId: currentWarehouseId, selectedRoleId: currentRoleId, setPermissionsFromApi } = useAuth();
+    const { user, warehouseRoles, completeSetup, selectedWarehouseId: currentWarehouseId, selectedRoleId: currentRoleId } = useAuth();
     
     const [selectedWarehouseId, setSelectedWarehouseId] = useState(currentWarehouseId || "");
     const [selectedRoleId, setSelectedRoleId] = useState(currentRoleId || "");
@@ -20,19 +21,69 @@ function SwitchWorkspaceModal({ onClose }) {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
+    const [fetchedRoles, setFetchedRoles] = useState([]);
+    const [rolesLoading, setRolesLoading] = useState(false);
+    const [roleErrorText, setRoleErrorText] = useState("");
+
+    useEffect(() => {
+        if (!selectedWarehouseId) {
+            setFetchedRoles([]);
+            setSelectedRoleId("");
+            setRoleErrorText("");
+            return;
+        }
+
+        setRolesLoading(true);
+        setFetchedRoles([]);
+        setSelectedRoleId("");
+        setRoleErrorText("");
+
+        authService.getWarehouseRoles(selectedWarehouseId)
+            .then(res => {
+                if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
+                    setFetchedRoles(res.message.roles);
+                } else {
+                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                    if (fallback.length > 0) {
+                        setFetchedRoles(fallback);
+                    } else {
+                        setFetchedRoles([]);
+                        setRoleErrorText("No roles available");
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load roles:", err);
+                const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                if (fallback.length > 0) {
+                    setFetchedRoles(fallback);
+                } else {
+                    setFetchedRoles([]);
+                    setRoleErrorText("No roles available");
+                }
+            })
+            .finally(() => {
+                setRolesLoading(false);
+            });
+    }, [selectedWarehouseId]);
+
     if (!user) return null;
 
     const uniqueWarehouses = [
         ...new Map(warehouseRoles.map(item => [item.warehouseId, item])).values()
     ];
 
-    const filteredRoles = warehouseRoles.filter(role => role.warehouseId === selectedWarehouseId);
-
     const warehouseOptions = uniqueWarehouses.map(wh => ({
         value: wh.warehouseId,
         label: wh.warehouseName,
         rawObj: wh
     }));
+
+    const userRoleIds = warehouseRoles
+        .filter(r => r.warehouseId === selectedWarehouseId)
+        .map(r => r.roleId);
+
+    const filteredRoles = fetchedRoles.filter(role => userRoleIds.includes(role.roleId));
 
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,
@@ -77,38 +128,15 @@ function SwitchWorkspaceModal({ onClose }) {
         setIsLoading(true);
 
         try {
-            // Call your secure API to get permissions
-            const apiUrl = import.meta.env.VITE_PERMISSIONS_API_URL;
-            const apiKey = import.meta.env.VITE_PERMISSIONS_API_KEY;
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': apiKey
-                },
-                body: JSON.stringify({
-                    warehouseId: selectedWhObj.warehouseId,
-                    roleId: selectedRlObj.roleId
-                })
-            });
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                // Set the permissions in the context
-                setPermissionsFromApi(data.message.accessiblePages);
-            } else {
-                console.error("API returned an error:", data);
-            }
+            // completeSetup already calls authService.getRolePermissions,
+            // saves to localStorage, and updates accessiblePages state.
+            await completeSetup(selectedWhObj, selectedRlObj);
         } catch (error) {
-            console.error("Failed to fetch permissions", error);
-        }
-
-        setTimeout(() => {
+            console.error("Failed to switch workspace permissions:", error);
+        } finally {
             setIsLoading(false);
-            completeSetup(selectedWhObj, selectedRlObj);
-            onClose(); // Close modal immediately after state update
-        }, 500);
+            onClose();
+        }
     };
 
     return (
@@ -138,11 +166,11 @@ function SwitchWorkspaceModal({ onClose }) {
                     <div className="switch-workspace-field">
                         <label>Role</label>
                         <SearchableSelect
-                            placeholder="Select Role"
+                            placeholder={rolesLoading ? "Loading Roles..." : roleErrorText ? "No Roles Available" : "Select Role"}
                             options={roleOptions}
                             value={selectedRoleId}
                             onChange={handleRoleChange}
-                            disabled={!selectedWarehouseId}
+                            disabled={!selectedWarehouseId || rolesLoading || filteredRoles.length === 0}
                             iconType="role"
                         />
                     </div>
