@@ -1,10 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Package, Store, Repeat } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css"; // Reuse sidebar styling structure
 
 function InventoryFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
     const location = useLocation();
+    const { canView } = useAuth();
 
     if (!menu || !menu.submenu) return null;
 
@@ -36,6 +38,8 @@ function InventoryFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
         }
     };
 
+    const visibleSubmenu = menu.submenu;
+
     return (
         <div 
             className="sidebar-flyout-panel inventory-flyout-panel fade-in"
@@ -48,7 +52,7 @@ function InventoryFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
             </div>
             
             <ul className="flyout-list">
-                {menu.submenu.map((item, idx) => {
+                {visibleSubmenu.map((item, idx) => {
                     const isActive = isLinkActive(item.path);
                     return (
                         <li key={idx}>

@@ -17,7 +17,8 @@ import {
     ChevronRight,
     FileText,
     Activity,
-    Shield
+    Shield,
+    Users
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -28,127 +29,91 @@ import DarkhouseFlyout from "./DarkhouseFlyout";
 import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
 
-// ─── Complete Master Sidebar Menu Configuration ───────────────────────────────────────────────
-const ALL_SIDEBAR_MENU = [
-    {
-        id: "dashboard",
-        label: "Dashboard",
-        path: "/",
-        icon: LayoutDashboard,
-    },
-    {
-        id: "catalog",
-        label: "Catalog",
-        icon: BookOpen,
-        submenu: [
-            { label: "Products", path: "/catalog/products" },
-            { label: "Categories", path: "/catalog/categories" },
-            { label: "Brands", path: "/catalog/brands" },
-            { label: "Attributes", path: "/catalog/attributes" },
-            { label: "Variants", path: "/catalog/variants" },
-            { label: "Pricing", path: "/catalog/pricing" },
-            { label: "Product Mapping", path: "/catalog/mapping" },
-            { label: "Bulk Upload", path: "/catalog/bulk-upload" },
-            { label: "Media Library", path: "/catalog/media" },
-            { label: "Product Audit", path: "/catalog/audit" }
-        ]
-    },
-    {
-        id: "inventory",
-        label: "Inventory",
-        icon: Database,
-        submenu: [
-            { label: "Warehouse Inventory", path: "/inventory" },
-            { label: "Darkhouse Inventory", path: "/inventory?tab=darkhouse" },
-            { label: "Stock Transfers", path: "/inventory?tab=transfers" }
-        ]
-    },
-    {
-        id: "orders",
-        label: "Orders",
-        icon: ShoppingBag,
-        submenu: [
-            { label: "All Orders", path: "/orders" },
-            { label: "Pending Orders", path: "/orders/pending" },
-            { label: "Picking", path: "/orders?tab=picking" },
-            { label: "Packing", path: "/orders?tab=packing" },
-            { label: "Delivery Tracking", path: "/orders?tab=tracking" }
-        ]
-    },
-    {
-        id: "darkhouses",
-        label: "Darkhouses",
-        icon: Warehouse,
-        submenu: [
-            { label: "Darkhouse List", path: "/darkhouses" },
-            { label: "Managers", path: "/darkhouses?tab=managers" },
-            { label: "Assign Products", path: "/darkhouses?tab=assign" }
-        ]
-    },
-    {
-        id: "customers",
-        label: "Customers",
-        path: "/customers",
-        icon: UserCircle,
-    },
-    {
-        id: "billing",
-        label: "Billing",
-        path: "/billing",
-        icon: CreditCard,
-    },
-    {
-        id: "analytics",
-        label: "Analytics",
-        path: "/analytics",
-        icon: BarChart3,
-    },
-    {
-        id: "admin",
-        label: "Admin",
-        icon: Shield,
-        submenu: [
-            { label: "Members", path: "/admin/members" },
-            { label: "User Roles", path: "/admin/roles" }
-        ]
-    },
-    {
-        id: "reports",
-        label: "Reports",
-        path: "/reports",
-        icon: FileText,
-    },
-    {
-        id: "operations",
-        label: "Operations",
-        path: "/operations",
-        icon: Activity,
+// ─── Dynamic Routing & Menu Configuration Helper Mapping Functions ──────────────────────────────
+const getRouteForPage = (pageId, pageName) => {
+    const id = pageId.toUpperCase();
+    switch (id) {
+        case "DASHBOARD":
+            return "/";
+        case "ORDERS":
+            if (pageName === "Pending Orders") return "/orders/pending";
+            if (pageName === "Picking") return "/orders?tab=picking";
+            if (pageName === "Packing") return "/orders?tab=packing";
+            if (pageName === "Delivery Tracking") return "/orders?tab=tracking";
+            return "/orders";
+        case "WAREHOUSE_INVENTORY":
+            return "/inventory";
+        case "DARKHOUSE_INVENTORY":
+            return "/inventory?tab=darkhouse";
+        case "EMPLOYEES":
+            return "/employees";
+        case "REPORTS":
+            return "/reports";
+        case "ANALYTICS":
+            return "/analytics";
+        case "CUSTOMERS":
+            return "/customers";
+        case "BILLING":
+            return "/billing";
+        case "SETTINGS":
+            if (pageName === "General") return "/settings";
+            if (pageName === "Notifications") return "/settings?tab=notifications";
+            if (pageName === "Billing Plans") return "/settings?tab=billing";
+            if (pageName === "Login & Security") return "/settings?tab=security";
+            return "/settings";
+        case "SUPPORT":
+            return "/support";
+        case "CATALOG":
+            if (pageName === "Products") return "/catalog/products";
+            if (pageName === "Categories") return "/catalog/categories";
+            if (pageName === "Brands") return "/catalog/brands";
+            if (pageName === "Attributes") return "/catalog/attributes";
+            if (pageName === "Variants") return "/catalog/variants";
+            if (pageName === "Pricing") return "/catalog/pricing";
+            if (pageName === "Product Mapping") return "/catalog/mapping";
+            if (pageName === "Bulk Upload") return "/catalog/bulk-upload";
+            if (pageName === "Media Library") return "/catalog/media";
+            if (pageName === "Product Audit") return "/catalog/audit";
+            return "/catalog/products";
+        case "OPERATIONS":
+            return "/operations";
+        case "ADMIN":
+            if (pageName === "Members") return "/admin/members";
+            if (pageName === "User Roles") return "/admin/roles";
+            return "/admin";
+        case "DARKHOUSES":
+            if (pageName === "Darkhouse List") return "/darkhouses";
+            if (pageName === "Managers") return "/darkhouses?tab=managers";
+            if (pageName === "Assign Products") return "/darkhouses?tab=assign";
+            return "/darkhouses";
+        default:
+            return `/${id.toLowerCase().replace(/_/g, "-")}`;
     }
-];
+};
 
-const ALL_BOTTOM_MENU = [
-    {
-        id: "settings",
-        label: "Settings",
-        icon: Settings,
-        submenu: [
-            { label: "General", path: "/settings" },
-            { label: "Notifications", path: "/settings?tab=notifications" },
-            { label: "Billing Plans", path: "/settings?tab=billing" },
-            { label: "Login & Security", path: "/settings?tab=security" }
-        ]
-    },
-    {
-        id: "support",
-        label: "Help & Support",
-        path: "/support",
-        icon: HelpCircle,
-    }
-];
+const getIconForModule = (moduleName) => {
+    const iconMap = {
+        "Dashboard": LayoutDashboard,
+        "Orders": ShoppingBag,
+        "Inventory": Database,
+        "Catalog": BookOpen,
+        "Darkhouses": Warehouse,
+        "Customers": UserCircle,
+        "Employees": Users,
+        "Billing": CreditCard,
+        "Analytics": BarChart3,
+        "Admin": Shield,
+        "Reports": FileText,
+        "Operations": Activity,
+        "Settings": Settings,
+        "Support": HelpCircle
+    };
+    return iconMap[moduleName] || Package;
+};
 
 function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const location = useLocation();
-    const { user, selectedRoleName, canView } = useAuth();
+    const { user, selectedRoleName, canView, accessiblePages } = useAuth();
     
     // Hover & Flyout states
     const [hoveredMenu, setHoveredMenu] = useState(null);
@@ -160,23 +125,94 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const userRole = selectedRoleName || "";
     const profileImage = user?.ProfileImage || avatarImg;
 
-    // Filter main menu and bottom menu items
-    const getFilteredMenus = () => {
-        const filteredMain = ALL_SIDEBAR_MENU.filter(item => {
-            return canView(item.id.toUpperCase());
-        });
-        
-        const allowedBottomIds = ["support"];
-        if (canView("SETTINGS")) {
-            allowedBottomIds.push("settings");
-        }
-        
-        const filteredBottom = ALL_BOTTOM_MENU.filter(item => allowedBottomIds.includes(item.id));
+    // Dynamically construct menus from accessiblePages
+    const buildDynamicMenu = (pages) => {
+        if (!pages || !Array.isArray(pages)) return { main: [], bottom: [] };
 
-        return { main: filteredMain, bottom: filteredBottom };
+        const allowedPages = pages.filter(p => p.canView);
+
+        const groups = {};
+        allowedPages.forEach(page => {
+            const mod = page.moduleName || "General";
+            if (!groups[mod]) {
+                groups[mod] = [];
+            }
+            groups[mod].push(page);
+        });
+
+        const MODULE_ORDER = [
+            "Dashboard",
+            "Catalog",
+            "Inventory",
+            "Orders",
+            "Darkhouses",
+            "Customers",
+            "Employees",
+            "Billing",
+            "Analytics",
+            "Admin",
+            "Reports",
+            "Operations",
+            "Settings",
+            "Support"
+        ];
+
+        const BOTTOM_MODULES = ["Settings", "Support"];
+
+        const sidebarItems = [];
+        const bottomItems = [];
+
+        Object.keys(groups).forEach(moduleName => {
+            const modulePages = groups[moduleName];
+            const id = moduleName.toLowerCase().replace(/\s+/g, "-");
+
+            const item = {
+                id,
+                label: moduleName,
+                icon: getIconForModule(moduleName),
+            };
+
+            if (moduleName === "Orders") {
+                item.submenu = [
+                    { label: "All Orders", path: "/orders" },
+                    { label: "Pending Orders", path: "/orders/pending" },
+                    { label: "Picking", path: "/orders?tab=picking" },
+                    { label: "Packing", path: "/orders?tab=packing" },
+                    { label: "Delivery Tracking", path: "/orders?tab=tracking" },
+                    { label: "Label History", path: "/orders?tab=label-history" }
+                ];
+            } else if (modulePages.length === 1) {
+                const singlePage = modulePages[0];
+                item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
+            } else {
+                item.submenu = modulePages.map(page => ({
+                    label: page.pageName,
+                    path: getRouteForPage(page.pageId, page.pageName)
+                }));
+            }
+
+            if (BOTTOM_MODULES.includes(moduleName)) {
+                bottomItems.push(item);
+            } else {
+                sidebarItems.push(item);
+            }
+        });
+
+        const sortFn = (a, b) => {
+            const indexA = MODULE_ORDER.indexOf(a.label);
+            const indexB = MODULE_ORDER.indexOf(b.label);
+            const rankA = indexA === -1 ? 999 : indexA;
+            const rankB = indexB === -1 ? 999 : indexB;
+            return rankA - rankB;
+        };
+
+        sidebarItems.sort(sortFn);
+        bottomItems.sort(sortFn);
+
+        return { main: sidebarItems, bottom: bottomItems };
     };
 
-    const { main: activeSidebarMenu, bottom: activeBottomMenu } = getFilteredMenus();
+    const { main: activeSidebarMenu, bottom: activeBottomMenu } = buildDynamicMenu(accessiblePages || []);
 
     // Helper to check active highlighting on parents
     const isParentActive = (item) => {

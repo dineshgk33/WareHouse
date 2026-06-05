@@ -1462,20 +1462,24 @@
 /* ═══════════════════════════════════════════════════════════════
    Premium Quick Commerce Industrial Label (Thermal design)
    ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   Premium Quick Commerce Industrial Label (Redesigned)
+   ═══════════════════════════════════════════════════════════════ */
 .quick-commerce-label {
     background-color: #ffffff !important;
-    border: 2px dashed #000000;
-    border-radius: 2px;
-    padding: 12px;
-    color: #000000 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 60mm; /* Fixed height for consistency */
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    color: #0f172a !important;
+    font-family: 'Outfit', 'Inter', -apple-system, sans-serif !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 60mm !important; /* Fixed height for A7/2x4 grid sheet alignment */
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
     user-select: none;
 }
 
@@ -1484,144 +1488,210 @@
     break-inside: avoid;
 }
 
-/* Label Top Header */
-.label-header {
+/* Category-based Side Highlight Bars */
+.quick-commerce-label.category-frozen {
+    border-left: 5px solid #3b82f6 !important;
+}
+.quick-commerce-label.category-fruits {
+    border-left: 5px solid #f97316 !important;
+}
+.quick-commerce-label.category-vegetables {
+    border-left: 5px solid #10b981 !important;
+}
+.quick-commerce-label.category-dairy {
+    border-left: 5px solid #8b5cf6 !important;
+}
+.quick-commerce-label.category-grocery {
+    border-left: 5px solid #64748b !important;
+}
+
+/* Header Band */
+.label-header-band {
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 18px;
+    margin-bottom: 4px;
 }
 
-.label-logo-area {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.label-category-badge {
+    font-size: 8px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+}
+
+.category-frozen .label-category-badge {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+}
+.category-fruits .label-category-badge {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+.category-vegetables .label-category-badge {
+    background-color: #ecfdf5;
+    color: #047857;
+}
+.category-dairy .label-category-badge {
+    background-color: #f5f3ff;
+    color: #6d28d9;
+}
+.category-grocery .label-category-badge {
+    background-color: #f8fafc;
+    color: #475569;
 }
 
 .label-logo-symbol {
-    font-size: 11px;
-    font-weight: 900;
-    color: #000000;
+    font-size: 10px;
+    font-weight: 800;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 3px;
 }
 
 .label-logo-text {
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.8px;
-    color: #000000;
+    font-weight: 950;
+    letter-spacing: 0.5px;
 }
 
-.label-qc-badge {
-    border: 1.5px solid #000000;
+.label-qc-pill {
     font-size: 8px;
     font-weight: 800;
-    padding: 1px 5px;
-    border-radius: 1px;
-    letter-spacing: 0.4px;
-    background-color: #ffffff;
-    color: #000000;
-}
-
-.label-divider {
-    border-top: 1.5px solid #000000;
-    margin: 6px 0;
-    width: 100%;
+    background-color: #f0fdf4;
+    color: #166534;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid #bbf7d0;
 }
 
 /* Product Section */
-.label-product-name {
-    font-size: 14px;
-    font-weight: 800;
-    line-height: 1.2;
-    color: #000000;
-    margin-bottom: 4px;
-    word-break: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 34px;
-}
-
-/* Metadata Grid */
-.label-meta-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 4px 8px;
-    margin-bottom: 6px;
-}
-
-.meta-cell {
+.label-main-content {
     display: flex;
-    flex-direction: column;
-}
-
-.meta-cell .lbl {
-    font-size: 7px;
-    font-weight: 700;
-    color: #4b5563;
-    letter-spacing: 0.2px;
-    text-transform: uppercase;
-}
-
-.meta-cell .val {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #000000;
-}
-
-.meta-cell .val.bold {
-    font-size: 11px;
-    font-weight: 800;
-}
-
-/* Footer layout (details + QR code) */
-.label-footer-section {
-    display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: space-between;
-    height: 80px;
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
-.label-footer-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.label-product-section {
     flex: 1;
     min-width: 0;
 }
 
-.footer-info-row {
-    font-size: 9px;
+.label-brand-name {
+    font-size: 8px;
     font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 1px;
+}
+
+.label-product-title {
+    font-size: 13.5px;
+    font-weight: 850;
+    line-height: 1.2;
+    color: #0f172a;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    height: 32px;
+}
+
+.label-weight-badge {
+    font-size: 10px;
+    font-weight: 800;
+    background-color: #f1f5f9;
+    color: #334155;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    border: 1.5px solid #e2e8f0;
+}
+
+/* Technical Details Grid */
+.label-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+    border-top: 1px dashed #e2e8f0;
+    border-bottom: 1px dashed #e2e8f0;
+    padding: 4px 0;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-item.full-width {
+    grid-column: span 4;
+}
+
+.detail-label {
+    font-size: 6.5px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.1px;
+    margin-bottom: 1px;
+}
+
+.detail-value {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #1e293b;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.detail-value.highlight {
+    color: #0f172a;
+    font-weight: 850;
+}
+
+.detail-value.monospace {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 9px;
+}
+
+/* Barcode Layout Section */
+.label-barcode-section {
     display: flex;
-    gap: 4px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: auto;
 }
 
-.footer-info-row .lbl {
-    color: #4b5563;
-    font-size: 8px;
-    width: 32px;
-    flex-shrink: 0;
-}
-
-.footer-info-row .val {
-    color: #000000;
-}
-
-.label-qr-code {
-    width: 80px;
-    height: 80px;
+.label-barcode-graphic {
+    width: 100%;
+    height: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid #000000;
-    padding: 4px;
-    background: #ffffff;
-    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.label-barcode-graphic svg {
+    max-height: 25px;
+    width: auto;
+}
+
+.label-barcode-text {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 8.5px;
+    font-weight: 800;
+    color: #475569;
+    margin-top: 1px;
+    letter-spacing: 2px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1707,24 +1777,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Premium Quick Commerce Industrial Label (Thermal design)
+   Redesigned Label Size Scaling and Print Adaptations
    ═══════════════════════════════════════════════════════════════ */
-.quick-commerce-label {
-    background-color: #ffffff !important;
-    border: 2px dashed #000000 !important;
-    border-radius: 2px !important;
-    padding: 12px !important;
-    color: #000000 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    height: 60mm !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-    position: relative !important;
-}
-
 .quick-commerce-label.printable {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -1737,49 +1791,45 @@
     padding: 24px !important;
     border-width: 3px !important;
 }
-.grid-1x1 .label-logo-text {
-    font-size: 20px !important;
+.grid-1x1 .label-product-title {
+    font-size: 26px !important;
+    height: auto !important;
+    margin-bottom: 8px !important;
+}
+.grid-1x1 .label-brand-name {
+    font-size: 13px !important;
+}
+.grid-1x1 .label-category-badge,
+.grid-1x1 .label-qc-pill {
+    font-size: 13px !important;
+    padding: 4px 12px !important;
 }
 .grid-1x1 .label-logo-symbol {
-    font-size: 18px !important;
+    font-size: 16px !important;
 }
-.grid-1x1 .label-qc-badge {
-    font-size: 12px !important;
-    padding: 2px 8px !important;
+.grid-1x1 .label-weight-badge {
+    font-size: 16px !important;
+    padding: 6px 12px !important;
 }
-.grid-1x1 .label-product-name {
-    font-size: 22px !important;
-    height: auto !important;
-    margin: 12px 0 !important;
-    line-height: 1.3 !important;
-    -webkit-line-clamp: 2 !important;
+.grid-1x1 .label-details-grid {
+    gap: 12px !important;
+    padding: 12px 0 !important;
 }
-.grid-1x1 .label-meta-grid {
-    gap: 8px 16px !important;
-    margin-bottom: 12px !important;
-}
-.grid-1x1 .meta-cell .lbl {
-    font-size: 10px !important;
-}
-.grid-1x1 .meta-cell .val {
-    font-size: 15px !important;
-}
-.grid-1x1 .label-footer-section {
-    height: 120px !important;
-}
-.grid-1x1 .footer-info-row {
-    font-size: 12px !important;
-    gap: 6px !important;
-}
-.grid-1x1 .footer-info-row .lbl {
-    width: 44px !important;
+.grid-1x1 .detail-label {
     font-size: 11px !important;
 }
-.grid-1x1 .label-qr-code {
-    width: 120px !important;
-    height: 120px !important;
-    border: 1.5px solid #000000 !important;
-    padding: 6px !important;
+.grid-1x1 .detail-value {
+    font-size: 15px !important;
+}
+.grid-1x1 .label-barcode-graphic {
+    height: 55px !important;
+}
+.grid-1x1 .label-barcode-graphic svg {
+    max-height: 55px !important;
+}
+.grid-1x1 .label-barcode-text {
+    font-size: 14px !important;
+    margin-top: 4px !important;
 }
 
 /* 1x2 Custom label layout */
@@ -1788,47 +1838,6 @@
     padding: 20px !important;
     border-width: 2.5px !important;
 }
-.grid-1x2 .label-logo-text {
-    font-size: 16px !important;
-}
-.grid-1x2 .label-logo-symbol {
-    font-size: 14px !important;
-}
-.grid-1x2 .label-qc-badge {
-    font-size: 11px !important;
-    padding: 2px 6px !important;
-}
-.grid-1x2 .label-product-name {
-    font-size: 18px !important;
-    height: auto !important;
-    margin: 8px 0 !important;
-}
-.grid-1x2 .label-meta-grid {
-    gap: 6px 12px !important;
-    margin-bottom: 10px !important;
-}
-.grid-1x2 .meta-cell .lbl {
-    font-size: 9px !important;
-}
-.grid-1x2 .meta-cell .val {
-    font-size: 13.5px !important;
-}
-.grid-1x2 .label-footer-section {
-    height: 105px !important;
-}
-.grid-1x2 .footer-info-row {
-    font-size: 11px !important;
-}
-.grid-1x2 .footer-info-row .lbl {
-    width: 38px !important;
-    font-size: 10px !important;
-}
-.grid-1x2 .label-qr-code {
-    width: 105px !important;
-    height: 105px !important;
-    border: 1.5px solid #000000 !important;
-    padding: 5px !important;
-}
 
 /* 2x2 Custom label layout */
 .grid-2x2 .quick-commerce-label {
@@ -1836,57 +1845,44 @@
     padding: 20px !important;
     border-width: 2.5px !important;
 }
-.grid-2x2 .label-logo-text {
-    font-size: 15px !important;
-}
-.grid-2x2 .label-logo-symbol {
-    font-size: 13px !important;
-}
-.grid-2x2 .label-qc-badge {
-    font-size: 10px !important;
-    padding: 2px 6px !important;
-}
-.grid-2x2 .label-product-name {
-    font-size: 18px !important;
+
+/* 1x2 and 2x2 custom overrides */
+.grid-1x2 .label-product-title,
+.grid-2x2 .label-product-title {
+    font-size: 20px !important;
     height: auto !important;
-    margin: 8px 0 !important;
 }
-.grid-2x2 .label-meta-grid {
-    gap: 6px 12px !important;
-    margin-bottom: 10px !important;
-}
-.grid-2x2 .meta-cell .lbl {
-    font-size: 9px !important;
-}
-.grid-2x2 .meta-cell .val {
-    font-size: 13px !important;
-}
-.grid-2x2 .label-footer-section {
-    height: 105px !important;
-}
-.grid-2x2 .footer-info-row {
+.grid-1x2 .label-brand-name,
+.grid-2x2 .label-brand-name {
     font-size: 11px !important;
 }
-.grid-2x2 .footer-info-row .lbl {
-    width: 38px !important;
-    font-size: 10px !important;
+.grid-1x2 .detail-label,
+.grid-2x2 .detail-label {
+    font-size: 9px !important;
 }
-.grid-2x2 .label-qr-code {
-    width: 105px !important;
-    height: 105px !important;
-    border: 1.5px solid #000000 !important;
-    padding: 5px !important;
+.grid-1x2 .detail-value,
+.grid-2x2 .detail-value {
+    font-size: 13px !important;
+}
+.grid-1x2 .label-barcode-graphic,
+.grid-2x2 .label-barcode-graphic {
+    height: 45px !important;
+}
+.grid-1x2 .label-barcode-graphic svg,
+.grid-2x2 .label-barcode-graphic svg {
+    max-height: 45px !important;
+}
+.grid-1x2 .label-barcode-text,
+.grid-2x2 .label-barcode-text {
+    font-size: 12px !important;
 }
 
 /* 3x4 Custom label layout */
-.grid-3x4 .label-footer-section {
-    height: 60px !important;
+.grid-3x4 .label-barcode-graphic {
+    height: 25px !important;
 }
-.grid-3x4 .label-qr-code {
-    width: 60px !important;
-    height: 60px !important;
-    border: 1.5px solid #000000 !important;
-    padding: 3px !important;
+.grid-3x4 .label-barcode-graphic svg {
+    max-height: 25px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════

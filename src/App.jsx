@@ -26,6 +26,9 @@ const Darkhouses              = lazy(() => import("./pages/Darkhouses/Darkhouses
 const ReportsPage             = lazy(() => import("./pages/Reports/ReportsPage.jsx"));
 const OperationsPage          = lazy(() => import("./pages/Operations/OperationsPage.jsx"));
 
+// Admin Module
+const AdminPage               = lazy(() => import("./pages/Admin/AdminPage.jsx"));
+
 // Auth & Setup Pages
 const LoginPage               = lazy(() => import("./pages/Auth/LoginPage.jsx"));
 const OrgRoleSelectionPage    = lazy(() => import("./pages/Auth/OrgRoleSelectionPage.jsx"));
@@ -69,7 +72,7 @@ function PageLoader() {
 
 // ─── Protected Route Wrapper ──────────────────────────────────────────────────
 function ProtectedRoute({ allowedRoles, pageId }) {
-    const { isAuthenticated, userRole, canView, permissionsLoading } = useAuth();
+    const { isAuthenticated, userRole, canView, permissionsLoading, accessiblePages } = useAuth();
 
     if (permissionsLoading) {
         return <PageLoader />;
@@ -80,6 +83,11 @@ function ProtectedRoute({ allowedRoles, pageId }) {
     }
 
     if (pageId) {
+        // If accessiblePages is empty, the user hasn't selected a role yet
+        // (or stale permissions were discarded). Send them to /connect.
+        if (accessiblePages.length === 0) {
+            return <Navigate to="/connect" replace />;
+        }
         if (!canView(pageId)) {
             return <Navigate to="/403" replace />;
         }
@@ -151,22 +159,21 @@ function App() {
                                 {/* Shared Seller Fallback Portal Route */}
                                 <Route path="seller-zone" element={<SellerZoneDashboard />} />
 
-                                {/* Shared Dashboard View */}
-                                <Route element={<ProtectedRoute allowedRoles={DASHBOARD_ROLES} pageId="DASHBOARD" />}>
+                                {/* Dashboard */}
+                                <Route element={<ProtectedRoute pageId="DASHBOARD" />}>
                                     <Route index element={<Dashboard />} />
                                     <Route path="dashboard" element={<Dashboard />} />
                                 </Route>
 
-                                {/* Store Managers and Administrators */}
-                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="DARKHOUSES" />}>
-                                    <Route path="darkhouses" element={<Darkhouses />} />
-                                </Route>
-                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="ORDERS" />}>
+                                {/* Orders */}
+                                <Route element={<ProtectedRoute pageId="ORDERS" />}>
                                     <Route path="orders" element={<Orders />} />
                                     <Route path="orders/pending" element={<Orders />} />
                                 </Route>
-                                <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="INVENTORY" />}>
-                                    <Route path="inventory"  element={<Inventory />} />
+
+                                {/* Warehouse Inventory */}
+                                <Route element={<ProtectedRoute pageId="WAREHOUSE_INVENTORY" />}>
+                                    <Route path="inventory" element={<Inventory />} />
                                 </Route>
 
                                 {/* Catalog Module Routes */}
@@ -186,28 +193,46 @@ function App() {
                                     <Route path="products" element={<CatalogProducts />} />
                                 </Route>
 
-                                {/* Operation Heads and Administrators */}
-                                <Route element={<ProtectedRoute allowedRoles={ANALYTICS_ROLES} pageId="ANALYTICS" />}>
-                                    <Route path="analytics"  element={<Analytics />} />
+                                {/* Analytics */}
+                                <Route element={<ProtectedRoute pageId="ANALYTICS" />}>
+                                    <Route path="analytics" element={<Analytics />} />
                                 </Route>
 
-                                {/* Administrator Exclusive Pages */}
-                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="CUSTOMERS" />}>
-                                    <Route path="customers"  element={<Customers />} />
-                                </Route>
-                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="BILLING" />}>
-                                    <Route path="billing"    element={<Billing />} />
-                                </Route>
-                                <Route element={<ProtectedRoute allowedRoles={ADMIN_ROLES} pageId="SETTINGS" />}>
-                                    <Route path="settings"   element={<Settings />} />
+                                {/* Employees */}
+                                <Route element={<ProtectedRoute pageId="EMPLOYEES" />}>
+                                    <Route path="employees" element={<AdminPage />} />
                                 </Route>
 
-                                {/* Operation Head Exclusive Pages */}
-                                <Route element={<ProtectedRoute allowedRoles={OPERATION_HEAD_ONLY} pageId="REPORTS" />}>
+                                {/* Admin — Members & User Roles */}
+                                <Route element={<ProtectedRoute pageId="ADMIN" />}>
+                                    <Route path="admin/members" element={<AdminPage />} />
+                                    <Route path="admin/roles" element={<AdminPage />} />
+                                    <Route path="admin" element={<AdminPage />} />
+                                </Route>
+
+                                {/* Reports */}
+                                <Route element={<ProtectedRoute pageId="REPORTS" />}>
                                     <Route path="reports" element={<ReportsPage />} />
                                 </Route>
-                                <Route element={<ProtectedRoute allowedRoles={OPERATION_HEAD_ONLY} pageId="OPERATIONS" />}>
+
+                                {/* Operations */}
+                                <Route element={<ProtectedRoute pageId="OPERATIONS" />}>
                                     <Route path="operations" element={<OperationsPage />} />
+                                </Route>
+
+                                {/* Customers */}
+                                <Route element={<ProtectedRoute pageId="CUSTOMERS" />}>
+                                    <Route path="customers" element={<Customers />} />
+                                </Route>
+
+                                {/* Billing */}
+                                <Route element={<ProtectedRoute pageId="BILLING" />}>
+                                    <Route path="billing" element={<Billing />} />
+                                </Route>
+
+                                {/* Settings */}
+                                <Route element={<ProtectedRoute pageId="SETTINGS" />}>
+                                    <Route path="settings" element={<Settings />} />
                                 </Route>
                             </Route>
                         </Route>

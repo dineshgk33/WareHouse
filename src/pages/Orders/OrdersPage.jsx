@@ -31,6 +31,7 @@ import { getOrderStatusClass } from "../../utils/statusUtils";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 import { generateQRCodeSVG } from "../../utils/qrcode";
+import { Barcode128Svg } from "../../utils/barcode";
 import "./Orders.css";
 
 const chunkArray = (array, size) => {
@@ -53,6 +54,24 @@ const getPageSize = (format) => {
 };
 
 const ROWS_PER_PAGE = 7;
+
+const getCategoryForProduct = (productName, sku = "") => {
+    const name = productName.toLowerCase();
+    const skuCode = sku.toUpperCase();
+    if (name.includes("mango") || name.includes("fruit") || name.includes("apple") || name.includes("banana") || skuCode.startsWith("FRT")) {
+        return "Fruits";
+    }
+    if (name.includes("milk") || name.includes("dairy") || name.includes("cheese") || name.includes("butter") || name.includes("paneer") || skuCode.startsWith("DRY")) {
+        return "Dairy";
+    }
+    if (name.includes("fries") || name.includes("frozen") || name.includes("ice cream") || name.includes("coca-cola") || name.includes("coke") || name.includes("drink") || skuCode.startsWith("FZN") || skuCode.startsWith("DRK")) {
+        return "Frozen";
+    }
+    if (name.includes("potato") || name.includes("tomato") || name.includes("onion") || name.includes("vegetable") || name.includes("veg") || name.includes("chips") || skuCode.startsWith("VEG") || skuCode.startsWith("SNK")) {
+        return "Vegetables";
+    }
+    return "Frozen"; // default fallback
+};
 
 function OrdersPage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -1991,46 +2010,72 @@ function OrdersPage() {
                                 <div className="preview-pages-wrapper">
                                     {chunkArray(previewLabels, getPageSize(labelLayoutFormat)).map((pageLabels, pageIndex) => (
                                         <div key={pageIndex} className={`a4-page-mockup ${labelLayoutFormat}`}>
-                                            {pageLabels.map((label) => (
-                                                <div key={label.id} className="quick-commerce-label">
-                                                    <div className="label-header">
-                                                        <div className="label-logo-area">
-                                                            <span className="label-logo-symbol">▲</span>
-                                                            <span className="label-logo-text">HAATZA</span>
+                                            {pageLabels.map((label) => {
+                                                const category = getCategoryForProduct(label.productName, label.sku);
+                                                const barcode = new Barcode128Svg(label.id);
+                                                if (labelLayoutFormat === "grid-1x1") {
+                                                    barcode.height = 55;
+                                                    barcode.factor = 2.4;
+                                                } else if (labelLayoutFormat === "grid-1x2" || labelLayoutFormat === "grid-2x2") {
+                                                    barcode.height = 45;
+                                                    barcode.factor = 1.8;
+                                                } else if (labelLayoutFormat === "grid-3x4") {
+                                                    barcode.height = 25;
+                                                    barcode.factor = 1.0;
+                                                } else {
+                                                    barcode.height = 30;
+                                                    barcode.factor = 1.2;
+                                                }
+                                                const barcodeHtml = barcode.toString();
+                                                
+                                                return (
+                                                    <div key={label.id} className={`quick-commerce-label category-${category.toLowerCase()}`}>
+                                                        <div className="label-header-band">
+                                                            <span className="label-category-badge">{category.toUpperCase()}</span>
+                                                            <span className="label-logo-symbol">
+                                                                ▲ <span className="label-logo-text">HAATZA</span>
+                                                            </span>
+                                                            <span className="label-qc-pill">✓ QC PASSED</span>
                                                         </div>
-                                                        <div className="label-qc-badge">QC PASSED</div>
-                                                    </div>
-                                                    <div className="label-divider"></div>
-                                                    <div className="label-product-name">{label.productName}</div>
-                                                    <div className="label-meta-grid">
-                                                        <div className="meta-cell"><span className="lbl">ORDER ID</span><span className="val bold">{label.orderId}</span></div>
-                                                        <div className="meta-cell"><span className="lbl">NET WT</span><span className="val">{label.netWeight}</span></div>
-                                                        <div className="meta-cell"><span className="lbl">BATCH ID</span><span className="val font-mono">{label.batchId}</span></div>
-                                                        <div className="meta-cell"><span className="lbl">PACKED BY</span><span className="val">{label.packedBy}</span></div>
-                                                    </div>
-                                                    <div className="label-footer-section">
-                                                        <div className="label-footer-info">
-                                                            <div className="footer-info-row"><span className="lbl">DATE:</span> <span className="val">{label.packedDate}</span></div>
-                                                            <div className="footer-info-row"><span className="lbl">HUB:</span> <span className="val font-mono">{label.warehouse}</span></div>
-                                                            <div className="footer-info-row"><span className="lbl">SKU:</span> <span className="val font-mono">{label.sku}</span></div>
+                                                        
+                                                        <div className="label-main-content">
+                                                            <div className="label-product-section">
+                                                                <div className="label-brand-name">{label.brand}</div>
+                                                                <div className="label-product-title">{label.productName}</div>
+                                                            </div>
+                                                            <div className="label-weight-badge">{label.netWeight}</div>
                                                         </div>
-                                                        <div 
-                                                            className="label-qr-code"
-                                                            dangerouslySetInnerHTML={{
-                                                                __html: generateQRCodeSVG(JSON.stringify({
-                                                                    brand: "HAATZA",
-                                                                    orderId: label.orderId,
-                                                                    productId: label.productId,
-                                                                    productName: label.productName,
-                                                                    warehouse: label.warehouse,
-                                                                    packedDate: label.packedDate,
-                                                                    status: label.status
-                                                                }), { size: 150, margin: 3 })
-                                                            }}
-                                                        />
+
+                                                        <div className="label-details-grid">
+                                                            <div className="detail-item">
+                                                                <span className="detail-label">ORDER ID</span>
+                                                                <span className="detail-value highlight">{label.orderId}</span>
+                                                            </div>
+                                                            <div className="detail-item">
+                                                                <span className="detail-label">BATCH ID</span>
+                                                                <span className="detail-value monospace">{label.batchId}</span>
+                                                            </div>
+                                                            <div className="detail-item">
+                                                                <span className="detail-label">PACKED BY</span>
+                                                                <span className="detail-value">{label.packedBy}</span>
+                                                            </div>
+                                                            <div className="detail-item">
+                                                                <span className="detail-label">PACKED DATE</span>
+                                                                <span className="detail-value">{label.packedDate}</span>
+                                                            </div>
+                                                            <div className="detail-item full-width">
+                                                                <span className="detail-label">HUB / ORIGIN</span>
+                                                                <span className="detail-value">{label.warehouse} (SKU: {label.sku})</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="label-barcode-section">
+                                                            <div className="label-barcode-graphic" dangerouslySetInnerHTML={{ __html: barcodeHtml }} />
+                                                            <div className="label-barcode-text">{label.id}</div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ))}
                                 </div>
@@ -2060,46 +2105,72 @@ function OrdersPage() {
                 <div id="print-sheet">
                     {chunkArray(previewLabels, getPageSize(labelLayoutFormat)).map((pageLabels, pageIndex) => (
                         <div key={pageIndex} className={`a4-page-print-sheet ${labelLayoutFormat}`}>
-                            {pageLabels.map((label) => (
-                                <div key={label.id} className="quick-commerce-label printable">
-                                    <div className="label-header">
-                                        <div className="label-logo-area">
-                                            <span className="label-logo-symbol">▲</span>
-                                            <span className="label-logo-text">HAATZA</span>
+                            {pageLabels.map((label) => {
+                                const category = getCategoryForProduct(label.productName, label.sku);
+                                const barcode = new Barcode128Svg(label.id);
+                                if (labelLayoutFormat === "grid-1x1") {
+                                    barcode.height = 55;
+                                    barcode.factor = 2.4;
+                                } else if (labelLayoutFormat === "grid-1x2" || labelLayoutFormat === "grid-2x2") {
+                                    barcode.height = 45;
+                                    barcode.factor = 1.8;
+                                } else if (labelLayoutFormat === "grid-3x4") {
+                                    barcode.height = 25;
+                                    barcode.factor = 1.0;
+                                } else {
+                                    barcode.height = 30;
+                                    barcode.factor = 1.2;
+                                }
+                                const barcodeHtml = barcode.toString();
+                                
+                                return (
+                                    <div key={label.id} className={`quick-commerce-label printable category-${category.toLowerCase()}`}>
+                                        <div className="label-header-band">
+                                            <span className="label-category-badge">{category.toUpperCase()}</span>
+                                            <span className="label-logo-symbol">
+                                                ▲ <span className="label-logo-text">HAATZA</span>
+                                            </span>
+                                            <span className="label-qc-pill">✓ QC PASSED</span>
                                         </div>
-                                        <div className="label-qc-badge">QC PASSED</div>
-                                    </div>
-                                    <div className="label-divider"></div>
-                                    <div className="label-product-name">{label.productName}</div>
-                                    <div className="label-meta-grid">
-                                        <div className="meta-cell"><span className="lbl">ORDER ID</span><span className="val bold">{label.orderId}</span></div>
-                                        <div className="meta-cell"><span className="lbl">NET WT</span><span className="val">{label.netWeight}</span></div>
-                                        <div className="meta-cell"><span className="lbl">BATCH ID</span><span className="val font-mono">{label.batchId}</span></div>
-                                        <div className="meta-cell"><span className="lbl">PACKED BY</span><span className="val">{label.packedBy}</span></div>
-                                    </div>
-                                    <div className="label-footer-section">
-                                        <div className="label-footer-info">
-                                            <div className="footer-info-row"><span className="lbl">DATE:</span> <span className="val">{label.packedDate}</span></div>
-                                            <div className="footer-info-row"><span className="lbl">HUB:</span> <span className="val font-mono">{label.warehouse}</span></div>
-                                            <div className="footer-info-row"><span className="lbl">SKU:</span> <span className="val font-mono">{label.sku}</span></div>
+                                        
+                                        <div className="label-main-content">
+                                            <div className="label-product-section">
+                                                <div className="label-brand-name">{label.brand}</div>
+                                                <div className="label-product-title">{label.productName}</div>
+                                            </div>
+                                            <div className="label-weight-badge">{label.netWeight}</div>
                                         </div>
-                                        <div 
-                                            className="label-qr-code"
-                                            dangerouslySetInnerHTML={{
-                                                __html: generateQRCodeSVG(JSON.stringify({
-                                                    brand: "HAATZA",
-                                                    orderId: label.orderId,
-                                                    productId: label.productId,
-                                                    productName: label.productName,
-                                                    warehouse: label.warehouse,
-                                                    packedDate: label.packedDate,
-                                                    status: label.status
-                                                }), { size: 150, margin: 3 })
-                                            }}
-                                        />
+
+                                        <div className="label-details-grid">
+                                            <div className="detail-item">
+                                                <span className="detail-label">ORDER ID</span>
+                                                <span className="detail-value highlight">{label.orderId}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">BATCH ID</span>
+                                                <span className="detail-value monospace">{label.batchId}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">PACKED BY</span>
+                                                <span className="detail-value">{label.packedBy}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="detail-label">PACKED DATE</span>
+                                                <span className="detail-value">{label.packedDate}</span>
+                                            </div>
+                                            <div className="detail-item full-width">
+                                                <span className="detail-label">HUB / ORIGIN</span>
+                                                <span className="detail-value">{label.warehouse} (SKU: {label.sku})</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="label-barcode-section">
+                                            <div className="label-barcode-graphic" dangerouslySetInnerHTML={{ __html: barcodeHtml }} />
+                                            <div className="label-barcode-text">{label.id}</div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ))}
                 </div>,

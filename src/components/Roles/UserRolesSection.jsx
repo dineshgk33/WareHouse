@@ -4,7 +4,6 @@ import { useAuth } from "../../context/AuthContext";
 import { DEFAULT_ROLES } from "../../constants/rolePermissions";
 import RoleCard from "./RoleCard";
 import PermissionsViewerModal from "./PermissionsViewerModal";
-import EditPermissionsModal from "./EditPermissionsModal";
 import EditRoleModal from "./EditRoleModal";
 import DeleteRoleModal from "./DeleteRoleModal";
 import AdminVerificationModal from "./AdminVerificationModal";
@@ -39,12 +38,11 @@ function UserRolesSection({ showToast }) {
 
     const [selectedRoleId, setSelectedRoleId] = useState(null);
     const [viewerOpen, setViewerOpen] = useState(false);
-    const [editPermissionsOpen, setEditPermissionsOpen] = useState(false);
+    const [viewerEditMode, setViewerEditMode] = useState(false);
     const [editRoleOpen, setEditRoleOpen] = useState(false);
     const [createRoleOpen, setCreateRoleOpen] = useState(false);
     const [deleteRoleOpen, setDeleteRoleOpen] = useState(false);
     const [adminVerifyOpen, setAdminVerifyOpen] = useState(false);
-    const [draftPermissions, setDraftPermissions] = useState([]);
     const [verifyConfig, setVerifyConfig] = useState(null);
 
     useEffect(() => {
@@ -109,7 +107,7 @@ function UserRolesSection({ showToast }) {
 
     const openViewer = (roleId) => {
         setSelectedRoleId(roleId);
-        setEditPermissionsOpen(false);
+        setViewerEditMode(false);
         setEditRoleOpen(false);
         setDeleteRoleOpen(false);
         setCreateRoleOpen(false);
@@ -118,16 +116,15 @@ function UserRolesSection({ showToast }) {
 
     const openEditPermissions = () => {
         if (!selectedRole) return;
-        setDraftPermissions([...selectedRole.permissions]);
         setEditRoleOpen(false);
         setDeleteRoleOpen(false);
         setCreateRoleOpen(false);
-        setViewerOpen(false);
-        setEditPermissionsOpen(true);
+        setViewerEditMode(true);
+        setViewerOpen(true);
     };
 
     const openEditRole = () => {
-        setEditPermissionsOpen(false);
+        setViewerEditMode(false);
         setDeleteRoleOpen(false);
         setCreateRoleOpen(false);
         setViewerOpen(false);
@@ -135,14 +132,14 @@ function UserRolesSection({ showToast }) {
     };
 
     const openDeleteRole = () => {
-        setEditPermissionsOpen(false);
+        setViewerEditMode(false);
         setEditRoleOpen(false);
         setCreateRoleOpen(false);
         setViewerOpen(false);
         setDeleteRoleOpen(true);
     };
 
-    const handleSavePermissions = () => {
+    const handleSavePermissions = (updatedPermissions, onSuccess) => {
         if (!selectedRole) return;
         requestVerification({
             message:
@@ -153,17 +150,17 @@ function UserRolesSection({ showToast }) {
                 setRoles((prev) =>
                     prev.map((item) =>
                         item.id === selectedRole.id
-                            ? { ...item, permissions: draftPermissions }
+                            ? { ...item, permissions: updatedPermissions }
                             : item
                     )
                 );
                 addAuditEntry({
                     roleName: selectedRole.name,
                     previousPermissions: previous,
-                    updatedPermissions: draftPermissions,
+                    updatedPermissions: updatedPermissions,
                 });
-                setEditPermissionsOpen(false);
                 showToast?.("Permission changes saved successfully.");
+                if (onSuccess) onSuccess();
             },
         });
     };
@@ -281,21 +278,15 @@ function UserRolesSection({ showToast }) {
             <PermissionsViewerModal
                 isOpen={viewerOpen}
                 role={selectedRole}
-                onClose={() => setViewerOpen(false)}
-                onEditPermissions={openEditPermissions}
+                onClose={() => {
+                    setViewerOpen(false);
+                    setViewerEditMode(false);
+                }}
                 onEditRole={openEditRole}
                 onDeleteRole={openDeleteRole}
-            />
-
-            <EditPermissionsModal
-                isOpen={editPermissionsOpen}
-                role={selectedRole}
-                permissions={draftPermissions}
-                onChangePermissions={setDraftPermissions}
-                onClose={() => setEditPermissionsOpen(false)}
                 onSave={handleSavePermissions}
-                onEditRole={openEditRole}
-                onDeleteRole={openDeleteRole}
+                initialIsEditing={viewerEditMode}
+                onCancelEditing={() => setViewerEditMode(false)}
             />
 
             <EditRoleModal

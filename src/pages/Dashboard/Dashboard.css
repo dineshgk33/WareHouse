@@ -119,6 +119,18 @@
   border-color: rgba(37, 99, 235, 0.3);
 }
 
+/* Card with no access — muted appearance, no hover lift */
+.dashboard-card-no-access {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+}
+.dashboard-card-no-access:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-card) !important;
+  border-color: var(--border-color) !important;
+}
+
 .card-stat-info {
   display: flex;
   flex-direction: column;

@@ -75,7 +75,8 @@ function OrgRoleSelectionPage() {
                 const firstPageId = firstPage ? (firstPage.pageId ? firstPage.pageId.toUpperCase() : "") : "";
                 switch (firstPageId) {
                     case "ORDERS": targetPath = "/orders"; break;
-                    case "INVENTORY": targetPath = "/inventory"; break;
+                    case "WAREHOUSE_INVENTORY": targetPath = "/inventory"; break;
+                    case "DARKHOUSE_INVENTORY": targetPath = "/inventory?tab=darkhouse"; break;
                     case "CATALOG": targetPath = "/catalog/products"; break;
                     case "CUSTOMERS": targetPath = "/customers"; break;
                     case "BILLING": targetPath = "/billing"; break;
@@ -83,7 +84,8 @@ function OrgRoleSelectionPage() {
                     case "ANALYTICS": targetPath = "/analytics"; break;
                     case "REPORTS": targetPath = "/reports"; break;
                     case "OPERATIONS": targetPath = "/operations"; break;
-                    case "DARKHOUSES": targetPath = "/darkhouses"; break;
+                    case "EMPLOYEES": targetPath = "/employees"; break;
+                    case "ADMIN": targetPath = "/admin/members"; break;
                     default: targetPath = "/connect"; break; // Safely return to connect instead of 403
                 }
             }

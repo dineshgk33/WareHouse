@@ -25,6 +25,21 @@ export function AuthProvider({ children }) {
 
     const [accessiblePages, setAccessiblePages] = useState(() => {
         try {
+            // Only restore saved pages if they belong to the CURRENT selected role.
+            // If the stored role/warehouse differs from the selection, discard — prevents
+            // stale permissions from a previous session leaking into the new one.
+            const savedWarehouseId = localStorage.getItem("selectedWarehouseId") || "";
+            const savedRoleId      = localStorage.getItem("selectedRoleId") || "";
+            const permVersion      = localStorage.getItem("permissionsVersion") || "";
+            const expectedVersion  = `${savedWarehouseId}::${savedRoleId}`;
+
+            if (!savedWarehouseId || !savedRoleId || permVersion !== expectedVersion) {
+                // Version mismatch — discard stale permissions
+                localStorage.removeItem("accessiblePages");
+                localStorage.removeItem("permissionsVersion");
+                return [];
+            }
+
             const saved = localStorage.getItem("accessiblePages");
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
@@ -101,6 +116,13 @@ export function AuthProvider({ children }) {
         const userProfile = responseData.message;
         const roles = userProfile?.warehouseRoles || [];
         
+        // On every fresh login, wipe the previous session's permissions immediately.
+        // This prevents stale accessiblePages (from an old role) from leaking into the
+        // new session before completeSetup() is called.
+        localStorage.removeItem("accessiblePages");
+        localStorage.removeItem("permissionsVersion");
+        setAccessiblePages([]);
+
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("authUser", JSON.stringify(userProfile));
         localStorage.setItem("warehouseRoles", JSON.stringify(roles));
@@ -119,18 +141,21 @@ export function AuthProvider({ children }) {
             if (res.status === "success") {
                 pages = res.message.accessiblePages || [];
                 setAccessiblePages(pages);
-                localStorage.setItem("accessiblePages", JSON.stringify(pages));
             } else {
                 setAccessiblePages([]);
-                localStorage.setItem("accessiblePages", "[]");
             }
         } catch (error) {
             console.error("Failed to fetch permissions", error);
             setAccessiblePages([]);
-            localStorage.setItem("accessiblePages", "[]");
         } finally {
             setPermissionsLoading(false);
         }
+
+        // Stamp a version key so the page-init code can validate freshness
+        // on next app load: permissionsVersion = "<warehouseId>::<roleId>"
+        const permVersion = `${warehouse.warehouseId}::${role.roleId}`;
+        localStorage.setItem("accessiblePages", JSON.stringify(pages));
+        localStorage.setItem("permissionsVersion", permVersion);
 
         localStorage.setItem("selectedWarehouseId", warehouse.warehouseId);
         localStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
@@ -170,6 +195,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("userOrg");
         localStorage.removeItem("userLoc");
         localStorage.removeItem("accessiblePages");
+        localStorage.removeItem("permissionsVersion");
         
         setIsAuthenticated(false);
         setUser(null);

@@ -308,8 +308,81 @@ function AdminPage() {
         <div className="settings-page-wrapper admin-layout">
             <style>{`
                 .admin-layout {
-                    padding-top: 24px;
+                    padding-top: 0;
                 }
+                
+                .admin-page-container {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                    height: 100%;
+                    background: #ffffff;
+                    overflow: hidden;
+                }
+                
+                .admin-page-header {
+                    background: #ffffff;
+                    padding: 24px 32px 0 32px;
+                    flex-shrink: 0;
+                }
+                
+                .admin-page-title {
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    margin: 0;
+                    letter-spacing: -0.5px;
+                }
+                
+                .admin-tabs-container {
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 16px;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding-bottom: 12px;
+                }
+                
+                .admin-tab-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 40px;
+                    padding: 12px 20px;
+                    border-radius: 10px;
+                    font-family: inherit;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    border: none;
+                }
+                
+                /* Active Tab: Blue background, White text */
+                .admin-tab-btn.active {
+                    background-color: #2563eb;
+                    color: #ffffff;
+                    font-weight: 600;
+                }
+                
+                /* Inactive Tab: Transparent background, Dark text */
+                .admin-tab-btn:not(.active) {
+                    background-color: transparent;
+                    color: #334155;
+                }
+                
+                .admin-tab-btn:not(.active):hover {
+                    background-color: #f1f5f9;
+                    color: #0f172a;
+                }
+                
+                .admin-content-area {
+                    flex: 1;
+                    padding: 32px 40px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    background: #ffffff;
+                }
+
                 
                 /* Action Bar */
                 .table-action-bar {
@@ -765,6 +838,14 @@ function AdminPage() {
                         flex-direction: column;
                         gap: 12px;
                     }
+
+                    .admin-page-header {
+                        padding: 16px 20px 0 20px;
+                    }
+                    
+                    .admin-content-area {
+                        padding: 16px 20px;
+                    }
                 }
             `}</style>
             
@@ -781,31 +862,28 @@ function AdminPage() {
                 </div>
             )}
 
-            {/* Split Grid Container Box */}
-            <div className="settings-container">
-                {/* Left Sidebar with Icons */}
-                <aside className="settings-sidebar">
-                    <ul className="settings-tab-list">
+            {/* Full-width container with top tabs */}
+            <div className="admin-page-container">
+                {/* Top Header Block */}
+                <div className="admin-page-header">
+                    <h1 className="admin-page-title">Admin</h1>
+                    <div className="admin-tabs-container">
                         {tabs.map((tab) => {
-                            const Icon = tab.icon;
                             return (
-                                <li key={tab.id}>
-                                    <button
-                                        className={`settings-tab-btn ${activeTab === tab.id ? "active" : ""}`}
-                                        onClick={() => handleTabChange(tab.id)}
-                                        title={tab.label}
-                                    >
-                                        <Icon size={18} className="tab-icon" />
-                                        <span className="tab-label">{tab.label}</span>
-                                    </button>
-                                </li>
+                                <button
+                                    key={tab.id}
+                                    className={`admin-tab-btn ${activeTab === tab.id ? "active" : ""}`}
+                                    onClick={() => handleTabChange(tab.id)}
+                                >
+                                    {tab.label}
+                                </button>
                             );
                         })}
-                    </ul>
-                </aside>
+                    </div>
+                </div>
 
-                {/* Right Content Pane */}
-                <section className="settings-content">
+                {/* Content Pane */}
+                <section className="admin-content-area">
                     {renderActiveContent()}
                 </section>
             </div>

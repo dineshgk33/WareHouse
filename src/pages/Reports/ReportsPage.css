@@ -245,3 +245,24 @@
 .btn-download-report:hover {
   background-color: #1d4ed8;
 }
+
+/* ── Unavailable stat card variant ───────────────────────────────────── */
+.reports-stat-unavailable {
+  background: linear-gradient(135deg, #f8faff, #f1f5ff);
+  border-style: dashed;
+  border-color: #c7d2fe;
+  opacity: 0.85;
+}
+
+/* ── Syncing spin icon ────────────────────────────────────────────────── */
+.spin-icon {
+  animation: reportSpin 0.8s linear infinite;
+}
+@keyframes reportSpin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

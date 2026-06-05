@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, PackageSearch, PackageCheck, Truck, Clock } from "lucide-react";
+import { ShoppingBag, PackageSearch, PackageCheck, Truck, Clock, History } from "lucide-react";
 import "./Sidebar.css"; // Reuse sidebar styling structure
 
 function OrdersFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
@@ -35,6 +35,8 @@ function OrdersFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
                 return <PackageCheck size={16} className="flyout-item-icon" />;
             case "Delivery Tracking":
                 return <Truck size={16} className="flyout-item-icon" />;
+            case "Label History":
+                return <History size={16} className="flyout-item-icon" />;
             default:
                 return <ShoppingBag size={16} className="flyout-item-icon" />;
         }

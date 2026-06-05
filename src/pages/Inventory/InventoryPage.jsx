@@ -32,8 +32,20 @@ const ROWS_PER_PAGE = 6;
 
 function InventoryPage() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const activeTab = searchParams.get("tab") || "warehouse";
-    const { canCreate, canEdit, canApprove } = useAuth();
+    const { canCreate, canEdit, canApprove, canView } = useAuth();
+
+    // Determine the active tab: respect URL param first, then fall back based on permissions
+    const getDefaultTab = () => {
+        const paramTab = searchParams.get("tab");
+        if (paramTab) return paramTab;
+        // If user has warehouse inventory access, default to it
+        if (canView("WAREHOUSE_INVENTORY")) return "warehouse";
+        // Otherwise fall back to darkhouse if available
+        if (canView("DARKHOUSE_INVENTORY")) return "darkhouse";
+        return "warehouse";
+    };
+
+    const activeTab = getDefaultTab();
 
     // ─── States ───────────────────────────────────────────────────────────────
     const [warehouseStock, setWarehouseStock] = useState(MOCK_WAREHOUSE_STOCK);
@@ -348,7 +360,7 @@ function InventoryPage() {
                     </p>
                 </div>
                 <div className="inv-header-actions-group">
-                    {activeTab === "transfers" && canCreate("INVENTORY") && (
+                    {activeTab === "transfers" && canCreate("WAREHOUSE_INVENTORY") && (
                         <button className="inv-action-btn-primary" onClick={openNewTransfer}>
                             <Plus size={15} />
                             <span>New Stock Transfer</span>
@@ -484,30 +496,36 @@ function InventoryPage() {
                 {/* Toolbar */}
                 <div className="inv-toolbar">
                     <div className="inv-tabs" role="tablist">
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "warehouse"}
-                            className={`inv-tab ${activeTab === "warehouse" ? "inv-tab--active" : ""}`}
-                            onClick={() => handleTabClick("warehouse")}
-                        >
-                            Warehouse Inventory
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "darkhouse"}
-                            className={`inv-tab ${activeTab === "darkhouse" ? "inv-tab--active" : ""}`}
-                            onClick={() => handleTabClick("darkhouse")}
-                        >
-                            Darkhouse Inventory
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "transfers"}
-                            className={`inv-tab ${activeTab === "transfers" ? "inv-tab--active" : ""}`}
-                            onClick={() => handleTabClick("transfers")}
-                        >
-                            Stock Transfers
-                        </button>
+                        {canView("WAREHOUSE_INVENTORY") && (
+                            <button
+                                role="tab"
+                                aria-selected={activeTab === "warehouse"}
+                                className={`inv-tab ${activeTab === "warehouse" ? "inv-tab--active" : ""}`}
+                                onClick={() => handleTabClick("warehouse")}
+                            >
+                                Warehouse Inventory
+                            </button>
+                        )}
+                        {canView("DARKHOUSE_INVENTORY") && (
+                            <button
+                                role="tab"
+                                aria-selected={activeTab === "darkhouse"}
+                                className={`inv-tab ${activeTab === "darkhouse" ? "inv-tab--active" : ""}`}
+                                onClick={() => handleTabClick("darkhouse")}
+                            >
+                                Darkhouse Inventory
+                            </button>
+                        )}
+                        {canView("WAREHOUSE_INVENTORY") && (
+                            <button
+                                role="tab"
+                                aria-selected={activeTab === "transfers"}
+                                className={`inv-tab ${activeTab === "transfers" ? "inv-tab--active" : ""}`}
+                                onClick={() => handleTabClick("transfers")}
+                            >
+                                Stock Transfers
+                            </button>
+                        )}
                     </div>
 
                     <div className="inv-toolbar__actions">
@@ -654,7 +672,7 @@ function InventoryPage() {
                                                         <button className="inv-row-action-btn" title="View details" onClick={() => openWhView(item)}>
                                                             <Eye size={13} />
                                                         </button>
-                                                        {canEdit("INVENTORY") && (
+                                                        {canEdit("WAREHOUSE_INVENTORY") && (
                                                             <>
                                                                 <button className="inv-row-action-btn" title="Edit" onClick={() => openWhEdit(item)}>
                                                                     <Edit2 size={13} />
@@ -714,7 +732,7 @@ function InventoryPage() {
                                                         <button className="inv-row-action-btn" title="View details" onClick={() => openDhView(item)}>
                                                             <Eye size={13} />
                                                         </button>
-                                                        {canEdit("INVENTORY") && (
+                                                        {canEdit("DARKHOUSE_INVENTORY") && (
                                                             <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openDhAdjust(item)}>
                                                                 <SlidersHorizontal size={13} />
                                                             </button>
@@ -764,7 +782,7 @@ function InventoryPage() {
                                                 <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
                                                 <td>
                                                     <div className="inv-actions-cell">
-                                                        {item.status === "Pending" && canApprove("INVENTORY") && (
+                                                        {item.status === "Pending" && canApprove("WAREHOUSE_INVENTORY") && (
                                                             <>
                                                                 <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
                                                                     Approve
@@ -774,7 +792,7 @@ function InventoryPage() {
                                                                 </button>
                                                             </>
                                                         )}
-                                                        {item.status === "Dispatched" && canApprove("INVENTORY") && (
+                                                        {item.status === "Dispatched" && canApprove("WAREHOUSE_INVENTORY") && (
                                                             <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleReceiveTransfer(item.id)}>
                                                                 Mark Received
                                                             </button>

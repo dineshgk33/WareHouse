@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
     ShoppingCart,
     IndianRupee,
@@ -218,6 +219,7 @@ const CustomTooltip = ({ active, payload, label, selectedMetric }) => {
 
 function Dashboard() {
     const navigate = useNavigate();
+    const { canView } = useAuth();
 
     // Chart States
     const [chartPeriod, setChartPeriod] = useState("30D"); // "7D", "30D", "90D", "1Y"
@@ -526,6 +528,8 @@ function Dashboard() {
     };
 
     // Card configurations mapping for responsive sparkline rendering
+    // Each card also carries a pageId so we can gate navigation to pages the
+    // current user does not have access to (prevents reaching /403 from the dashboard).
     const cardConfigs = [
         {
             title: "Total Orders",
@@ -534,6 +538,7 @@ function Dashboard() {
             trend: "+12.5%",
             isUp: true,
             route: "/orders",
+            pageId: "ORDERS",
             sparkData: statSparklineData["Total Orders"],
             stroke: "#2563EB",
             fill: "#DBEAFE"
@@ -545,6 +550,7 @@ function Dashboard() {
             trend: "+8.23%",
             isUp: true,
             route: "/analytics",
+            pageId: "ANALYTICS",
             sparkData: statSparklineData["Revenue"],
             stroke: "#10B981",
             fill: "#D1FAE5"
@@ -556,6 +562,7 @@ function Dashboard() {
             trend: "+15.21%",
             isUp: true,
             route: "/customers",
+            pageId: "CUSTOMERS",
             sparkData: statSparklineData["New Customers"],
             stroke: "#8B5CF6",
             fill: "#EDE9FE"
@@ -565,8 +572,9 @@ function Dashboard() {
             value: lowStockCount.toString(),
             icon: AlertTriangle,
             trend: "+5.22%",
-            isUp: false, // Low stock count going up is technically danger
+            isUp: false,
             route: "/inventory",
+            pageId: "WAREHOUSE_INVENTORY",
             sparkData: statSparklineData["Low Stock Items"],
             stroke: "#EF4444",
             fill: "#FEE2E2"
@@ -599,36 +607,53 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* 1. UPGRADED KPI CARDS WITH SPARKLINES & INTERACTIVE ROUTING */}
+            {/* 1. UPGRADED KPI CARDS WITH SPARKLINES & PERMISSION-AWARE ROUTING */}
             <div className="dashboard-stats-grid">
                 {cardConfigs.map((card, index) => {
                     const CardIcon = card.icon;
+                    const hasAccess = card.pageId ? canView(card.pageId) : true;
                     return (
-                        <div 
-                            key={index} 
-                            className="dashboard-summary-card" 
-                            onClick={() => navigate(card.route)}
+                        <div
+                            key={index}
+                            className={`dashboard-summary-card ${!hasAccess ? "dashboard-card-no-access" : ""}`}
+                            onClick={() => hasAccess && navigate(card.route)}
+                            style={{ cursor: hasAccess ? "pointer" : "default" }}
+                            title={!hasAccess ? "You do not have access to this section" : undefined}
                         >
                             <div className="card-stat-info">
                                 <div className="card-stat-header">
                                     <div className="card-stat-icon-wrapper" style={{ backgroundColor: `${card.fill}` }}>
-                                        <CardIcon size={18} style={{ color: `${card.stroke}` }} />
+                                        <CardIcon size={18} style={{ color: hasAccess ? `${card.stroke}` : "#94a3b8" }} />
                                     </div>
                                     <span className="card-stat-title">{card.title}</span>
+                                    {!hasAccess && (
+                                        <span style={{
+                                            marginLeft: "auto",
+                                            fontSize: 10,
+                                            fontWeight: 600,
+                                            color: "#94a3b8",
+                                            background: "#f1f5f9",
+                                            padding: "2px 7px",
+                                            borderRadius: 9999,
+                                            letterSpacing: "0.3px"
+                                        }}>No access</span>
+                                    )}
                                 </div>
                                 <div className="card-stat-body">
-                                    <span className="card-stat-value">{card.value}</span>
-                                    <div className="card-stat-trend-wrapper">
-                                        <span className={`trend-badge ${card.isUp ? "trend-up" : "trend-down"}`}>
-                                            {card.isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                                            {card.trend}
-                                        </span>
-                                        <span className="comparison-label">vs last 30 days</span>
-                                    </div>
+                                    <span className="card-stat-value" style={{ color: !hasAccess ? "#94a3b8" : undefined }}>{ hasAccess ? card.value : "—" }</span>
+                                    {hasAccess && (
+                                        <div className="card-stat-trend-wrapper">
+                                            <span className={`trend-badge ${card.isUp ? "trend-up" : "trend-down"}`}>
+                                                {card.isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                                {card.trend}
+                                            </span>
+                                            <span className="comparison-label">vs last 30 days</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             {/* Responsive Recharts Sparkline AreaChart */}
-                            <div className="card-sparkline-wrapper">
+                            <div className="card-sparkline-wrapper" style={{ opacity: hasAccess ? 1 : 0.25 }}>
                                 <ResponsiveContainer width="100%" height={40}>
                                     <AreaChart data={card.sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                                         <defs>
@@ -640,7 +665,7 @@ function Dashboard() {
                                         <Area
                                             type="monotone"
                                             dataKey="val"
-                                            stroke={card.stroke}
+                                            stroke={hasAccess ? card.stroke : "#cbd5e1"}
                                             strokeWidth={1.8}
                                             fill={`url(#gradient-${index})`}
                                             dot={false}
