@@ -1886,6 +1886,152 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   THERMAL PRINTER LAYOUT (4-inch and 100×50mm)
+   ═══════════════════════════════════════════════════════════════ */
+/* Single-column continuous label layout for thermal printers */
+.preview-pages-wrapper .a4-page-mockup.thermal-4inch,
+.preview-pages-wrapper .a4-page-mockup.thermal-100x50 {
+    width: auto !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    background-color: transparent !important;
+    border: 1px dashed #cbd5e1 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-content: flex-start !important;
+    box-shadow: none !important;
+    margin-bottom: 16px !important;
+}
+
+.preview-pages-wrapper .a4-page-mockup.thermal-4inch {
+    width: 101.6mm !important;
+}
+
+.preview-pages-wrapper .a4-page-mockup.thermal-100x50 {
+    width: 100mm !important;
+}
+
+/* Print sheet layout for thermal (single column, continuous feed) */
+.a4-page-print-sheet.thermal-4inch,
+.a4-page-print-sheet.thermal-100x50 {
+    width: 101.6mm !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6mm !important;
+    padding: 0 !important;
+    align-content: flex-start !important;
+    page-break-after: avoid !important;
+}
+
+.a4-page-print-sheet.thermal-100x50 {
+    width: 100mm !important;
+}
+
+/* Thermal label sizing */
+.thermal-4inch .quick-commerce-label,
+.thermal-100x50 .quick-commerce-label {
+    width: 100% !important;
+    height: 50mm !important;
+    max-height: 50mm !important;
+    padding: 6mm !important;
+    margin: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* Thermal printer font and spacing adjustments */
+.thermal-4inch .label-header-band,
+.thermal-100x50 .label-header-band {
+    margin-bottom: 2mm !important;
+}
+
+.thermal-4inch .label-category-badge,
+.thermal-100x50 .label-category-badge {
+    font-size: 6px !important;
+    padding: 0.5mm 3mm !important;
+}
+
+.thermal-4inch .label-logo-symbol,
+.thermal-100x50 .label-logo-symbol {
+    font-size: 8px !important;
+}
+
+.thermal-4inch .label-product-title,
+.thermal-100x50 .label-product-title {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    -webkit-line-clamp: 1 !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    margin-bottom: 1mm !important;
+}
+
+.thermal-4inch .label-brand-name,
+.thermal-100x50 .label-brand-name {
+    font-size: 6px !important;
+    margin-bottom: 0.5mm !important;
+}
+
+.thermal-4inch .label-main-content,
+.thermal-100x50 .label-main-content {
+    gap: 3mm !important;
+    margin-bottom: 1mm !important;
+}
+
+.thermal-4inch .label-weight-badge,
+.thermal-100x50 .label-weight-badge {
+    font-size: 7px !important;
+    padding: 0.5mm 2mm !important;
+}
+
+.thermal-4inch .label-details-grid,
+.thermal-100x50 .label-details-grid {
+    gap: 2px !important;
+    margin-bottom: 1mm !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.thermal-4inch .detail-label,
+.thermal-100x50 .detail-label {
+    font-size: 5px !important;
+}
+
+.thermal-4inch .detail-value,
+.thermal-100x50 .detail-value {
+    font-size: 7px !important;
+}
+
+.thermal-4inch .label-barcode-section,
+.thermal-100x50 .label-barcode-section {
+    margin-top: 1mm !important;
+}
+
+.thermal-4inch .label-barcode-graphic,
+.thermal-100x50 .label-barcode-graphic {
+    height: 35px !important;
+    margin: 1mm 0 !important;
+}
+
+.thermal-4inch .label-barcode-graphic svg,
+.thermal-100x50 .label-barcode-graphic svg {
+    max-height: 35px !important;
+    max-width: 100% !important;
+}
+
+.thermal-4inch .label-barcode-text,
+.thermal-100x50 .label-barcode-text {
+    font-size: 8px !important;
+    margin-top: 0.5mm !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CRITICAL PRINT PAGE MEDIA STYLING RULES
    ═══════════════════════════════════════════════════════════════ */
 @page {
@@ -1945,6 +2091,45 @@
         align-content: start !important;
         page-break-after: always !important;
         break-after: always !important;
+    }
+
+    /* ─── Thermal Printer Print Styles ─── */
+    /* Dynamic width based on thermal printer format */
+    #print-sheet {
+        width: auto !important; /* Override default 210mm */
+    }
+
+    .a4-page-print-sheet.thermal-4inch {
+        width: 101.6mm !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    .a4-page-print-sheet.thermal-100x50 {
+        width: 100mm !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    /* Thermal label print sizing */
+    .a4-page-print-sheet.thermal-4inch .quick-commerce-label,
+    .a4-page-print-sheet.thermal-100x50 .quick-commerce-label {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        margin: 0 !important;
+        padding: 5mm !important;
+        border-radius: 4px !important;
+    }
+
+    @page {
+        size: 101.6mm auto;
+        margin: 0;
     }
 }
 
