@@ -49,6 +49,8 @@ const getPageSize = (format) => {
         case "grid-2x2": return 4;
         case "grid-2x4": return 8;
         case "grid-3x4": return 12;
+        case "thermal-4inch": return 1;  // Single column - 1 label per "page" (continuous)
+        case "thermal-100x50": return 1; // Single column - 1 label per "page" (continuous)
         default: return 8;
     }
 };
@@ -128,7 +130,7 @@ function OrdersPage() {
     });
     const [previewLabels, setPreviewLabels] = useState([]);
     const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
-    const [labelLayoutFormat, setLabelLayoutFormat] = useState("grid-2x4"); // grid-2x4 or grid-3x4
+    const [labelLayoutFormat, setLabelLayoutFormat] = useState("thermal-4inch"); // thermal-4inch, thermal-100x50, or grid-2x4
     const [triggerImmediatePrint, setTriggerImmediatePrint] = useState(false);
 
     // Modals
@@ -1980,9 +1982,11 @@ function OrdersPage() {
                                 <Printer size={18} />
                             </div>
                             <div className="orders-modal-header__text-block">
-                                <h3 className="orders-modal-title">A4 Warehouse Labels Print Preview</h3>
+                                <h3 className="orders-modal-title">
+                                    {labelLayoutFormat.startsWith('thermal') ? '🖨️ Thermal Printer' : '📄 A4 Warehouse'} Labels Print Preview
+                                </h3>
                                 <span className="orders-modal-subtitle">
-                                    {previewLabels.length} Labels generated • HAATZA Dark Store Operations
+                                    {previewLabels.length} Labels • {labelLayoutFormat === 'thermal-4inch' ? '4-inch Thermal' : labelLayoutFormat === 'thermal-100x50' ? '100×50mm Thermal' : 'A4 Sheet'} • HAATZA Dark Store Operations
                                 </span>
                             </div>
                             <div className="preview-header-controls">
@@ -1991,11 +1995,13 @@ function OrdersPage() {
                                     value={labelLayoutFormat}
                                     onChange={(e) => setLabelLayoutFormat(e.target.value)}
                                 >
-                                    <option value="grid-1x1">A4 Sheet - 1x1 Grid (1 label)</option>
-                                    <option value="grid-1x2">A4 Sheet - 1x2 Grid (2 labels)</option>
-                                    <option value="grid-2x2">A4 Sheet - 2x2 Grid (4 labels)</option>
-                                    <option value="grid-2x4">A4 Sheet - 2x4 Grid (8 labels)</option>
-                                    <option value="grid-3x4">A4 Sheet - 3x4 Grid (12 labels)</option>
+                                    <option value="thermal-4inch">🖨️ Thermal 4-inch (101.6mm)</option>
+                                    <option value="thermal-100x50">🖨️ Thermal 100mm × 50mm</option>
+                                    <option value="grid-2x4">📄 A4 Sheet - 2x4 Grid (8 labels)</option>
+                                    <option value="grid-1x1">📄 A4 Sheet - 1x1 Grid (1 label)</option>
+                                    <option value="grid-1x2">📄 A4 Sheet - 1x2 Grid (2 labels)</option>
+                                    <option value="grid-2x2">📄 A4 Sheet - 2x2 Grid (4 labels)</option>
+                                    <option value="grid-3x4">📄 A4 Sheet - 3x4 Grid (12 labels)</option>
                                 </select>
                             </div>
                         </div>
@@ -2003,7 +2009,22 @@ function OrdersPage() {
                         {/* Body */}
                         <div className="orders-modal-body preview-body">
                             <p className="adjust-explainer">
-                                Review the layout below. Make sure your printer is set to <strong>A4</strong> paper, portrait orientation, with **no margins** (scale: 100%) for perfect thermal sticker alignment.
+                                {labelLayoutFormat.startsWith('thermal') ? (
+                                    <>
+                                        <strong>🖨️ Thermal Printer Mode</strong><br/>
+                                        • Use <strong>{labelLayoutFormat === 'thermal-4inch' ? '4-inch (101.6mm)' : '100mm'}</strong> thermal paper<br/>
+                                        • Portrait orientation, continuous feed<br/>
+                                        • Set printer to <strong>actual paper width</strong> in driver settings<br/>
+                                        • No scaling - labels will stack vertically<br/>
+                                        • Compatible with Zebra, TSC, XPrinter, and standard 4-inch thermal printers
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong>📄 A4 Sheet Mode</strong><br/>
+                                        • Printer set to <strong>A4</strong> paper, portrait orientation<br/>
+                                        • <strong>No margins</strong> required (scale: 100%) for perfect alignment
+                                    </>
+                                )}
                             </p>
                             
                             <div className="preview-sheet-scroll-container">
@@ -2013,7 +2034,13 @@ function OrdersPage() {
                                             {pageLabels.map((label) => {
                                                 const category = getCategoryForProduct(label.productName, label.sku);
                                                 const barcode = new Barcode128Svg(label.id);
-                                                if (labelLayoutFormat === "grid-1x1") {
+                                                
+                                                // Barcode sizing for different formats
+                                                if (labelLayoutFormat === "thermal-4inch" || labelLayoutFormat === "thermal-100x50") {
+                                                    // Thermal printer: larger barcode for better scan reliability
+                                                    barcode.height = 60;
+                                                    barcode.factor = 2.5;
+                                                } else if (labelLayoutFormat === "grid-1x1") {
                                                     barcode.height = 55;
                                                     barcode.factor = 2.4;
                                                 } else if (labelLayoutFormat === "grid-1x2" || labelLayoutFormat === "grid-2x2") {
@@ -2108,7 +2135,13 @@ function OrdersPage() {
                             {pageLabels.map((label) => {
                                 const category = getCategoryForProduct(label.productName, label.sku);
                                 const barcode = new Barcode128Svg(label.id);
-                                if (labelLayoutFormat === "grid-1x1") {
+                                
+                                // Barcode sizing for different formats
+                                if (labelLayoutFormat === "thermal-4inch" || labelLayoutFormat === "thermal-100x50") {
+                                    // Thermal printer: larger barcode for better scan reliability
+                                    barcode.height = 60;
+                                    barcode.factor = 2.5;
+                                } else if (labelLayoutFormat === "grid-1x1") {
                                     barcode.height = 55;
                                     barcode.factor = 2.4;
                                 } else if (labelLayoutFormat === "grid-1x2" || labelLayoutFormat === "grid-2x2") {
