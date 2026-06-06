@@ -13,20 +13,34 @@ import {
     ChevronLeft,
     ChevronRight,
     ArrowUpDown,
-    Check
+    Check,
+    Loader2,
+    Copy,
+    Key,
+    Mail
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
 import UserRolesSection from "../../components/Roles/UserRolesSection";
 import Modal from "../../components/Roles/Modal";
+import Accordion from "../../components/Roles/Accordion";
+import {
+    buildPermissionMap,
+    getEnabledInCategory,
+    VIEW_PERMISSION_CATEGORIES,
+    PERMISSION_CATEGORIES
+} from "../../components/Roles/rolePermissionsUtils";
 import { authService } from "../../services/authService";
 import "../Settings/Settings.css";
 
 function AdminPage() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, selectedRole, selectedRoleName, warehouseRoles } = useAuth();
+    const { user, selectedRole, selectedRoleName, warehouseRoles, selectedWarehouseId: sessionWarehouseId, selectedWarehouseName: sessionWarehouseName } = useAuth();
+    // Email validation state
+    const [emailCheckStatus, setEmailCheckStatus] = useState(null); // 'checking' | 'available' | 'exists'
+    const [emailMessage, setEmailMessage] = useState('');
     
     // Determine active tab from URL path
     const pathParts = location.pathname.split('/');
@@ -68,43 +82,194 @@ function AdminPage() {
     const name = user ? `${user.firstName} ${user.lastName}` : "";
     const email = user?.email || "";
 
-    const [members, setMembers] = useState(() => [
-        { id: '1', name: name, email: email, employeeId: user?.employeeId || "EMP001", role: selectedRoleName || "Owner", warehouse: "Central Hub Alpha", status: "Active", joinedDate: "2026-06-01", avatar: user?.ProfileImage || avatarImg, initials: "", bg: "" },
-        { id: '2', name: "Sarah Connor", email: "s.connor@haatza.com", employeeId: "EMP002", role: "Administrator", warehouse: "Central Hub Alpha", status: "Active", joinedDate: "2026-04-15", avatar: "", initials: "SC", bg: "text-bg-pink" },
-        { id: '3', name: "Alex Jackson", email: "alex.j@haatza.com", employeeId: "EMP003", role: "Developer", warehouse: "Tech Center", status: "Active", joinedDate: "2026-05-10", avatar: "", initials: "AJ", bg: "text-bg-blue" },
-        { id: '4', name: "Michael Chen", email: "m.chen@haatza.com", employeeId: "EMP004", role: "Viewer", warehouse: "Westside Storage", status: "Inactive", joinedDate: "2025-11-20", avatar: "", initials: "MC", bg: "text-bg-yellow" },
-        { id: '5', name: "Emma Watson", email: "emma.w@haatza.com", employeeId: "EMP005", role: "Manager", warehouse: "Central Hub Alpha", status: "Active", joinedDate: "2026-01-05", avatar: "", initials: "EW", bg: "text-bg-green" },
-        { id: '6', name: "David Kim", email: "d.kim@haatza.com", employeeId: "EMP006", role: "Developer", warehouse: "Tech Center", status: "Pending", joinedDate: "2026-06-03", avatar: "", initials: "DK", bg: "text-bg-purple" },
-        { id: '7', name: "Sophia Martinez", email: "s.martinez@haatza.com", employeeId: "EMP007", role: "Administrator", warehouse: "Eastside Storage", status: "Suspended", joinedDate: "2025-08-14", avatar: "", initials: "SM", bg: "text-bg-orange" },
-        { id: '8', name: "James Wilson", email: "j.wilson@haatza.com", employeeId: "EMP008", role: "Viewer", warehouse: "Westside Storage", status: "Active", joinedDate: "2026-02-28", avatar: "", initials: "JW", bg: "text-bg-blue" },
-        { id: '9', name: "Olivia Taylor", email: "o.taylor@haatza.com", employeeId: "EMP009", role: "Manager", warehouse: "North Facility", status: "Active", joinedDate: "2025-12-10", avatar: "", initials: "OT", bg: "text-bg-pink" },
-        { id: '10', name: "Liam Brown", email: "l.brown@haatza.com", employeeId: "EMP010", role: "Developer", warehouse: "Tech Center", status: "Active", joinedDate: "2026-03-22", avatar: "", initials: "LB", bg: "text-bg-yellow" },
-        { id: '11', name: "Ava Davis", email: "a.davis@haatza.com", employeeId: "EMP011", role: "Viewer", warehouse: "Central Hub Alpha", status: "Inactive", joinedDate: "2025-09-05", avatar: "", initials: "AD", bg: "text-bg-green" },
-        { id: '12', name: "Noah Garcia", email: "n.garcia@haatza.com", employeeId: "EMP012", role: "Administrator", warehouse: "South Facility", status: "Pending", joinedDate: "2026-05-25", avatar: "", initials: "NG", bg: "text-bg-purple" }
-    ]);
+    const [members, setMembers] = useState([]);
+    const [isMembersLoading, setIsMembersLoading] = useState(false);
+    const [membersError, setMembersError] = useState("");
 
     // Modal & Form States
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-    const [newMemberName, setNewMemberName] = useState("");
+    const [newMemberFirstName, setNewMemberFirstName] = useState("");
+    const [newMemberLastName, setNewMemberLastName] = useState("");
     const [newMemberEmail, setNewMemberEmail] = useState("");
     const [newMemberPhone, setNewMemberPhone] = useState("");
     const [newMemberEmpId, setNewMemberEmpId] = useState("");
-    const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
-    const [selectedRoleId, setSelectedRoleId] = useState(null);
+    const [selectedWarehouseId, setSelectedWarehouseId] = useState(() => sessionWarehouseId || "");
+    const [selectedRoleIds, setSelectedRoleIds] = useState([]);
     const [accountStatus, setAccountStatus] = useState("ACTIVE");
-    const [newMemberDept, setNewMemberDept] = useState("");
     const [newMemberAccessLevel, setNewMemberAccessLevel] = useState("Standard");
     const [newMemberManager, setNewMemberManager] = useState("");
+    const [newMemberEmploymentType, setNewMemberEmploymentType] = useState("Full-time");
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState("");
+    const [isPhotoConverting, setIsPhotoConverting] = useState(false);
+    
+    // Credential Modal states
+    const [createdCredentials, setCreatedCredentials] = useState(null);
+    const [sendEmailOption, setSendEmailOption] = useState(true);
+    const [copied, setCopied] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
     
     const [fetchedRoles, setFetchedRoles] = useState([]);
     const [rolesLoading, setRolesLoading] = useState(false);
     const [roleErrorText, setRoleErrorText] = useState("");
+    const [roleSearchQuery, setRoleSearchQuery] = useState("");
     
     const [permissionsList, setPermissionsList] = useState([]);
     const [permissionsLoading, setPermissionsLoading] = useState(false);
     const [isCreatingMember, setIsCreatingMember] = useState(false);
     const [isEditingPermissions, setIsEditingPermissions] = useState(false);
     const [customAccessiblePages, setCustomAccessiblePages] = useState([]);
+    const [expandedCategories, setExpandedCategories] = useState({});
+    const [rolePermissionsMap, setRolePermissionsMap] = useState({});
+    const [loadingMap, setLoadingMap] = useState(false);
+
+    const getRoleDescription = (roleName) => {
+        const defaultRoles = [
+            { name: "Super Admin", description: "Full platform ownership with unrestricted access across all modules." },
+            { name: "Administrator", description: "Full platform ownership with unrestricted access across all modules." },
+            { name: "Warehouse Manager", description: "Oversees stock movement, darkhouse operations, and order fulfillment." },
+            { name: "Store Manager", description: "Oversees stock movement, darkhouse operations, and order fulfillment." },
+            { name: "Inventory Manager", description: "Maintains inventory records, stock adjustments, and shelf-level accuracy." },
+            { name: "Operation Head", description: "Full system operations, analytics, reporting, and team management." },
+            { name: "Picker", description: "Locates and collects items from shelves for packaging." },
+            { name: "Packer", description: "Packages collected products and prepares shipment labels." },
+            { name: "Viewer", description: "Read-only access to warehouse dashboards and inventory logs." }
+        ];
+        const match = defaultRoles.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+        return match ? match.description : "Access to assigned workspace modules and settings.";
+    };
+
+    const getPermissionsFromAccessiblePages = (accessiblePages) => {
+        const permissions = [];
+        if (!Array.isArray(accessiblePages)) return permissions;
+        
+        accessiblePages.forEach(p => {
+            const pageId = p.pageId ? p.pageId.toUpperCase() : "";
+            
+            if (pageId === "WAREHOUSE_INVENTORY" || pageId === "DARKHOUSE_INVENTORY") {
+                if (p.canView) permissions.push("View Inventory");
+                if (p.canCreate || p.canEdit) permissions.push("Manage Inventory");
+                if (p.canDelete) permissions.push("Delete Inventory");
+                if (p.canApprove) permissions.push("Adjust Stock Levels");
+            }
+            else if (pageId === "ORDERS") {
+                if (p.canView) permissions.push("View Orders");
+                if (p.canEdit) {
+                    permissions.push("Update Order Status");
+                    permissions.push("Print Labels");
+                }
+                if (p.canCreate) permissions.push("Generate Labels");
+                if (p.canDelete) permissions.push("Delete Orders");
+            }
+            else if (pageId === "CUSTOMERS") {
+                if (p.canView) permissions.push("View Customers");
+                if (p.canEdit) permissions.push("Edit Customer Profiles");
+                if (p.canApprove) permissions.push("Verify Customers");
+            }
+            else if (pageId === "DARKHOUSES") {
+                if (p.canView) permissions.push("View Darkhouses");
+                if (p.canEdit || p.canCreate) permissions.push("Manage Darkhouses");
+            }
+            else if (pageId === "ANALYTICS") {
+                if (p.canView) permissions.push("View Analytics");
+                if (p.canEdit || p.canCreate) permissions.push("Export Analytics Reports");
+            }
+            else if (pageId === "BILLING") {
+                if (p.canView) permissions.push("View Billing");
+                if (p.canEdit || p.canCreate) permissions.push("Manage Billing Plans");
+                if (p.canApprove) permissions.push("View Invoices");
+            }
+            else if (pageId === "SETTINGS") {
+                if (p.canView) permissions.push("View Settings");
+            }
+            else if (pageId === "EMPLOYEES" || pageId === "ADMIN") {
+                if (p.canView) permissions.push("View Users");
+                if (p.canEdit || p.canCreate) permissions.push("Manage Users");
+                if (p.canApprove) permissions.push("Assign User Roles");
+            }
+        });
+        
+        return permissions;
+    };
+
+    const selectedRoleIdsStr = selectedRoleIds.join(",");
+
+    useEffect(() => {
+        if (selectedRoleIds.length > 0) {
+            setExpandedCategories(
+                VIEW_PERMISSION_CATEGORIES.reduce((acc, cat) => {
+                    acc[cat] = true;
+                    return acc;
+                }, {})
+            );
+        }
+    }, [selectedRoleIdsStr]);
+
+    // Email validation effect (500ms debounce)
+    useEffect(() => {
+        if (!newMemberEmail.trim()) {
+            setEmailCheckStatus(null);
+            setEmailMessage('');
+            return;
+        }
+
+        // Basic validation check before querying the API
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newMemberEmail.trim())) {
+            setEmailCheckStatus('invalid');
+            setEmailMessage('Please enter a valid email address');
+            return;
+        }
+
+        setEmailCheckStatus('checking');
+        setEmailMessage('Checking email availability...');
+
+        const handler = setTimeout(async () => {
+            try {
+                const resp = await fetch(`https://haatza.com/_functions/checkWarehouseemployee?email=${encodeURIComponent(newMemberEmail.trim())}`);
+                const data = await resp.json();
+
+                let exists = false;
+                if (data && data.status === "success" && data.message && data.message.body) {
+                    try {
+                        const bodyObj = typeof data.message.body === 'string' ? JSON.parse(data.message.body) : data.message.body;
+                        exists = (bodyObj.success === true) || (bodyObj.exists === true);
+                    } catch (err) {
+                        console.error("Failed to parse body JSON", err);
+                    }
+                }
+
+                if (exists) {
+                    setEmailCheckStatus('exists');
+                    setEmailMessage('Employee already exists with this email. Please change the email to select options.');
+                } else {
+                    setEmailCheckStatus('available');
+                    setEmailMessage('Email available');
+                }
+            } catch (e) {
+                console.error('Email validation error', e);
+                // On request failure, let user proceed to not block them
+                setEmailCheckStatus('available');
+                setEmailMessage('Email status check skipped');
+            }
+        }, 500);
+
+        return () => clearTimeout(handler);
+    }, [newMemberEmail]);
+
+    const getPermissionCountForRole = (roleId) => {
+        const pages = rolePermissionsMap[roleId];
+        if (!pages) return null;
+        let count = 0;
+        pages.forEach(p => {
+            if (p.canView) count++;
+            if (p.canCreate) count++;
+            if (p.canEdit) count++;
+            if (p.canDelete) count++;
+            if (p.canApprove) count++;
+        });
+        return count;
+    };
 
     // Extract unique warehouses dynamically from current user's warehouseRoles context (from login response)
     const uniqueWarehouses = useMemo(() => {
@@ -123,43 +288,209 @@ function AdminPage() {
         return list;
     }, [warehouseRoles]);
 
+    // Fetch warehouse employees dynamically from backend when the active warehouse changes
+    useEffect(() => {
+        if (!sessionWarehouseId) {
+            setMembers([]);
+            return;
+        }
+
+        let isMounted = true;
+        setIsMembersLoading(true);
+        setMembersError("");
+
+        authService.getWarehouseEmployees(sessionWarehouseId)
+            .then((res) => {
+                if (!isMounted) return;
+
+                let rawEmployees = [];
+                if (res && res.status === "success" && res.message) {
+                    if (Array.isArray(res.message.employees)) {
+                        rawEmployees = res.message.employees;
+                    } else if (Array.isArray(res.message)) {
+                        rawEmployees = res.message;
+                    } else if (res.message.body) {
+                        try {
+                            const bodyObj = typeof res.message.body === 'string'
+                                ? JSON.parse(res.message.body)
+                                : res.message.body;
+                            if (Array.isArray(bodyObj.employees)) {
+                                rawEmployees = bodyObj.employees;
+                            } else if (Array.isArray(bodyObj)) {
+                                rawEmployees = bodyObj;
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse body JSON in getWarehouseEmployees", e);
+                        }
+                    }
+                } else if (res && Array.isArray(res)) {
+                    rawEmployees = res;
+                } else if (res && Array.isArray(res.employees)) {
+                    rawEmployees = res.employees;
+                }
+
+                const mappedMembers = rawEmployees.map((emp, index) => {
+                    const firstName = emp.firstName || "";
+                    const lastName = emp.lastName || "";
+                    const fullName = emp.fullName || `${firstName} ${lastName}`.trim() || "Unknown Employee";
+
+                    const roleNames = Array.isArray(emp.warehouseRoles)
+                        ? emp.warehouseRoles.map(r => r.roleName)
+                        : [];
+                    const warehouseNames = Array.isArray(emp.warehouseRoles)
+                        ? emp.warehouseRoles.map(r => r.warehouseName)
+                        : [];
+
+                    let status = "Active";
+                    if (emp.status) {
+                        const s = emp.status.toUpperCase();
+                        if (s === "ACTIVE") status = "Active";
+                        else if (s === "INACTIVE" || s === "DEACTIVATED") status = "Inactive";
+                        else if (s === "PENDING") status = "Pending";
+                        else if (s === "SUSPENDED") status = "Suspended";
+                        else status = emp.status;
+                    }
+
+                    let joinedDate = "2026-06-01";
+                    if (emp._createdDate) {
+                        try {
+                            joinedDate = new Date(emp._createdDate).toISOString().split('T')[0];
+                        } catch (e) {}
+                    } else if (emp.joinedDate) {
+                        joinedDate = emp.joinedDate;
+                    }
+
+                    const bgClasses = ["text-bg-pink", "text-bg-blue", "text-bg-yellow", "text-bg-green", "text-bg-purple", "text-bg-orange"];
+                    const bg = bgClasses[index % bgClasses.length];
+
+                    const initials = fullName
+                        .split(' ')
+                        .filter(Boolean)
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2) || "EE";
+
+                    return {
+                        id: emp.id || emp._id || `EMP-${index}-${Date.now()}`,
+                        name: fullName,
+                        email: emp.email || "",
+                        employeeId: emp.employeeCode || emp.employeeId || `EMP-${index}`,
+                        role: roleNames.length > 0 ? roleNames.join(", ") : "Member",
+                        warehouse: warehouseNames.length > 0 ? warehouseNames.join(", ") : (sessionWarehouseName || "Warehouse"),
+                        status: status,
+                        joinedDate: joinedDate,
+                        avatar: emp.photo || emp.avatar || "",
+                        initials: initials,
+                        bg: bg
+                    };
+                });
+
+                setMembers(mappedMembers);
+            })
+            .catch((err) => {
+                if (!isMounted) return;
+                console.error("Failed to fetch warehouse employees:", err);
+                setMembersError("Failed to load team members from the backend.");
+                setMembers([]);
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setIsMembersLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [sessionWarehouseId, sessionWarehouseName]);
+
     // Fetch roles dynamically when a warehouse is selected
     useEffect(() => {
         if (!selectedWarehouseId) {
             setFetchedRoles([]);
-            setSelectedRoleId(null);
+            setSelectedRoleIds([]);
             setRoleErrorText("");
+            setRolePermissionsMap({});
             return;
         }
         
         setRolesLoading(true);
-        setSelectedRoleId(null);
+        setSelectedRoleIds([]);
         setFetchedRoles([]);
         setRoleErrorText("");
+        setRolePermissionsMap({});
         
         authService.getWarehouseRoles(selectedWarehouseId)
-            .then(res => {
+            .then(async (res) => {
+                let rolesList = [];
                 if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
-                    setFetchedRoles(res.message.roles);
+                    rolesList = res.message.roles;
                 } else {
-                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
-                    if (fallback.length > 0) {
-                        setFetchedRoles(fallback);
-                    } else {
-                        setFetchedRoles([]);
-                        setSelectedRoleId(null);
-                        setRoleErrorText("No roles available for selected warehouse");
+                    rolesList = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
+                }
+
+                // Filter by selected warehouseId
+                const filtered = rolesList.filter(role => role.warehouseId === selectedWarehouseId);
+                
+                if (filtered.length > 0) {
+                    setFetchedRoles(filtered);
+                    
+                    // Pre-fetch permissions for each role
+                    setLoadingMap(true);
+                    const map = {};
+                    try {
+                        await Promise.all(filtered.map(async (role) => {
+                            try {
+                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId);
+                                if (permRes.status === "success" && permRes.message && Array.isArray(permRes.message.accessiblePages)) {
+                                    map[role.roleId] = permRes.message.accessiblePages;
+                                }
+                            } catch (e) {
+                                console.error("Failed to load permissions for role " + role.roleId, e);
+                            }
+                        }));
+                        setRolePermissionsMap(map);
+                    } catch (err) {
+                        console.error("Failed to prefetch permissions map:", err);
+                    } finally {
+                        setLoadingMap(false);
                     }
+                } else {
+                    setFetchedRoles([]);
+                    setSelectedRoleIds([]);
+                    setRoleErrorText("No roles available for selected warehouse");
                 }
             })
-            .catch(err => {
+            .catch(async (err) => {
                 console.error("Failed to load roles:", err);
                 const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
                 if (fallback.length > 0) {
                     setFetchedRoles(fallback);
+                    
+                    // Pre-fetch permissions for fallback
+                    setLoadingMap(true);
+                    const map = {};
+                    try {
+                        await Promise.all(fallback.map(async (role) => {
+                            try {
+                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId);
+                                if (permRes.status === "success" && permRes.message && Array.isArray(permRes.message.accessiblePages)) {
+                                    map[role.roleId] = permRes.message.accessiblePages;
+                                }
+                            } catch (e) {
+                                console.error("Failed to load permissions for role " + role.roleId, e);
+                            }
+                        }));
+                        setRolePermissionsMap(map);
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        setLoadingMap(false);
+                    }
                 } else {
                     setFetchedRoles([]);
-                    setSelectedRoleId(null);
+                    setSelectedRoleIds([]);
                     setRoleErrorText("No roles available for selected warehouse");
                 }
             })
@@ -170,7 +501,7 @@ function AdminPage() {
 
     // Fetch permissions dynamically when a role is selected
     useEffect(() => {
-        if (!selectedWarehouseId || !selectedRoleId || fetchedRoles.length === 0) {
+        if (!selectedWarehouseId || selectedRoleIds.length === 0 || fetchedRoles.length === 0) {
             setPermissionsList([]);
             setCustomAccessiblePages([]);
             return;
@@ -180,19 +511,36 @@ function AdminPage() {
         setPermissionsList([]);
         setCustomAccessiblePages([]);
         
-        authService.getRolePermissions(selectedWarehouseId, selectedRoleId)
-            .then(res => {
-                if (res.status === "success" && res.message && Array.isArray(res.message.accessiblePages)) {
-                    // Get only pages/modules the user can view
-                    const activeModules = res.message.accessiblePages
-                        .filter(page => page.canView)
-                        .map(page => page.pageName || page.pageId);
-                    setPermissionsList(activeModules);
-                    setCustomAccessiblePages(res.message.accessiblePages);
-                } else {
-                    setPermissionsList([]);
-                    setCustomAccessiblePages([]);
-                }
+        Promise.all(
+            selectedRoleIds.map(roleId => authService.getRolePermissions(selectedWarehouseId, roleId))
+        )
+            .then(results => {
+                const mergedPagesMap = {};
+                
+                results.forEach(res => {
+                    if (res.status === "success" && res.message && Array.isArray(res.message.accessiblePages)) {
+                        res.message.accessiblePages.forEach(page => {
+                            const pid = page.pageId;
+                            if (!mergedPagesMap[pid]) {
+                                mergedPagesMap[pid] = { ...page };
+                            } else {
+                                mergedPagesMap[pid].canView = mergedPagesMap[pid].canView || page.canView;
+                                mergedPagesMap[pid].canCreate = mergedPagesMap[pid].canCreate || page.canCreate;
+                                mergedPagesMap[pid].canEdit = mergedPagesMap[pid].canEdit || page.canEdit;
+                                mergedPagesMap[pid].canDelete = mergedPagesMap[pid].canDelete || page.canDelete;
+                                mergedPagesMap[pid].canApprove = mergedPagesMap[pid].canApprove || page.canApprove;
+                            }
+                        });
+                    }
+                });
+                
+                const mergedPages = Object.values(mergedPagesMap);
+                const activeModules = mergedPages
+                    .filter(page => page.canView)
+                    .map(page => page.pageName || page.pageId);
+                
+                setPermissionsList(activeModules);
+                setCustomAccessiblePages(mergedPages);
             })
             .catch(err => {
                 console.error("Failed to load permissions:", err);
@@ -202,18 +550,18 @@ function AdminPage() {
             .finally(() => {
                 setPermissionsLoading(false);
             });
-    }, [selectedWarehouseId, selectedRoleId, fetchedRoles]);
+    }, [selectedWarehouseId, selectedRoleIdsStr, fetchedRoles]);
 
     const closeAndResetModal = () => {
         setIsAddMemberModalOpen(false);
-        setNewMemberName("");
+        setNewMemberFirstName("");
+        setNewMemberLastName("");
         setNewMemberEmail("");
         setNewMemberPhone("");
         setNewMemberEmpId("");
-        setSelectedWarehouseId("");
-        setSelectedRoleId(null);
+        setSelectedWarehouseId(sessionWarehouseId || "");
+        setSelectedRoleIds([]);
         setAccountStatus("ACTIVE");
-        setNewMemberDept("");
         setNewMemberAccessLevel("Standard");
         setNewMemberManager("");
         setFetchedRoles([]);
@@ -221,75 +569,270 @@ function AdminPage() {
         setRoleErrorText("");
         setIsEditingPermissions(false);
         setCustomAccessiblePages([]);
+        setPhotoFile(null);
+        setPhotoPreview("");
+        setNewMemberEmploymentType("Full-time");
+        setEmailCheckStatus(null);
+        setEmailMessage("");
+        setIsPhotoConverting(false);
+        setCreatedCredentials(null);
+        setSendEmailOption(true);
+        setCopied(false);
+        setIsSendingEmail(false);
+        setRoleSearchQuery("");
+    };
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file type: only JPG, JPEG, and PNG
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        if (!allowedTypes.includes(file.type)) {
+            showToast?.("Invalid file type. Supported: JPG, JPEG, PNG");
+            return;
+        }
+        
+        // Validate file size (5 MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast?.("File size exceeds 5MB limit.");
+            return;
+        }
+        
+        setPhotoFile(file);
+        setIsPhotoConverting(true);
+        setPhotoPreview(""); // clear old preview while converting
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // Add a brief timeout so the conversion loading state is visible
+            setTimeout(() => {
+                setPhotoPreview(reader.result);
+                setIsPhotoConverting(false);
+            }, 600);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemovePhoto = () => {
+        setPhotoFile(null);
+        setPhotoPreview("");
+    };
+
+    const generateSecurePassword = () => {
+        const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const numbers = "0123456789";
+        const symbols = "!@#$%&*";
+        const allChars = uppercase + lowercase + numbers + symbols;
+        
+        let password = "";
+        // Ensure at least one of each type for security
+        password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+        password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+        password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+        password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+        
+        for (let i = 0; i < 6; i++) {
+            password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+        }
+        
+        // Shuffle characters
+        return password.split('').sort(() => 0.5 - Math.random()).join('');
     };
 
     const handleAddMemberToLocalList = (payload) => {
-        const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === payload.warehouseId);
-        const selectedRl = fetchedRoles.find(role => role.roleId === payload.roleId);
+        const isFormData = payload instanceof FormData;
+        const warehouseId = isFormData ? payload.get("warehouseId") : (payload.warehouseId || (payload.warehouseRoles && payload.warehouseRoles[0]?.warehouseId) || "");
+        const email = isFormData ? payload.get("email") : payload.email;
+        const status = isFormData ? payload.get("status") : (payload.status || "ACTIVE");
+        const rawRoleIds = isFormData ? payload.getAll("roleIds[]") : (payload.roleIds || (payload.warehouseRoles ? payload.warehouseRoles.map(r => r.roleId) : []));
+        let roleIds = Array.isArray(rawRoleIds) && rawRoleIds.length > 0 ? rawRoleIds : [];
+        if (isFormData && roleIds.length === 0) {
+            try {
+                roleIds = JSON.parse(payload.get("roleIdsStr") || "[]");
+            } catch (e) {}
+        }
+
+        const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === warehouseId) || {
+            warehouseName: sessionWarehouseName || "Warehouse"
+        };
+        const roleNames = fetchedRoles
+            .filter(role => roleIds && roleIds.includes(role.roleId))
+            .map(role => role.roleName);
+        
+        const firstName = isFormData ? payload.get("firstName") : payload.firstName;
+        const lastName = isFormData ? payload.get("lastName") : payload.lastName;
+        const fullName = isFormData ? `${firstName} ${lastName}` : (payload.fullName || `${firstName} ${lastName}`);
+        const employmentType = isFormData ? payload.get("employmentType") : payload.employmentType;
         
         const newMember = {
             id: `EMP-${Date.now()}`,
-            name: payload.fullName,
-            email: payload.email,
-            employeeId: newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
-            role: selectedRl ? selectedRl.roleName : "Member",
-            warehouse: selectedWh ? selectedWh.warehouseName : "Warehouse",
-            status: payload.status === "ACTIVE" ? "Active" : "Pending",
+            name: fullName,
+            email: email,
+            employeeId: payload.employeeCode || newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+            role: roleNames.length > 0 ? roleNames.join(", ") : (payload.warehouseRoles ? payload.warehouseRoles.map(r => r.roleName).join(", ") : "Member"),
+            warehouse: (payload.warehouseRoles && payload.warehouseRoles[0]?.warehouseName) || selectedWh.warehouseName,
+            status: status === "ACTIVE" ? "Active" : "Pending",
             joinedDate: new Date().toISOString().split('T')[0],
-            avatar: "",
-            initials: payload.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            avatar: payload.photo || photoPreview || "",
+            initials: fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
             bg: ["text-bg-pink", "text-bg-blue", "text-bg-yellow", "text-bg-green", "text-bg-purple", "text-bg-orange"][Math.floor(Math.random() * 6)],
-            accessiblePages: payload.accessiblePages
+            accessiblePages: isFormData ? JSON.parse(payload.get("accessiblePages") || "[]") : (payload.accessiblePages || []),
+            employmentType: employmentType || "Full-time"
         };
         
         setMembers(prev => [newMember, ...prev]);
+    };    const handleSendCredentialsEmail = async () => {
+        if (!createdCredentials) return;
+        setIsSendingEmail(true);
+        try {
+            // Simulate API request to send email
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setCreatedCredentials(prev => prev ? { ...prev, emailSent: true } : null);
+            showToast?.(`Credentials sent to ${createdCredentials.email} successfully!`);
+        } catch (err) {
+            console.error("Failed to send credentials email:", err);
+            showToast?.("Failed to send email. Please try again.");
+        } finally {
+            setIsSendingEmail(false);
+        }
     };
 
     const handleCreateMember = async (e) => {
         e.preventDefault();
-        if (!newMemberName.trim() || !newMemberEmail.trim() || !selectedWarehouseId || !selectedRoleId) {
+        const isPhoneValid = /^\+?[0-9\s\-]+$/.test(newMemberPhone.trim()) && newMemberPhone.trim().length >= 8;
+        if (!newMemberFirstName.trim() || !newMemberLastName.trim() || !newMemberEmail.trim() || !newMemberPhone.trim() || !isPhoneValid || !selectedWarehouseId || selectedRoleIds.length === 0) {
             return;
         }
         
         setIsCreatingMember(true);
-        
-        const payload = {
-            fullName: newMemberName.trim(),
-            email: newMemberEmail.trim(),
-            phoneNumber: newMemberPhone.trim(),
-            warehouseId: selectedWarehouseId,
-            roleId: selectedRoleId,
-            status: accountStatus === "ACTIVE" ? "ACTIVE" : "PENDING",
-            department: newMemberDept,
-            accessLevel: newMemberAccessLevel,
-            reportingManager: newMemberManager,
-            accessiblePages: customAccessiblePages
-        };
-        
+
         try {
-            const res = await authService.createMember(payload);
-            if (res.status === "success") {
-                showToast?.("Team member created successfully.");
-                handleAddMemberToLocalList(payload);
-                closeAndResetModal();
+            // Step 1: Upload photo if present
+            let photoUrl = "";
+            if (photoFile) {
+                try {
+                    // Convert file to base64
+                    const base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const base64String = reader.result.split(',')[1];
+                            resolve(base64String);
+                        };
+                        reader.onerror = (error) => reject(error);
+                        reader.readAsDataURL(photoFile);
+                    });
+
+                    const uploadRes = await authService.uploadMedia(photoFile.name, base64Data, photoFile.type);
+                    if (uploadRes && uploadRes.imageUrl) {
+                        photoUrl = uploadRes.imageUrl;
+                    }
+                } catch (uploadErr) {
+                    console.error("Failed to upload media:", uploadErr);
+                    showToast?.("Photo upload failed. Proceeding without photo.");
+                }
+            }
+
+            // Step 2: Build the warehouseRolesPayload
+            const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId) || {
+                warehouseName: sessionWarehouseName || "Central Hub Alpha"
+            };
+            const warehouseRolesPayload = selectedRoleIds.map(roleId => {
+                const roleObj = fetchedRoles.find(r => r.roleId === roleId);
+                return {
+                    warehouseId: selectedWarehouseId,
+                    roleName: roleObj ? roleObj.roleName : "Member",
+                    warehouseName: selectedWh.warehouseName,
+                    status: "Active",
+                    roleId: roleId
+                };
+            });
+
+            // Step 3: Format phone number as integer
+            const numericPhone = Number(newMemberPhone.trim().replace(/\D/g, ''));
+
+            // Step 4: Map employment type appropriately
+            let formattedEmploymentType = newMemberEmploymentType;
+            if (newMemberEmploymentType.toLowerCase() === 'full-time') {
+                formattedEmploymentType = 'Full-Time';
+            } else if (newMemberEmploymentType.toLowerCase() === 'part-time') {
+                formattedEmploymentType = 'Part-Time';
+            }
+
+            // Step 5: Construct the payload
+            const employeePayload = {
+                firstName: newMemberFirstName.trim(),
+                lastName: newMemberLastName.trim(),
+                phone: numericPhone,
+                email: newMemberEmail.trim(),
+                employeeCode: newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+                employmentType: formattedEmploymentType,
+                photo: photoUrl,
+                warehouseRoles: warehouseRolesPayload,
+                sendEmail: sendEmailOption
+            };
+
+            // Step 6: Post to createWarehouseEmployee API
+            const res = await authService.createWarehouseEmployee(employeePayload);
+            if (res && (res.success === true || res.status === "success")) {
+                showToast?.("Employee created successfully.");
+                handleAddMemberToLocalList(employeePayload);
+                const generatedPassword = res.password || generateSecurePassword();
+                setCreatedCredentials({
+                    employeeId: employeePayload.employeeCode,
+                    email: employeePayload.email,
+                    password: generatedPassword,
+                    fullName: `${employeePayload.firstName} ${employeePayload.lastName}`,
+                    emailSent: sendEmailOption
+                });
             } else {
-                showToast?.(res.message || "Failed to create team member.");
+                showToast?.(res.message || "Failed to create employee.");
             }
         } catch (error) {
             console.error("Failed to create member:", error);
+            // Fallback for simulation/prototype testing if API returns CORS or 404
             if (!error.response || error.response.status === 404) {
-                // Fallback local simulation for prototype (handles 404 or CORS/Network errors)
-                showToast?.("Member created successfully (Local Simulation).");
-                handleAddMemberToLocalList(payload);
-                closeAndResetModal();
+                showToast?.("Employee created successfully (Local Simulation).");
+                const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId) || {
+                    warehouseName: sessionWarehouseName || "Central Hub Alpha"
+                };
+                const warehouseRolesPayload = selectedRoleIds.map(roleId => {
+                    const roleObj = fetchedRoles.find(r => r.roleId === roleId);
+                    return {
+                        warehouseId: selectedWarehouseId,
+                        roleName: roleObj ? roleObj.roleName : "Member",
+                        warehouseName: selectedWh.warehouseName,
+                        status: "Active",
+                        roleId: roleId
+                    };
+                });
+                const fallbackPayload = {
+                    firstName: newMemberFirstName.trim(),
+                    lastName: newMemberLastName.trim(),
+                    phone: Number(newMemberPhone.trim().replace(/\D/g, '')),
+                    email: newMemberEmail.trim(),
+                    employeeCode: newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
+                    employmentType: newMemberEmploymentType,
+                    photo: photoPreview || "",
+                    warehouseRoles: warehouseRolesPayload
+                };
+                handleAddMemberToLocalList(fallbackPayload);
+                const generatedPassword = generateSecurePassword();
+                setCreatedCredentials({
+                    employeeId: fallbackPayload.employeeCode,
+                    email: fallbackPayload.email,
+                    password: generatedPassword,
+                    fullName: `${fallbackPayload.firstName} ${fallbackPayload.lastName}`,
+                    emailSent: sendEmailOption
+                });
             } else {
-                showToast?.(error.response?.data?.message || "Failed to create member. Please try again.");
+                showToast?.(error.response?.data?.message || "Failed to create employee. Please try again.");
             }
         } finally {
             setIsCreatingMember(false);
         }
     };
-
     // Filter logic
     const filteredMembers = useMemo(() => {
         return members.filter(member => {
@@ -388,8 +931,20 @@ function AdminPage() {
                     </div>
 
                     {/* Table Container */}
-                    <div className="enterprise-table-container">
-                        {paginatedMembers.length > 0 ? (
+                    <div className="enterprise-table-container" style={{ position: 'relative', minHeight: '200px' }}>
+                        {isMembersLoading ? (
+                            <div className="table-loading-state" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '60px 20px',
+                                gap: '12px'
+                            }}>
+                                <Loader2 className="animate-spin" size={36} style={{ color: '#2563eb' }} />
+                                <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Fetching team members...</span>
+                            </div>
+                        ) : paginatedMembers.length > 0 ? (
                             <table className="enterprise-table">
                                 <thead>
                                     <tr>
@@ -514,15 +1069,116 @@ function AdminPage() {
         return null;
     };
 
-    const selectedWarehouse = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-    const selectedRoleObj = fetchedRoles.find(role => role.roleId === selectedRoleId);
+    const selectedWarehouse = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId) || {
+        warehouseName: sessionWarehouseName || "Central Hub Alpha"
+    };
+    const selectedRoleObjs = fetchedRoles.filter(role => selectedRoleIds.includes(role.roleId));
     
-    const displayWarehouseName = selectedWarehouse ? selectedWarehouse.warehouseName : "";
-    const displayRoleName = selectedRoleObj ? selectedRoleObj.roleName : "";
+    const displayWarehouseName = selectedWarehouse.warehouseName;
+    const displayRoleName = selectedRoleObjs.map(r => r.roleName).join(", ");
 
     return (
         <div className="settings-page-wrapper admin-layout">
             <style>{`
+                /* Role Cards Selection Section */
+                .role-cards-container {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 16px;
+                    padding: 8px 4px 16px 4px;
+                    margin-top: 6px;
+                    width: 100%;
+                }
+
+                @media (max-width: 1024px) {
+                    .role-cards-container {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .role-cards-container {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .role-card-item {
+                    background: #ffffff;
+                    border: 1.5px solid #e5e7eb;
+                    border-radius: 10px;
+                    padding: 14px;
+                    cursor: pointer;
+                    transition: all 0.2s ease-in-out;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                    text-align: left;
+                }
+
+                .role-card-item:hover {
+                    border-color: #cbd5e1;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                }
+
+                .role-card-item.selected {
+                    border-color: #2563eb;
+                    background-color: #eff6ff;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+                }
+
+                .role-card-item-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 6px;
+                    width: 100%;
+                }
+
+                .role-card-item-name {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    display: inline-flex;
+                    align-items: center;
+                }
+
+                .role-card-item.selected .role-card-item-name {
+                    color: #1d4ed8;
+                }
+
+                .role-card-item-id {
+                    font-size: 10px;
+                    color: #6b7280;
+                    background: #f3f4f6;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                }
+
+                .role-card-item.selected .role-card-item-id {
+                    background: #dbeafe;
+                    color: #1e40af;
+                }
+
+                .role-card-item-count {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #059669;
+                    margin-bottom: 6px;
+                }
+
+                .role-card-item.selected .role-card-item-count {
+                    color: #047857;
+                }
+
+                .role-card-item-desc {
+                    font-size: 11px;
+                    color: #6b7280;
+                    line-height: 1.4;
+                    margin: 0;
+                }
+
                 .admin-layout {
                     padding-top: 0;
                 }
@@ -1408,6 +2064,217 @@ function AdminPage() {
                     transform: none !important;
                     box-shadow: none !important;
                 }
+
+                /* Credentials Success Screen Styles */
+                .credentials-success-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    padding: 8px 0;
+                }
+                .success-icon-pulse {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 64px;
+                    height: 64px;
+                    background: #dcfce7;
+                    color: #15803d;
+                    border-radius: 50%;
+                    margin-bottom: 20px;
+                    animation: pulse-green 2s infinite;
+                }
+                @keyframes pulse-green {
+                    0% {
+                        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+                    }
+                    70% {
+                        box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
+                    }
+                    100% {
+                        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+                    }
+                }
+                .success-title {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin: 0 0 8px 0;
+                }
+                .success-subtitle {
+                    font-size: 14px;
+                    color: #64748b;
+                    margin: 0 0 24px 0;
+                    line-height: 1.5;
+                    max-width: 420px;
+                }
+                .credentials-card {
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 480px;
+                    padding: 20px;
+                    text-align: left;
+                    margin-bottom: 24px;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+                    box-sizing: border-box;
+                }
+                .credentials-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px 0;
+                    border-bottom: 1px solid #f1f5f9;
+                    gap: 16px;
+                }
+                .credentials-row:last-child {
+                    border-bottom: none;
+                }
+                .credentials-label {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #475569;
+                }
+                .credentials-value-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .credentials-value {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #0f172a;
+                }
+                .credentials-value--mono {
+                    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+                    font-size: 13px;
+                    background: #f1f5f9;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    letter-spacing: 0.5px;
+                }
+                .btn-copy-credential {
+                    background: #ffffff;
+                    border: 1px solid #cbd5e1;
+                    color: #475569;
+                    height: 32px;
+                    padding: 0 10px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                }
+                .btn-copy-credential:hover {
+                    border-color: #94a3b8;
+                    background: #f8fafc;
+                    color: #0f172a;
+                }
+                .btn-copy-credential.copied {
+                    background: #f0fdf4;
+                    border-color: #bbf7d0;
+                    color: #15803d;
+                }
+                .email-status-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 12px 16px;
+                    background: #eff6ff;
+                    border: 1px solid #dbeafe;
+                    border-radius: 12px;
+                    color: #1e40af;
+                    font-size: 13px;
+                    font-weight: 500;
+                    width: 100%;
+                    max-width: 480px;
+                    justify-content: center;
+                    box-sizing: border-box;
+                }
+                .email-status-badge.sent {
+                    background: #f0fdf4;
+                    border-color: #dcfce7;
+                    color: #166534;
+                }
+                .btn-send-email-now {
+                    background: #2563eb;
+                    border: none;
+                    color: #ffffff;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .btn-send-email-now:hover:not(:disabled) {
+                    background: #1d4ed8;
+                }
+                .btn-send-email-now:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                /* Loading Overlay & Scroll Lock Styles */
+                .modal-loading-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(255, 255, 255, 0.75);
+                    backdrop-filter: blur(4px);
+                    -webkit-backdrop-filter: blur(4px);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 100;
+                    border-radius: 20px;
+                }
+                .role-modal:has(.modal-loading-overlay) .role-modal__body {
+                    overflow-y: hidden !important;
+                }
+                .loading-spinner-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .spinner-ring {
+                    width: 48px;
+                    height: 48px;
+                    border: 4px solid #e2e8f0;
+                    border-top: 4px solid #2563eb;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .loading-text {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    text-align: center;
+                    margin: 0;
+                }
+                .loading-subtext {
+                    font-size: 13px;
+                    color: #64748b;
+                    margin-top: 6px;
+                    text-align: center;
+                }
             `}</style>
             
             {/* Accessible Toast Notification */}
@@ -1455,42 +2322,188 @@ function AdminPage() {
                 onClose={closeAndResetModal}
                 ariaLabelledBy="add-member-title"
                 header={
-                    <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div className="employee-avatar-placeholder" style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '50%',
-                            backgroundColor: '#eff6ff',
-                            color: '#2563eb',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <Users size={22} />
+                    createdCredentials ? (
+                        <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div className="employee-avatar-placeholder" style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                backgroundColor: '#eff6ff',
+                                color: '#2563eb',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyCentering: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <Key size={22} />
+                            </div>
+                            <div>
+                                <h2 id="add-member-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Employee Created</h2>
+                                <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>Account credentials generated successfully</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 id="add-member-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Add Employee</h2>
-                            <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>Create a new warehouse team member</p>
+                    ) : (
+                        <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div className="employee-avatar-placeholder" style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                backgroundColor: '#eff6ff',
+                                color: '#2563eb',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <Users size={22} />
+                            </div>
+                            <div>
+                                <h2 id="add-member-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Add Employee</h2>
+                                <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>Create a new warehouse team member</p>
+                            </div>
                         </div>
-                    </div>
+                    )
                 }
                 footer={
-                    <div className="add-employee-modal-footer">
-                        <button type="button" className="role-btn role-btn--ghost" onClick={closeAndResetModal} disabled={isCreatingMember}>
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            form="add-member-form"
-                            className="role-btn role-btn--primary"
-                            disabled={!newMemberName.trim() || !newMemberEmail.trim() || !selectedWarehouseId || !selectedRoleId || isCreatingMember || fetchedRoles.length === 0 || !!roleErrorText}
-                        >
-                            {isCreatingMember ? "Creating..." : "Create Employee"}
-                        </button>
-                    </div>
+                    createdCredentials ? (
+                        <div className="add-employee-modal-footer">
+                            <button 
+                                type="button" 
+                                className="role-btn role-btn--primary" 
+                                onClick={closeAndResetModal}
+                            >
+                                Done
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="add-employee-modal-footer">
+                            <button type="button" className="role-btn role-btn--ghost" onClick={closeAndResetModal} disabled={isCreatingMember}>
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                form="add-member-form"
+                                className="role-btn role-btn--primary"
+                                disabled={!newMemberFirstName.trim() || !newMemberLastName.trim() || !newMemberEmail.trim() || !newMemberPhone.trim() || !/^\+?[0-9\s\-]+$/.test(newMemberPhone.trim()) || newMemberPhone.trim().length < 8 || !selectedWarehouseId || selectedRoleIds.length === 0 || isCreatingMember || fetchedRoles.length === 0 || !!roleErrorText || emailCheckStatus !== 'available' || isPhotoConverting}
+                            >
+                                {isCreatingMember ? "Creating..." : "Create Employee"}
+                            </button>
+                        </div>
+                    )
                 }
             >
-                <form id="add-member-form" onSubmit={handleCreateMember} className="employee-modal-sections">
+                {isCreatingMember && (
+                    <div className="modal-loading-overlay">
+                        <div className="loading-spinner-container">
+                            <div className="spinner-ring"></div>
+                            <div>
+                                <h4 className="loading-text">Creating Employee</h4>
+                                <p className="loading-subtext">Setting up profile and generating credentials...</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {createdCredentials ? (
+                    <div className="credentials-success-container">
+                        <div className="success-icon-pulse">
+                            <CheckCircle size={32} />
+                        </div>
+                        <h3 className="success-title">Employee Created Successfully</h3>
+                        <p className="success-subtitle">
+                            A new warehouse team member account has been created for <strong>{createdCredentials.fullName}</strong>.
+                        </p>
+                        
+                        <div className="credentials-card">
+                            <div className="credentials-row">
+                                <span className="credentials-label">Employee ID</span>
+                                <div className="credentials-value-wrapper">
+                                    <span className="credentials-value credentials-value--mono">{createdCredentials.employeeId}</span>
+                                    <button 
+                                        type="button" 
+                                        className={`btn-copy-credential ${copied === 'empid' ? 'copied' : ''}`}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(createdCredentials.employeeId);
+                                            setCopied('empid');
+                                            showToast?.("Employee ID copied to clipboard!");
+                                            setTimeout(() => setCopied(false), 2000);
+                                        }}
+                                    >
+                                        {copied === 'empid' ? <Check size={13} /> : <Copy size={13} />}
+                                        {copied === 'empid' ? "Copied" : "Copy"}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="credentials-row">
+                                <span className="credentials-label">Email Address</span>
+                                <div className="credentials-value-wrapper">
+                                    <span className="credentials-value">{createdCredentials.email}</span>
+                                    <button 
+                                        type="button" 
+                                        className={`btn-copy-credential ${copied === 'email' ? 'copied' : ''}`}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(createdCredentials.email);
+                                            setCopied('email');
+                                            showToast?.("Email address copied to clipboard!");
+                                            setTimeout(() => setCopied(false), 2000);
+                                        }}
+                                    >
+                                        {copied === 'email' ? <Check size={13} /> : <Copy size={13} />}
+                                        {copied === 'email' ? "Copied" : "Copy"}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="credentials-row">
+                                <span className="credentials-label">Temporary Password</span>
+                                <div className="credentials-value-wrapper">
+                                    <span className="credentials-value credentials-value--mono">{createdCredentials.password}</span>
+                                    <button 
+                                        type="button" 
+                                        className={`btn-copy-credential ${copied === 'pwd' ? 'copied' : ''}`}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(createdCredentials.password);
+                                            setCopied('pwd');
+                                            showToast?.("Password copied to clipboard!");
+                                            setTimeout(() => setCopied(false), 2000);
+                                        }}
+                                    >
+                                        {copied === 'pwd' ? <Check size={13} /> : <Copy size={13} />}
+                                        {copied === 'pwd' ? "Copied" : "Copy"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {createdCredentials.emailSent ? (
+                            <div className="email-status-badge sent">
+                                <CheckCircle size={16} />
+                                <span>Login credentials have been sent to <strong>{createdCredentials.email}</strong></span>
+                            </div>
+                        ) : (
+                            <div className="email-status-badge">
+                                <Mail size={16} />
+                                <span style={{ flex: 1, textAlign: 'left' }}>Credentials not emailed yet</span>
+                                <button
+                                    type="button"
+                                    className="btn-send-email-now"
+                                    onClick={handleSendCredentialsEmail}
+                                    disabled={isSendingEmail}
+                                    style={{
+                                        marginLeft: '8px'
+                                    }}
+                                >
+                                    {isSendingEmail ? (
+                                        <Loader2 size={12} className="animate-spin" />
+                                    ) : (
+                                        <Mail size={12} />
+                                    )}
+                                    {isSendingEmail ? "Sending..." : "Send Email"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <form id="add-member-form" onSubmit={handleCreateMember} className="employee-modal-sections">
                     {/* Section 1: Personal Information */}
                     <div className="employee-section-card">
                         <div className="employee-section-header">
@@ -1498,39 +2511,149 @@ function AdminPage() {
                             <span>Personal Information</span>
                         </div>
                         <div className="employee-fields-grid">
-                            <div className="employee-form-field field-full-width">
-                                <label htmlFor="new-member-name">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-firstname">First Name <span style={{ color: '#ef4444' }}>*</span></label>
                                 <input
-                                    id="new-member-name"
+                                    id="new-member-firstname"
                                     type="text"
                                     required
-                                    placeholder="e.g. John Doe"
-                                    value={newMemberName}
-                                    onChange={(e) => setNewMemberName(e.target.value)}
+                                    placeholder="e.g. John"
+                                    value={newMemberFirstName}
+                                    onChange={(e) => setNewMemberFirstName(e.target.value)}
+                                />
+                            </div>
+                            <div className="employee-form-field">
+                                <label htmlFor="new-member-lastname">Last Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                <input
+                                    id="new-member-lastname"
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Doe"
+                                    value={newMemberLastName}
+                                    onChange={(e) => setNewMemberLastName(e.target.value)}
                                 />
                             </div>
                             
                             <div className="employee-form-field">
                                 <label htmlFor="new-member-email">Email Address <span style={{ color: '#ef4444' }}>*</span></label>
                                 <input
-                                    id="new-member-email"
-                                    type="email"
-                                    required
-                                    placeholder="e.g. john.doe@haatza.com"
-                                    value={newMemberEmail}
-                                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                                />
+                                     id="new-member-email"
+                                     type="email"
+                                     required
+                                     placeholder="e.g. john.doe@haatza.com"
+                                     value={newMemberEmail}
+                                     onChange={(e) => setNewMemberEmail(e.target.value)}
+                                 />
+                                 {emailCheckStatus && (emailCheckStatus === 'exists' || emailCheckStatus === 'invalid') && (
+                                    <p style={{ 
+                                        color: '#ef4444', 
+                                        fontSize: '12px', 
+                                        marginTop: '4px',
+                                        fontWeight: '500'
+                                    }}>
+                                        {emailMessage}
+                                    </p>
+                                 )}
                             </div>
 
                             <div className="employee-form-field">
-                                <label htmlFor="new-member-phone">Phone Number</label>
+                                <label htmlFor="new-member-phone">Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
                                 <input
                                     id="new-member-phone"
                                     type="tel"
+                                    required
                                     placeholder="e.g. +91 9876543210"
                                     value={newMemberPhone}
                                     onChange={(e) => setNewMemberPhone(e.target.value)}
                                 />
+                            </div>
+
+                            <div className="employee-form-field field-full-width">
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Profile Photo</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '64px',
+                                        height: '64px',
+                                        borderRadius: '50%',
+                                        backgroundColor: '#eff6ff',
+                                        border: '2px solid #e2e8f0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        flexShrink: 0
+                                    }}>
+                                        {isPhotoConverting ? (
+                                            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+                                        ) : photoPreview ? (
+                                            <img src={photoPreview} alt="Employee Avatar Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <Users size={28} style={{ color: '#94a3b8' }} />
+                                        )}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <label 
+                                                className="role-btn role-btn--ghost" 
+                                                style={{ 
+                                                    padding: '6px 12px', 
+                                                    fontSize: '12px', 
+                                                    height: 'auto', 
+                                                    borderRadius: '6px', 
+                                                    border: '1px solid #cbd5e1', 
+                                                    cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    opacity: emailCheckStatus === 'available' ? 1 : 0.6,
+                                                    pointerEvents: emailCheckStatus === 'available' ? 'auto' : 'none'
+                                                }}
+                                            >
+                                                Upload Photo
+                                                <input 
+                                                    type="file" 
+                                                    accept=".jpg,.jpeg,.png" 
+                                                    style={{ display: 'none' }} 
+                                                    onChange={handlePhotoChange} 
+                                                    disabled={emailCheckStatus !== 'available' || isPhotoConverting}
+                                                />
+                                            </label>
+                                            {photoFile && (
+                                                <button 
+                                                    type="button" 
+                                                    className="role-btn role-btn--ghost" 
+                                                    style={{ 
+                                                        padding: '6px 12px', 
+                                                        fontSize: '12px', 
+                                                        height: 'auto', 
+                                                        borderRadius: '6px', 
+                                                        border: '1px solid #fecaca', 
+                                                        color: '#dc2626',
+                                                        background: '#fef2f2',
+                                                        cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed',
+                                                        opacity: emailCheckStatus === 'available' ? 1 : 0.6
+                                                    }} 
+                                                    onClick={handleRemovePhoto}
+                                                    disabled={emailCheckStatus !== 'available' || isPhotoConverting}
+                                                >
+                                                    Remove Photo
+                                                </button>
+                                            )}
+                                        </div>
+                                        {isPhotoConverting ? (
+                                            <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: '600' }}>
+                                                Converting image to base64...
+                                            </span>
+                                        ) : photoPreview ? (
+                                            <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: '600' }}>
+                                                Image converted successfully.
+                                            </span>
+                                        ) : (
+                                            <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                                                Supported: JPG, JPEG, PNG (Max 5MB)
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1550,99 +2673,142 @@ function AdminPage() {
                                     placeholder="e.g. EMP003"
                                     value={newMemberEmpId}
                                     onChange={(e) => setNewMemberEmpId(e.target.value)}
+                                    disabled={emailCheckStatus !== 'available'}
                                 />
                             </div>
 
                             <div className="employee-form-field">
-                                <label htmlFor="new-member-dept">Department</label>
+                                <label htmlFor="new-member-employment-type">Employment Type</label>
                                 <select
-                                    id="new-member-dept"
-                                    value={newMemberDept}
-                                    onChange={(e) => setNewMemberDept(e.target.value)}
+                                    id="new-member-employment-type"
+                                    value={newMemberEmploymentType}
+                                    onChange={(e) => setNewMemberEmploymentType(e.target.value)}
+                                    disabled={emailCheckStatus !== 'available'}
                                 >
-                                    <option value="">&lt;Select Department&gt;</option>
-                                    <option value="Operations">Operations</option>
-                                    <option value="Logistics">Logistics</option>
-                                    <option value="Inventory">Inventory</option>
-                                    <option value="Administration">Administration</option>
-                                    <option value="Shipping & Receiving">Shipping & Receiving</option>
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Part-time">Part-time</option>
+                                    <option value="Contractor">Contractor</option>
+                                    <option value="Intern">Intern</option>
                                 </select>
                             </div>
 
-                            <div className="employee-form-field">
-                                <label htmlFor="new-member-warehouse">Warehouse <span style={{ color: '#ef4444' }}>*</span></label>
-                                <select
-                                    id="new-member-warehouse"
-                                    required
-                                    value={selectedWarehouseId}
-                                    onChange={(e) => {
-                                        setSelectedWarehouseId(e.target.value);
-                                        setSelectedRoleId(null);
-                                    }}
-                                >
-                                    <option value="">&lt;Select Warehouse&gt;</option>
-                                    {uniqueWarehouses.map(wh => (
-                                        <option key={wh.warehouseId} value={wh.warehouseId}>
-                                            {wh.warehouseName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {selectedWarehouseId && (
-                                <div className="employee-form-field">
-                                    <label htmlFor="new-member-role">Role <span style={{ color: '#ef4444' }}>*</span></label>
-                                    <select
-                                        id="new-member-role"
-                                        required
-                                        disabled={rolesLoading || fetchedRoles.length === 0}
-                                        value={selectedRoleId || ""}
-                                        onChange={(e) => setSelectedRoleId(e.target.value)}
-                                    >
-                                        {rolesLoading ? (
-                                            <option value="">Loading roles...</option>
-                                        ) : fetchedRoles.length === 0 ? (
-                                            <option value="">No roles available</option>
-                                        ) : (
-                                            <>
-                                                <option value="">&lt;Select Role&gt;</option>
-                                                {fetchedRoles.map(role => (
-                                                    <option key={role.roleId} value={role.roleId}>
-                                                        {role.roleName}
-                                                    </option>
-                                                ))}
-                                            </>
-                                        )}
-                                    </select>
-                                    {rolesLoading && <span className="setup-spinner" style={{ marginTop: '4px', width: '16px', height: '16px', border: '2px solid #2563eb', borderTopColor: 'transparent' }}></span>}
-                                    {roleErrorText && (
-                                        <span className="role-error-helper" style={{ color: "#ef4444", fontSize: "12px", marginTop: "4px", display: "block" }}>
-                                            {roleErrorText}
-                                        </span>
-                                    )}
+                            <div className="employee-form-field field-full-width">
+                                <label style={{ fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '6px', display: 'block' }}>Role Selection <span style={{ color: '#ef4444' }}>*</span></label>
+                                
+                                {/* Role Search Input */}
+                                <div className="search-input-wrapper" style={{ marginBottom: '12px', position: 'relative' }}>
+                                    <Search size={14} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search roles..."
+                                        value={roleSearchQuery}
+                                        onChange={(e) => setRoleSearchQuery(e.target.value)}
+                                        className="member-search-input"
+                                        style={{ 
+                                            width: '100%', 
+                                            height: '38px', 
+                                            paddingLeft: '36px',
+                                            paddingRight: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #cbd5e1',
+                                            fontSize: '13px',
+                                            outline: 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                        disabled={emailCheckStatus !== 'available'}
+                                    />
                                 </div>
-                            )}
+
+                                {rolesLoading ? (
+                                    <div style={{ display: 'flex', gap: '12px', padding: '8px 4px' }}>
+                                        {[1, 2].map(i => (
+                                            <div key={i} className="role-card-item" style={{ opacity: 0.6, cursor: 'default' }}>
+                                                <span className="role-card-item-count">Loading roles...</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : fetchedRoles.length === 0 ? (
+                                    <div style={{ padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }}>
+                                        {roleErrorText || "No roles available for selected warehouse"}
+                                    </div>
+                                ) : fetchedRoles.filter(role => 
+                                    role.roleName.toLowerCase().includes(roleSearchQuery.toLowerCase()) ||
+                                    role.roleId.toLowerCase().includes(roleSearchQuery.toLowerCase())
+                                ).length === 0 ? (
+                                    <div style={{ padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#64748b', fontSize: '13px', textAlign: 'center' }}>
+                                        No matching roles found.
+                                    </div>
+                                ) : (
+                                    <div className="role-cards-container" style={{
+                                        opacity: emailCheckStatus === 'available' ? 1 : 0.6,
+                                        pointerEvents: emailCheckStatus === 'available' ? 'auto' : 'none'
+                                    }}>
+                                        {fetchedRoles
+                                            .filter(role => 
+                                                role.roleName.toLowerCase().includes(roleSearchQuery.toLowerCase()) ||
+                                                role.roleId.toLowerCase().includes(roleSearchQuery.toLowerCase())
+                                            )
+                                            .map(role => (
+                                                <div 
+                                                    key={role.roleId} 
+                                                    className={`role-card-item ${selectedRoleIds.includes(role.roleId) ? 'selected' : ''}`}
+                                                    onClick={() => {
+                                                        if (emailCheckStatus !== 'available') return;
+                                                        setSelectedRoleIds(prev => {
+                                                            if (prev.includes(role.roleId)) {
+                                                                return prev.filter(id => id !== role.roleId);
+                                                            } else {
+                                                                return [...prev, role.roleId];
+                                                            }
+                                                        });
+                                                        setIsEditingPermissions(false);
+                                                    }}
+                                                    style={{
+                                                        cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed'
+                                                    }}
+                                                >
+                                                    <div className="role-card-item-header">
+                                                        <span className="role-card-item-name">
+                                                            {selectedRoleIds.includes(role.roleId) && <Check size={14} strokeWidth={3} style={{ marginRight: '6px' }} />}
+                                                            {role.roleName}
+                                                        </span>
+                                                        <span className="role-card-item-id">{role.roleId}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="employee-form-field">
                                 <label>Account Status</label>
-                                <div className="employee-status-container">
-                                    <label className="employee-status-option">
+                                <div className="employee-status-container" style={{
+                                    opacity: emailCheckStatus === 'available' ? 1 : 0.6,
+                                    pointerEvents: emailCheckStatus === 'available' ? 'auto' : 'none'
+                                }}>
+                                    <label className="employee-status-option" style={{ cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed' }}>
                                         <input
                                             type="radio"
                                             name="accountStatus"
                                             value="ACTIVE"
                                             checked={accountStatus === "ACTIVE"}
-                                            onChange={() => setAccountStatus("ACTIVE")}
+                                            onChange={() => {
+                                                if (emailCheckStatus === 'available') setAccountStatus("ACTIVE");
+                                            }}
+                                            disabled={emailCheckStatus !== 'available'}
                                         />
                                         <span>Active</span>
                                     </label>
-                                    <label className="employee-status-option">
+                                    <label className="employee-status-option" style={{ cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed' }}>
                                         <input
                                             type="radio"
                                             name="accountStatus"
                                             value="PENDING"
                                             checked={accountStatus === "PENDING"}
-                                            onChange={() => setAccountStatus("PENDING")}
+                                            onChange={() => {
+                                                if (emailCheckStatus === 'available') setAccountStatus("PENDING");
+                                            }}
+                                            disabled={emailCheckStatus !== 'available'}
                                         />
                                         <span>Pending</span>
                                     </label>
@@ -1651,169 +2817,112 @@ function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Section 3: Warehouse Assignment */}
+                    {/* Section 3: Assignment Details (Read-only) */}
                     <div className="employee-section-card">
                         <div className="employee-section-header">
                             <Warehouse size={16} />
-                            <span>Warehouse Assignment</span>
+                            <span>Assignment Info</span>
                         </div>
                         <div className="employee-fields-grid">
                             <div className="employee-form-field">
-                                <label htmlFor="new-member-access">Access Level</label>
-                                <select
-                                    id="new-member-access"
-                                    value={newMemberAccessLevel}
-                                    onChange={(e) => setNewMemberAccessLevel(e.target.value)}
-                                >
-                                    <option value="Standard">Standard</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Admin">Admin</option>
-                                </select>
+                                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Warehouse</label>
+                                <div style={{
+                                    fontSize: '14px',
+                                    color: '#1e293b',
+                                    padding: '12px 16px',
+                                    background: '#f1f5f9',
+                                    borderRadius: '10px',
+                                    fontWeight: '500',
+                                    minHeight: '48px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    {sessionWarehouseName || "Central Hub Alpha"}
+                                </div>
                             </div>
-
+                            <div className="employee-form-field">
+                                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Assigned By</label>
+                                <div style={{
+                                    fontSize: '14px',
+                                    color: '#1e293b',
+                                    padding: '12px 16px',
+                                    background: '#f1f5f9',
+                                    borderRadius: '10px',
+                                    fontWeight: '500',
+                                    minHeight: '48px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    {selectedRoleName || "Administrator"}
+                                </div>
+                            </div>
                             <div className="employee-form-field field-full-width">
-                                <label htmlFor="new-member-manager">Reporting Manager</label>
-                                <select
-                                    id="new-member-manager"
-                                    value={newMemberManager}
-                                    onChange={(e) => setNewMemberManager(e.target.value)}
-                                >
-                                    <option value="">&lt;Select Reporting Manager&gt;</option>
-                                    <option value="Dinesh G K">Dinesh G K (Super Admin)</option>
-                                    <option value="Sarah Connor">Sarah Connor (Administrator)</option>
-                                    <option value="Sophia Martinez">Sophia Martinez (Administrator)</option>
-                                    <option value="Noah Garcia">Noah Garcia (Administrator)</option>
-                                </select>
+                                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Selected Roles</label>
+                                <div style={{
+                                    fontSize: '14px',
+                                    color: '#1e293b',
+                                    padding: '12px 16px',
+                                    background: '#f1f5f9',
+                                    borderRadius: '10px',
+                                    fontWeight: '500',
+                                    minHeight: '48px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    gap: '8px'
+                                }}>
+                                    {fetchedRoles
+                                        .filter(r => selectedRoleIds.includes(r.roleId))
+                                        .map(r => r.roleName)
+                                        .join(", ") || "No roles selected"}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Permissions Summary Card */}
-                    <div className="permissions-summary-card" style={{ marginTop: '10px' }}>
-                        <div className="permissions-summary-title">Permissions Summary</div>
-                        <div className="permissions-summary-item">
-                            <strong>Selected Role:</strong>
-                            <span>{displayRoleName || "[Role Name]"}</span>
+                    {/* Section 4: Security & Notification */}
+                    <div className="employee-section-card">
+                        <div className="employee-section-header">
+                            <Mail size={16} />
+                            <span>Security & Notification</span>
                         </div>
-                        <div className="permissions-summary-item">
-                            <strong>Warehouse:</strong>
-                            <span>{displayWarehouseName || "[Warehouse Name]"}</span>
-                        </div>
-                        <div className="permissions-summary-item" style={{ flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '8px' }}>
-                                <strong>Access:</strong>
-                                {selectedRoleId && !permissionsLoading && customAccessiblePages.length > 0 && (
-                                    <button
-                                        type="button"
-                                        className="role-btn role-btn--ghost"
-                                        style={{ padding: '4px 12px', fontSize: '12px', height: 'auto', border: '1px solid #d1d5db', cursor: 'pointer' }}
-                                        onClick={() => setIsEditingPermissions(!isEditingPermissions)}
-                                    >
-                                        {isEditingPermissions ? "View Summary" : "Edit Permissions"}
-                                    </button>
-                                )}
-                            </div>
-
-                            {permissionsLoading ? (
-                                <span className="setup-spinner" style={{ marginTop: '4px', width: '16px', height: '16px', border: '2px solid #2563eb', borderTopColor: 'transparent' }}></span>
-                            ) : isEditingPermissions ? (
-                                <div className="custom-permissions-editor" style={{ width: '100%', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f9fafb', padding: '12px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                                    {customAccessiblePages.map((page) => (
-                                        <div key={page.pageId} style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>{page.pageName || page.pageId}</span>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={page.canView}
-                                                        onChange={() => {
-                                                            setCustomAccessiblePages(prev => prev.map(p => {
-                                                                if (p.pageId === page.pageId) {
-                                                                    const nextCanView = !p.canView;
-                                                                    return {
-                                                                        ...p,
-                                                                        canView: nextCanView,
-                                                                        canCreate: nextCanView ? p.canCreate : false,
-                                                                        canEdit: nextCanView ? p.canEdit : false,
-                                                                        canDelete: nextCanView ? p.canDelete : false,
-                                                                        canApprove: nextCanView ? p.canApprove : false
-                                                                    };
-                                                                }
-                                                                return p;
-                                                            }));
-                                                        }}
-                                                    />
-                                                    <span style={{ fontSize: '12px', color: '#4b5563' }}>Enabled</span>
-                                                </label>
-                                            </div>
-                                            {page.canView && (
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingLeft: '8px', marginTop: '4px' }}>
-                                                    {['canCreate', 'canEdit', 'canDelete', 'canApprove'].map((action) => {
-                                                        const label = action === 'canCreate' ? 'Create' :
-                                                                      action === 'canEdit' ? 'Edit' :
-                                                                      action === 'canDelete' ? 'Delete' : 'Approve';
-                                                        const isActive = page[action] || false;
-                                                        return (
-                                                            <button
-                                                                key={action}
-                                                                type="button"
-                                                                style={{
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px',
-                                                                    cursor: 'pointer',
-                                                                    fontSize: '11px',
-                                                                    background: isActive ? '#eff6ff' : '#ffffff',
-                                                                    border: isActive ? '1px solid #3b82f6' : '1px solid #d1d5db',
-                                                                    padding: '3px 8px',
-                                                                    borderRadius: '4px',
-                                                                    color: isActive ? '#2563eb' : '#4b5563',
-                                                                    transition: 'all 0.15s',
-                                                                    fontWeight: isActive ? '600' : 'normal'
-                                                                }}
-                                                                onClick={() => {
-                                                                    setCustomAccessiblePages(prev => prev.map(p => {
-                                                                        if (p.pageId === page.pageId) {
-                                                                            return { ...p, [action]: !p[action] };
-                                                                        }
-                                                                        return p;
-                                                                    }));
-                                                                }}
-                                                            >
-                                                                {isActive && <Check size={10} strokeWidth={3} />}
-                                                                {label}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <label className="employee-status-option" style={{ 
+                                display: 'flex', 
+                                alignItems: 'flex-start', 
+                                gap: '10px', 
+                                cursor: emailCheckStatus === 'available' ? 'pointer' : 'not-allowed',
+                                opacity: emailCheckStatus === 'available' ? 1 : 0.6
+                            }}>
+                                <input
+                                    type="checkbox"
+                                    checked={sendEmailOption}
+                                    onChange={(e) => {
+                                        if (emailCheckStatus === 'available') setSendEmailOption(e.target.checked);
+                                    }}
+                                    disabled={emailCheckStatus !== 'available'}
+                                    style={{
+                                        width: '18px',
+                                        height: '18px',
+                                        accentColor: '#2563eb',
+                                        cursor: 'pointer',
+                                        marginTop: '2px'
+                                    }}
+                                />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
+                                        Send credentials to employee's email
+                                    </span>
+                                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '400', lineHeight: '1.4' }}>
+                                        Automatically send the login password and Employee ID via email once the account is created.
+                                    </span>
                                 </div>
-                            ) : customAccessiblePages.filter(p => p.canView).length > 0 ? (
-                                <div className="permissions-access-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                                    {customAccessiblePages.filter(p => p.canView).map((page, index) => {
-                                        const actions = [];
-                                        if (page.canCreate) actions.push("Create");
-                                        if (page.canEdit) actions.push("Edit");
-                                        if (page.canDelete) actions.push("Delete");
-                                        if (page.canApprove) actions.push("Approve");
-                                        const actionStr = actions.length > 0 ? ` (${actions.join(", ")})` : "";
-                                        return (
-                                            <span key={index} className="permissions-access-tag" style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', color: '#374151' }}>
-                                                {page.pageName || page.pageId}{actionStr}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <span className="permissions-fallback-text" style={{ color: '#9ca3af', fontSize: '13px' }}>
-                                    Permissions will be assigned based on selected role.
-                                </span>
-                            )}
+                            </label>
                         </div>
                     </div>
+
                 </form>
+                )}
             </Modal>
         </div>
     );

@@ -6,6 +6,7 @@ const PERMISSIONS_API_URL = import.meta.env.VITE_PERMISSIONS_API_URL || "https:/
 const PERMISSIONS_API_KEY = import.meta.env.VITE_PERMISSIONS_API_KEY || ""; // API Key can be pasted here or loaded from .env
 const ROLES_API_URL = import.meta.env.VITE_ROLES_API_URL || "https://haatza.com/_functions/getWarehouseRoles";
 const CREATE_MEMBER_API_URL = import.meta.env.VITE_CREATE_MEMBER_API_URL || "https://haatza.com/_functions/createMember";
+const EMPLOYEES_API_URL = import.meta.env.VITE_EMPLOYEES_API_URL || "https://haatza.com/_functions/getWarehouseEmployees";
 
 export const authService = {
     login: async (email, password) => {
@@ -37,13 +38,41 @@ export const authService = {
     },
 
     createMember: async (memberData) => {
-        const headers = {
-            "Content-Type": "application/json"
-        };
+        const headers = {};
+        if (!(memberData instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
         if (PERMISSIONS_API_KEY) {
             headers["x-api-key"] = PERMISSIONS_API_KEY;
         }
         const response = await axios.post(CREATE_MEMBER_API_URL, memberData, { headers });
+        return response.data;
+    },
+
+    uploadMedia: async (fileName, fileData, mediaType) => {
+        const response = await axios.post("https://haatza.com/_functions/uploadMedia", {
+            fileName,
+            fileData,
+            mediaType
+        }, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        return response.data;
+    },
+
+    createWarehouseEmployee: async (employeeData) => {
+        const response = await axios.post("https://haatza.com/_functions/createWarehouseEmployee", employeeData, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        return response.data;
+    },
+
+    getWarehouseEmployees: async (warehouseId) => {
+        const response = await axios.get(`${EMPLOYEES_API_URL}?warehouseId=${warehouseId}`);
         return response.data;
     }
 };
