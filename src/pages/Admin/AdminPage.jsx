@@ -697,6 +697,8 @@ function AdminPage() {
             employeeId: payload.employeeCode || newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
             role: roleNames.length > 0 ? roleNames.join(", ") : (payloadRoles.length > 0 ? payloadRoles.map(r => r.roleName).join(", ") : "Member"),
             warehouse: (payloadRoles.length > 0 && payloadRoles[0]?.warehouseName) || selectedWh.warehouseName,
+            roles: roleNames.length > 0 ? roleNames : (payloadRoles.length > 0 ? payloadRoles.map(r => r.roleName) : ["Member"]),
+            warehouses: (payloadRoles.length > 0 && payloadRoles[0]?.warehouseName) ? [...new Set(payloadRoles.map(r => r.warehouseName).filter(Boolean))] : [selectedWh.warehouseName],
             status: status === "ACTIVE" ? "Active" : "Pending",
             joinedDate: new Date().toISOString().split('T')[0],
             avatar: payload.photo || photoPreview || "",
@@ -861,11 +863,11 @@ function AdminPage() {
     const filteredMembers = useMemo(() => {
         return members.filter(member => {
             const searchLower = searchTerm.toLowerCase();
-            return member.name.toLowerCase().includes(searchLower) ||
-                   member.email.toLowerCase().includes(searchLower) ||
-                   member.employeeId.toLowerCase().includes(searchLower) ||
-                   member.role.toLowerCase().includes(searchLower) ||
-                   member.warehouse.toLowerCase().includes(searchLower);
+            return (member.name || "").toLowerCase().includes(searchLower) ||
+                   (member.email || "").toLowerCase().includes(searchLower) ||
+                   (member.employeeId || "").toLowerCase().includes(searchLower) ||
+                   (member.role || "").toLowerCase().includes(searchLower) ||
+                   (member.warehouse || "").toLowerCase().includes(searchLower);
         });
     }, [searchTerm, members]);
 
@@ -952,7 +954,7 @@ function AdminPage() {
                             visibility: hidden;
                             opacity: 0;
                             position: absolute;
-                            bottom: 140%;
+                            bottom: calc(100% + 8px);
                             left: 50%;
                             transform: translateX(-50%);
                             background-color: #1e293b;
@@ -964,7 +966,7 @@ function AdminPage() {
                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                             z-index: 100;
                             transition: opacity 0.2s, visibility 0.2s;
-                            pointer-events: none;
+                            pointer-events: auto;
                             display: flex;
                             flex-direction: column;
                             gap: 6px;
@@ -976,6 +978,16 @@ function AdminPage() {
                         .warehouse-cell-wrapper:hover .warehouses-tooltip-content {
                             visibility: visible;
                             opacity: 1;
+                        }
+                        /* Invisible hover bridge to prevent closing when moving cursor over the gap */
+                        .roles-tooltip-content::before, .warehouses-tooltip-content::before {
+                            content: "";
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            right: 0;
+                            height: 10px;
+                            background: transparent;
                         }
                         .roles-tooltip-content::after, .warehouses-tooltip-content::after {
                             content: "";
@@ -1424,7 +1436,7 @@ function AdminPage() {
                 
                 .admin-content-area {
                     flex: 1;
-                    padding: 32px 40px;
+                    padding: 20px 32px 32px 32px;
                     overflow-y: auto;
                     overflow-x: hidden;
                     background: #ffffff;
@@ -1799,10 +1811,6 @@ function AdminPage() {
                     .enterprise-table td:nth-child(5) {
                         display: none; /* Hide Warehouse on tablet */
                     }
-                    .enterprise-table th:nth-child(7),
-                    .enterprise-table td:nth-child(7) {
-                        display: none; /* Hide Joined Date on tablet */
-                    }
                 }
                 
                 @media (max-width: 768px) {
@@ -1862,8 +1870,7 @@ function AdminPage() {
                     .enterprise-table td:nth-child(3),
                     .enterprise-table td:nth-child(4),
                     .enterprise-table td:nth-child(5),
-                    .enterprise-table td:nth-child(6),
-                    .enterprise-table td:nth-child(7) {
+                    .enterprise-table td:nth-child(6) {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
@@ -1873,7 +1880,6 @@ function AdminPage() {
                     .enterprise-table td:nth-child(4)::before { content: "Role"; color: #64748b; }
                     .enterprise-table td:nth-child(5)::before { content: "Warehouse"; color: #64748b; }
                     .enterprise-table td:nth-child(6)::before { content: "Status"; color: #64748b; }
-                    .enterprise-table td:nth-child(7)::before { content: "Joined Date"; color: #64748b; }
                     
                     .action-cell {
                         position: absolute;
@@ -2469,7 +2475,6 @@ function AdminPage() {
             <div className="admin-page-container">
                 {/* Top Header Block */}
                 <div className="admin-page-header">
-                    <h1 className="admin-page-title">Admin</h1>
                     <div className="admin-tabs-container">
                         {tabs.map((tab) => {
                             return (
@@ -2507,7 +2512,6 @@ function AdminPage() {
                                 color: '#2563eb',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyCentering: 'center',
                                 justifyContent: 'center',
                             }}>
                                 <Key size={22} />

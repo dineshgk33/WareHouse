@@ -115,7 +115,7 @@ function Topbar({ onOpenMobileSidebar }) {
                             alt={`${userName} Profile Avatar`} 
                             className="profile-avatar"
                             onError={(e) => {
-                                e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+                                e.target.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
                             }}
                         />
                         <span className="profile-name-simple">{userName}</span>

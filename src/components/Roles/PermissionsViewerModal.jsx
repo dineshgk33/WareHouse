@@ -95,13 +95,15 @@ function PermissionsViewerModal({
 
     const headerActions = isEditing ? (
         <>
-            <button
-                type="button"
-                className="role-btn role-btn--primary"
-                onClick={handleSave}
-            >
-                Save Changes
-            </button>
+            {onSave && (
+                <button
+                    type="button"
+                    className="role-btn role-btn--primary"
+                    onClick={handleSave}
+                >
+                    Save Changes
+                </button>
+            )}
             <button
                 type="button"
                 className="role-btn role-btn--ghost"
@@ -109,37 +111,45 @@ function PermissionsViewerModal({
             >
                 Cancel
             </button>
-            <button
-                type="button"
-                className="role-btn role-btn--danger"
-                onClick={onDeleteRole}
-            >
-                Delete Role
-            </button>
+            {onDeleteRole && (
+                <button
+                    type="button"
+                    className="role-btn role-btn--danger"
+                    onClick={onDeleteRole}
+                >
+                    Delete Role
+                </button>
+            )}
         </>
     ) : (
         <>
-            <button
-                type="button"
-                className="role-btn role-btn--primary"
-                onClick={startEditing}
-            >
-                Edit Permissions
-            </button>
-            <button
-                type="button"
-                className="role-btn role-btn--ghost"
-                onClick={startEditing}
-            >
-                Edit Role
-            </button>
-            <button
-                type="button"
-                className="role-btn role-btn--danger"
-                onClick={onDeleteRole}
-            >
-                Delete Role
-            </button>
+            {onSave && (
+                <button
+                    type="button"
+                    className="role-btn role-btn--primary"
+                    onClick={startEditing}
+                >
+                    Edit Permissions
+                </button>
+            )}
+            {onEditRole && (
+                <button
+                    type="button"
+                    className="role-btn role-btn--ghost"
+                    onClick={onEditRole}
+                >
+                    Edit Role
+                </button>
+            )}
+            {onDeleteRole && (
+                <button
+                    type="button"
+                    className="role-btn role-btn--danger"
+                    onClick={onDeleteRole}
+                >
+                    Delete Role
+                </button>
+            )}
         </>
     );
 
