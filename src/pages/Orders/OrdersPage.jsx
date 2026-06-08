@@ -520,6 +520,40 @@ function OrdersPage() {
         setSelectedOrderIds([]);
     };
 
+    const handleBulkMarkReadyForPacking = () => {
+        if (selectedOrderIds.length === 0) {
+            showToast("No orders selected.");
+            return;
+        }
+
+        const eligibleOrders = orders.filter(o => selectedOrderIds.includes(o.id) && o.status !== "Delivered" && o.status !== "Shipped" && o.status !== "Cancelled");
+        if (eligibleOrders.length === 0) {
+            showToast("No eligible orders selected for packaging.");
+            return;
+        }
+
+        const newPacks = eligibleOrders.map((o, idx) => ({
+            id: `PAK-${5100 + packs.length + idx}`,
+            orderId: o.id,
+            customer: o.customer,
+            packedBy: "Unassigned",
+            items: o.items || 1,
+            status: "Waiting"
+        }));
+
+        setOrders(prev => prev.map(order => {
+            if (selectedOrderIds.includes(order.id) && order.status !== "Delivered" && order.status !== "Shipped" && order.status !== "Cancelled") {
+                return { ...order, status: "Packing" };
+            }
+            return order;
+        }));
+
+        setPacks(prev => [...prev, ...newPacks]);
+
+        showToast(`Marked ${eligibleOrders.length} orders as Ready for Packing.`);
+        setSelectedOrderIds([]);
+    };
+
     const handleCreateTestOrders = () => {
         const count = 100;
         const newOrders = [];

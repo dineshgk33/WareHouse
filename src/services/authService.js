@@ -1,12 +1,20 @@
 import axios from "axios";
 
+// Helper to resolve URLs dynamically, routing through the Vite proxy on localhost to avoid CORS errors
+const resolveUrl = (url) => {
+    if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        return url.replace("https://www.haatza.com", "").replace("https://haatza.com", "");
+    }
+    return url;
+};
+
 // Read API URL and keys from environment variables, defaulting to relative path or empty if not specified
-const LOGIN_API_URL = import.meta.env.VITE_API_URL || "https://haatza.com/_functions/loginEmployee";
-const PERMISSIONS_API_URL = import.meta.env.VITE_PERMISSIONS_API_URL || "https://haatza.com/_functions/getRolePermissions";
+const LOGIN_API_URL = resolveUrl(import.meta.env.VITE_API_URL || "https://www.haatza.com/_functions/loginEmployee");
+const PERMISSIONS_API_URL = resolveUrl(import.meta.env.VITE_PERMISSIONS_API_URL || "https://www.haatza.com/_functions/getRolePermissions");
 const PERMISSIONS_API_KEY = import.meta.env.VITE_PERMISSIONS_API_KEY || ""; // API Key can be pasted here or loaded from .env
-const ROLES_API_URL = import.meta.env.VITE_ROLES_API_URL || "https://haatza.com/_functions/getWarehouseRoles";
-const CREATE_MEMBER_API_URL = import.meta.env.VITE_CREATE_MEMBER_API_URL || "https://haatza.com/_functions/createMember";
-const EMPLOYEES_API_URL = import.meta.env.VITE_EMPLOYEES_API_URL || "https://haatza.com/_functions/getWarehouseEmployees";
+const ROLES_API_URL = resolveUrl(import.meta.env.VITE_ROLES_API_URL || "https://www.haatza.com/_functions/getWarehouseRoles");
+const CREATE_MEMBER_API_URL = resolveUrl(import.meta.env.VITE_CREATE_MEMBER_API_URL || "https://www.haatza.com/_functions/createMember");
+const EMPLOYEES_API_URL = resolveUrl(import.meta.env.VITE_EMPLOYEES_API_URL || "https://www.haatza.com/_functions/getWarehouseEmployees");
 
 export const authService = {
     login: async (email, password) => {
@@ -50,7 +58,7 @@ export const authService = {
     },
 
     uploadMedia: async (fileName, fileData, mediaType) => {
-        const response = await axios.post("https://haatza.com/_functions/uploadMedia", {
+        const response = await axios.post(resolveUrl("https://www.haatza.com/_functions/uploadMedia"), {
             fileName,
             fileData,
             mediaType
@@ -63,7 +71,7 @@ export const authService = {
     },
 
     createWarehouseEmployee: async (employeeData) => {
-        const response = await axios.post("https://haatza.com/_functions/createWarehouseEmployee", employeeData, {
+        const response = await axios.post(resolveUrl("https://www.haatza.com/_functions/createWarehouseEmployee"), employeeData, {
             headers: {
                 "Content-Type": "application/json"
             }

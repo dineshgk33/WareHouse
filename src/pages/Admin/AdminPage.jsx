@@ -34,6 +34,14 @@ import {
 import { authService } from "../../services/authService";
 import "../Settings/Settings.css";
 
+// Helper to resolve URLs dynamically, routing through the Vite proxy on localhost to avoid CORS errors
+const resolveUrl = (url) => {
+    if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        return url.replace("https://www.haatza.com", "").replace("https://haatza.com", "");
+    }
+    return url;
+};
+
 function AdminPage() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -85,6 +93,7 @@ function AdminPage() {
     const [members, setMembers] = useState([]);
     const [isMembersLoading, setIsMembersLoading] = useState(false);
     const [membersError, setMembersError] = useState("");
+    const [retryTrigger, setRetryTrigger] = useState(0);
 
     // Modal & Form States
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -226,7 +235,7 @@ function AdminPage() {
 
         const handler = setTimeout(async () => {
             try {
-                const resp = await fetch(`https://haatza.com/_functions/checkWarehouseemployee?email=${encodeURIComponent(newMemberEmail.trim())}`);
+                const resp = await fetch(resolveUrl(`https://www.haatza.com/_functions/checkWarehouseemployee?email=${encodeURIComponent(newMemberEmail.trim())}`));
                 const data = await resp.json();
 
                 let exists = false;
@@ -304,7 +313,9 @@ function AdminPage() {
                 if (!isMounted) return;
 
                 let rawEmployees = [];
-                if (res && res.status === "success" && res.message) {
+                if (res && res.success === true && Array.isArray(res.data)) {
+                    rawEmployees = res.data;
+                } else if (res && res.status === "success" && res.message) {
                     if (Array.isArray(res.message.employees)) {
                         rawEmployees = res.message.employees;
                     } else if (Array.isArray(res.message)) {
@@ -334,11 +345,12 @@ function AdminPage() {
                     const lastName = emp.lastName || "";
                     const fullName = emp.fullName || `${firstName} ${lastName}`.trim() || "Unknown Employee";
 
-                    const roleNames = Array.isArray(emp.warehouseRoles)
-                        ? emp.warehouseRoles.map(r => r.roleName)
+                    const empRoles = emp.Role || emp.warehouseRoles || [];
+                    const roleNames = Array.isArray(empRoles)
+                        ? empRoles.map(r => r.roleName)
                         : [];
-                    const warehouseNames = Array.isArray(emp.warehouseRoles)
-                        ? emp.warehouseRoles.map(r => r.warehouseName)
+                    const warehouseNames = Array.isArray(empRoles)
+                        ? [...new Set(empRoles.map(r => r.warehouseName).filter(Boolean))]
                         : [];
 
                     let status = "Active";
@@ -371,16 +383,27 @@ function AdminPage() {
                         .toUpperCase()
                         .slice(0, 2) || "EE";
 
+                    let rawAvatar = emp.photo || emp.avatar || "";
+                    let avatar = rawAvatar;
+                    if (rawAvatar && rawAvatar.startsWith("wix:image://v1/")) {
+                        const parts = rawAvatar.substring("wix:image://v1/".length).split('/');
+                        if (parts.length > 0) {
+                            avatar = `https://static.wixstatic.com/media/${parts[0]}`;
+                        }
+                    }
+
                     return {
                         id: emp.id || emp._id || `EMP-${index}-${Date.now()}`,
                         name: fullName,
                         email: emp.email || "",
-                        employeeId: emp.employeeCode || emp.employeeId || `EMP-${index}`,
+                        employeeId: emp.employeeId || emp.employeeCode || `EMP-${index}`,
                         role: roleNames.length > 0 ? roleNames.join(", ") : "Member",
                         warehouse: warehouseNames.length > 0 ? warehouseNames.join(", ") : (sessionWarehouseName || "Warehouse"),
+                        roles: roleNames.length > 0 ? roleNames : ["Member"],
+                        warehouses: warehouseNames.length > 0 ? warehouseNames : [sessionWarehouseName || "Warehouse"],
                         status: status,
                         joinedDate: joinedDate,
-                        avatar: emp.photo || emp.avatar || "",
+                        avatar: avatar,
                         initials: initials,
                         bg: bg
                     };
@@ -391,8 +414,8 @@ function AdminPage() {
             .catch((err) => {
                 if (!isMounted) return;
                 console.error("Failed to fetch warehouse employees:", err);
-                setMembersError("Failed to load team members from the backend.");
                 setMembers([]);
+                setMembersError(err.message || "Failed to load team members from the database.");
             })
             .finally(() => {
                 if (isMounted) {
@@ -403,7 +426,7 @@ function AdminPage() {
         return () => {
             isMounted = false;
         };
-    }, [sessionWarehouseId, sessionWarehouseName]);
+    }, [sessionWarehouseId, sessionWarehouseName, retryTrigger]);
 
     // Fetch roles dynamically when a warehouse is selected
     useEffect(() => {
@@ -643,10 +666,11 @@ function AdminPage() {
 
     const handleAddMemberToLocalList = (payload) => {
         const isFormData = payload instanceof FormData;
-        const warehouseId = isFormData ? payload.get("warehouseId") : (payload.warehouseId || (payload.warehouseRoles && payload.warehouseRoles[0]?.warehouseId) || "");
+        const payloadRoles = payload.Role || payload.warehouseRoles || [];
+        const warehouseId = isFormData ? payload.get("warehouseId") : (payload.warehouseId || (payloadRoles.length > 0 && payloadRoles[0]?.warehouseId) || "");
         const email = isFormData ? payload.get("email") : payload.email;
         const status = isFormData ? payload.get("status") : (payload.status || "ACTIVE");
-        const rawRoleIds = isFormData ? payload.getAll("roleIds[]") : (payload.roleIds || (payload.warehouseRoles ? payload.warehouseRoles.map(r => r.roleId) : []));
+        const rawRoleIds = isFormData ? payload.getAll("roleIds[]") : (payload.roleIds || (payloadRoles.length > 0 ? payloadRoles.map(r => r.roleId) : []));
         let roleIds = Array.isArray(rawRoleIds) && rawRoleIds.length > 0 ? rawRoleIds : [];
         if (isFormData && roleIds.length === 0) {
             try {
@@ -671,8 +695,8 @@ function AdminPage() {
             name: fullName,
             email: email,
             employeeId: payload.employeeCode || newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
-            role: roleNames.length > 0 ? roleNames.join(", ") : (payload.warehouseRoles ? payload.warehouseRoles.map(r => r.roleName).join(", ") : "Member"),
-            warehouse: (payload.warehouseRoles && payload.warehouseRoles[0]?.warehouseName) || selectedWh.warehouseName,
+            role: roleNames.length > 0 ? roleNames.join(", ") : (payloadRoles.length > 0 ? payloadRoles.map(r => r.roleName).join(", ") : "Member"),
+            warehouse: (payloadRoles.length > 0 && payloadRoles[0]?.warehouseName) || selectedWh.warehouseName,
             status: status === "ACTIVE" ? "Active" : "Pending",
             joinedDate: new Date().toISOString().split('T')[0],
             avatar: payload.photo || photoPreview || "",
@@ -896,6 +920,98 @@ function AdminPage() {
         if (activeTab === "members") {
             return (
                 <div className="tab-panel-content fade-in" style={{ marginTop: '0', padding: 0 }}>
+                    <style>{`
+                        .role-cell-wrapper, .warehouse-cell-wrapper {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            white-space: nowrap;
+                        }
+                        .primary-role, .primary-warehouse {
+                            white-space: nowrap;
+                        }
+                        .more-roles-badge, .more-warehouses-badge {
+                            position: relative;
+                            margin-left: 4px;
+                            padding: 2px 6px;
+                            border-radius: 12px;
+                            background: #e2e8f0;
+                            color: #475569;
+                            font-size: 11px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            display: inline-flex;
+                            align-items: center;
+                            user-select: none;
+                        }
+                        .more-roles-badge:hover, .more-warehouses-badge:hover {
+                            background: #cbd5e1;
+                            color: #1e293b;
+                        }
+                        .roles-tooltip-content, .warehouses-tooltip-content {
+                            visibility: hidden;
+                            opacity: 0;
+                            position: absolute;
+                            bottom: 140%;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background-color: #1e293b;
+                            color: #ffffff;
+                            padding: 10px 12px;
+                            border-radius: 8px;
+                            width: max-content;
+                            max-width: 250px;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                            z-index: 100;
+                            transition: opacity 0.2s, visibility 0.2s;
+                            pointer-events: none;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 6px;
+                            text-align: left;
+                            font-weight: normal;
+                            line-height: 1.4;
+                        }
+                        .role-cell-wrapper:hover .roles-tooltip-content,
+                        .warehouse-cell-wrapper:hover .warehouses-tooltip-content {
+                            visibility: visible;
+                            opacity: 1;
+                        }
+                        .roles-tooltip-content::after, .warehouses-tooltip-content::after {
+                            content: "";
+                            position: absolute;
+                            top: 100%;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            border-width: 6px;
+                            border-style: solid;
+                            border-color: #1e293b transparent transparent transparent;
+                        }
+                        .tooltip-header {
+                            font-size: 11px;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            color: #94a3b8;
+                            border-bottom: 1px solid #334155;
+                            padding-bottom: 4px;
+                            white-space: nowrap;
+                        }
+                        .tooltip-list {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 4px;
+                            max-height: 150px;
+                            overflow-y: auto;
+                        }
+                        .tooltip-tag {
+                            font-size: 12px;
+                            color: #e2e8f0;
+                            display: inline-block;
+                            white-space: nowrap;
+                            padding: 2px 0;
+                        }
+                    `}</style>
                     {/* Compact Action Bar */}
                     <div className="table-action-bar">
                         <div className="search-input-wrapper table-search">
@@ -944,6 +1060,26 @@ function AdminPage() {
                                 <Loader2 className="animate-spin" size={36} style={{ color: '#2563eb' }} />
                                 <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>Fetching team members...</span>
                             </div>
+                        ) : membersError ? (
+                            <div className="table-empty-state" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '60px 20px',
+                                gap: '16px'
+                            }}>
+                                <span style={{ fontSize: '40px', color: '#ef4444' }}>⚠️</span>
+                                <h4 style={{ margin: 0, color: '#1e293b', fontWeight: '600' }}>Database Connection Error</h4>
+                                <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>{membersError}</p>
+                                <button 
+                                    className="btn-primary-action" 
+                                    onClick={() => setRetryTrigger(prev => prev + 1)}
+                                    style={{ marginTop: '8px' }}
+                                >
+                                    Retry Connection
+                                </button>
+                            </div>
                         ) : paginatedMembers.length > 0 ? (
                             <table className="enterprise-table">
                                 <thead>
@@ -964,9 +1100,6 @@ function AdminPage() {
                                         <th onClick={() => handleSort('status')} className="sortable-header">
                                             Status <ArrowUpDown size={12} className="sort-icon" />
                                         </th>
-                                        <th onClick={() => handleSort('joinedDate')} className="sortable-header">
-                                            Joined Date <ArrowUpDown size={12} className="sort-icon" />
-                                        </th>
                                         <th style={{ width: '40px', textAlign: 'center' }}>Actions</th>
                                     </tr>
                                 </thead>
@@ -985,14 +1118,47 @@ function AdminPage() {
                                                 <div className="table-secondary-text">{member.email}</div>
                                             </td>
                                             <td className="table-text">{member.employeeId}</td>
-                                            <td className="table-text">{member.role}</td>
-                                            <td className="table-text">{member.warehouse}</td>
+                                            <td className="table-text">
+                                                <div className="role-cell-wrapper">
+                                                    <span className="primary-role">{member.roles[0]}</span>
+                                                    {member.roles.length > 1 && (
+                                                        <span className="more-roles-badge">
+                                                            +{member.roles.length - 1}
+                                                            <div className="roles-tooltip-content">
+                                                                <div className="tooltip-header">All Assigned Roles ({member.roles.length})</div>
+                                                                <div className="tooltip-list">
+                                                                    {member.roles.map((r, idx) => (
+                                                                        <span key={idx} className="tooltip-tag">{r}</span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="table-text">
+                                                <div className="warehouse-cell-wrapper">
+                                                    <span className="primary-warehouse">{member.warehouses[0]}</span>
+                                                    {member.warehouses.length > 1 && (
+                                                        <span className="more-warehouses-badge">
+                                                            +{member.warehouses.length - 1}
+                                                            <div className="warehouses-tooltip-content">
+                                                                <div className="tooltip-header">Assigned Warehouses ({member.warehouses.length})</div>
+                                                                <div className="tooltip-list">
+                                                                    {member.warehouses.map((w, idx) => (
+                                                                        <span key={idx} className="tooltip-tag">{w}</span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td>
                                                 <span className={`table-status-chip ${getStatusColor(member.status)}`}>
                                                     {member.status}
                                                 </span>
                                             </td>
-                                            <td className="table-secondary-text">{member.joinedDate}</td>
                                             <td className="action-cell">
                                                 <div className="dropdown-wrapper">
                                                     <button className="btn-row-action" onClick={(e) => toggleDropdown(e, member.id)}>
@@ -1018,8 +1184,17 @@ function AdminPage() {
                         ) : (
                             <div className="table-empty-state">
                                 <Search size={40} className="empty-icon" />
-                                <h4>No matching team members found.</h4>
-                                <p>Try adjusting your search term or filters.</p>
+                                {members.length === 0 ? (
+                                    <>
+                                        <h4>No team members registered.</h4>
+                                        <p>Click 'Add Member' to create a new warehouse employee.</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h4>No matching team members found.</h4>
+                                        <p>Try adjusting your search term or filters.</p>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
