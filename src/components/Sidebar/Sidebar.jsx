@@ -18,7 +18,8 @@ import {
     FileText,
     Activity,
     Shield,
-    Users
+    Users,
+    Eye
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -35,6 +36,8 @@ const getRouteForPage = (pageId, pageName) => {
     switch (id) {
         case "DASHBOARD":
             return "/";
+        case "MANAGE_PREVIEW":
+            return "/manage-preview";
         case "ORDERS":
             if (pageName === "Pending Orders") return "/orders/pending";
             if (pageName === "Picking") return "/orders?tab=picking";
@@ -97,6 +100,7 @@ const getRouteForPage = (pageId, pageName) => {
 const getIconForModule = (moduleName) => {
     const iconMap = {
         "Dashboard": LayoutDashboard,
+        "Manage Preview": Eye,
         "Orders": ShoppingBag,
         "Inventory": Database,
         "Catalog": BookOpen,
@@ -157,6 +161,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
         const MODULE_ORDER = [
             "Dashboard",
+            "Manage Preview",
             "Catalog",
             "Inventory",
             "Orders",
@@ -220,6 +225,17 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 label: "Settings",
                 icon: getIconForModule("Settings"),
                 path: "/settings"
+            });
+        }
+
+        // Ensure Manage Preview is always available in the sidebarItems list for now, bypassing roles/permissions
+        const hasManagePreview = sidebarItems.some(item => item.id === "manage-preview");
+        if (!hasManagePreview) {
+            sidebarItems.push({
+                id: "manage-preview",
+                label: "Manage Preview",
+                icon: getIconForModule("Manage Preview"),
+                path: "/manage-preview"
             });
         }
 

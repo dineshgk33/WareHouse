@@ -85,7 +85,7 @@ function SearchableSelect({
     };
 
     return (
-        <div className="searchable-select-root" ref={containerRef} onKeyDown={handleKeyDown}>
+        <div className={`searchable-select-root ${isOpen ? "open" : ""}`} ref={containerRef} onKeyDown={handleKeyDown}>
             <button
                 type="button"
                 className={`select-trigger-btn ${isOpen ? "open" : ""}`}

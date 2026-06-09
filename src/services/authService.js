@@ -113,6 +113,7 @@ export const authService = {
                 message: {
                     accessiblePages: [
                         { pageId: "DASHBOARD", pageName: "Dashboard", moduleName: "Dashboard", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
+                        { pageId: "MANAGE_PREVIEW", pageName: "Manage Preview", moduleName: "Manage Preview", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "ORDERS", pageName: "Orders", moduleName: "Orders", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "WAREHOUSE_INVENTORY", pageName: "Inventory", moduleName: "Inventory", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "DARKHOUSE_INVENTORY", pageName: "Darkhouses", moduleName: "Darkhouses", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
@@ -145,6 +146,7 @@ export const authService = {
                 message: {
                     accessiblePages: [
                         { pageId: "DASHBOARD", pageName: "Dashboard", moduleName: "Dashboard", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
+                        { pageId: "MANAGE_PREVIEW", pageName: "Manage Preview", moduleName: "Manage Preview", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "ORDERS", pageName: "Orders", moduleName: "Orders", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "WAREHOUSE_INVENTORY", pageName: "Inventory", moduleName: "Inventory", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },
                         { pageId: "DARKHOUSE_INVENTORY", pageName: "Darkhouses", moduleName: "Darkhouses", canView: true, canCreate: true, canEdit: true, canDelete: true, canApprove: true },

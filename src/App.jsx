@@ -21,6 +21,7 @@ const Customers               = lazy(() => import("./pages/Customers/CustomersPa
 const Billing                 = lazy(() => import("./pages/Billing/BillingPage.jsx"));
 const Settings                = lazy(() => import("./pages/Settings/SettingsPage.jsx"));
 const Darkhouses              = lazy(() => import("./pages/Darkhouses/DarkhousesPage.jsx"));
+const ManagePreview           = lazy(() => import("./pages/ManagePreview/ManagePreviewPage.jsx"));
 
 // Dynamic Role Pages
 const ReportsPage             = lazy(() => import("./pages/Reports/ReportsPage.jsx"));
@@ -166,6 +167,11 @@ function App() {
                                 <Route element={<ProtectedRoute pageId="DASHBOARD" />}>
                                     <Route index element={<Dashboard />} />
                                     <Route path="dashboard" element={<Dashboard />} />
+                                </Route>
+
+                                {/* Manage Preview */}
+                                <Route element={<ProtectedRoute />}>
+                                    <Route path="manage-preview" element={<ManagePreview />} />
                                 </Route>
 
                                 {/* Orders */}
