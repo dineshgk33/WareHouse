@@ -144,7 +144,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const buildDynamicMenu = (pages) => {
         if (!pages || !Array.isArray(pages)) return { main: [], bottom: [] };
 
-        const allowedPages = pages.filter(p => p.canView);
+        const allowedPages = pages.filter(p => p.canView && p.pageName !== "User Roles");
 
         const groups = {};
         allowedPages.forEach(page => {
@@ -211,6 +211,17 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             const rankB = indexB === -1 ? 999 : indexB;
             return rankA - rankB;
         };
+
+        // Ensure Settings is always available in the bottomItems list so all users can access their profile settings
+        const hasSettings = bottomItems.some(item => item.id === "settings");
+        if (!hasSettings) {
+            bottomItems.push({
+                id: "settings",
+                label: "Settings",
+                icon: getIconForModule("Settings"),
+                path: "/settings"
+            });
+        }
 
         sidebarItems.sort(sortFn);
         bottomItems.sort(sortFn);

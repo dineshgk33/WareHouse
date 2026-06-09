@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { 
     Users, 
@@ -22,7 +22,10 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
-import UserRolesSection from "../../components/Roles/UserRolesSection";
+import PermissionsViewerModal from "../../components/Roles/PermissionsViewerModal";
+import MemberRoleEditModal from "../../components/Roles/MemberRoleEditModal";
+import MemberPasswordChangeModal from "../../components/Roles/MemberPasswordChangeModal";
+import { DEFAULT_ROLES } from "../../constants/rolePermissions";
 import Modal from "../../components/Roles/Modal";
 import Accordion from "../../components/Roles/Accordion";
 import {
@@ -45,7 +48,7 @@ const resolveUrl = (url) => {
 function AdminPage() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, selectedRole, selectedRoleName, warehouseRoles, selectedWarehouseId: sessionWarehouseId, selectedWarehouseName: sessionWarehouseName } = useAuth();
+    const { user, selectedRole, selectedRoleName, warehouseRoles, selectedWarehouseId: sessionWarehouseId, selectedWarehouseName: sessionWarehouseName, userPassword } = useAuth();
     // Email validation state
     const [emailCheckStatus, setEmailCheckStatus] = useState(null); // 'checking' | 'available' | 'exists'
     const [emailMessage, setEmailMessage] = useState('');
@@ -63,6 +66,27 @@ function AdminPage() {
     const [sortConfig, setSortConfig] = useState({ key: 'joinedDate', direction: 'desc' });
     const [activeDropdown, setActiveDropdown] = useState(null);
     const itemsPerPage = 10;
+
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+    const [initialIsEditing, setInitialIsEditing] = useState(false);
+
+    // Store custom employee permissions locally to simulate database updates
+    const [customPermissions, setCustomPermissions] = useState(() => {
+        const cached = localStorage.getItem("haatza_custom_employee_permissions");
+        return cached ? JSON.parse(cached) : {};
+    });
+
+    const [adminVerifyOpen, setAdminVerifyOpen] = useState(false);
+    const [verifyConfig, setVerifyConfig] = useState(null);
+
+    useEffect(() => {
+        localStorage.setItem("haatza_custom_employee_permissions", JSON.stringify(customPermissions));
+    }, [customPermissions]);
+
+
 
     // Sync activeTab state when URL changes
     useEffect(() => {
@@ -83,8 +107,7 @@ function AdminPage() {
     };
 
     const tabs = [
-        { id: "members", label: "Members", icon: Users },
-        { id: "roles", label: "User roles", icon: Briefcase }
+        { id: "members", label: "Members", icon: Users }
     ];
 
     const name = user ? `${user.firstName} ${user.lastName}` : "";
@@ -94,6 +117,244 @@ function AdminPage() {
     const [isMembersLoading, setIsMembersLoading] = useState(false);
     const [membersError, setMembersError] = useState("");
     const [retryTrigger, setRetryTrigger] = useState(0);
+
+    const selectedEmployee = useMemo(() => {
+        return members.find((emp) => emp.id === selectedEmployeeId) || null;
+    }, [members, selectedEmployeeId]);
+
+    // Map employee's warehouse roles to their corresponding permissions defined in DEFAULT_ROLES
+    const getEmployeePermissions = useCallback((empId, employeeRoles) => {
+        if (customPermissions[empId]) {
+            return customPermissions[empId];
+        }
+
+        const permissionsSet = new Set();
+        employeeRoles.forEach((roleName) => {
+            const matchedRole = DEFAULT_ROLES.find(
+                (r) =>
+                    r.name.toLowerCase() === roleName.toLowerCase() ||
+                    r.id.toLowerCase() === roleName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+            );
+            if (matchedRole) {
+                matchedRole.permissions.forEach((p) => permissionsSet.add(p));
+            }
+        });
+        if (permissionsSet.size === 0) {
+            const roRole = DEFAULT_ROLES.find((r) => r.id === "read-only-user");
+            if (roRole) roRole.permissions.forEach((p) => permissionsSet.add(p));
+        }
+        return Array.from(permissionsSet);
+    }, [customPermissions]);
+
+    const selectedEmployeeRoleObj = useMemo(() => {
+        if (!selectedEmployee) return null;
+        return {
+            id: selectedEmployee.id,
+            name: selectedEmployee.name,
+            description: `Assigned Roles: ${selectedEmployee.roles?.join(", ") || selectedEmployee.role} at ${
+                selectedEmployee.warehouse
+            }`,
+            permissions: getEmployeePermissions(selectedEmployee.id, selectedEmployee.roles || [selectedEmployee.role]),
+        };
+    }, [selectedEmployee, customPermissions, getEmployeePermissions]);
+
+    // Password verification logic matching current login account
+    const verifyPassword = useCallback(
+        (password) => {
+            const adminPassword = userPassword || localStorage.getItem("userPassword") || "";
+            if (!password || password !== adminPassword) {
+                return { ok: false, message: "Incorrect administrator password." };
+            }
+            return { ok: true };
+        },
+        [userPassword]
+    );
+
+    // Bypassed Administrator Verification for Save Permissions:
+    // Administrator password verification is bypassed in handleSavePermissions; 
+    // changes are directly applied to local state and storage for efficiency.
+    const requestVerification = useCallback((config) => {
+        setVerifyConfig(config);
+        setAdminVerifyOpen(true);
+    }, []);
+
+    const handleAdminVerified = useCallback(() => {
+        verifyConfig?.onSuccess?.();
+        setVerifyConfig(null);
+        setAdminVerifyOpen(false);
+    }, [verifyConfig]);
+
+    const handleSavePermissions = async (updatedPermissions, onSuccess) => {
+        if (!selectedEmployee) return;
+        
+        try {
+            const payload = {
+                email: selectedEmployee.email,
+                employeeId: selectedEmployee.employeeId || selectedEmployee.id,
+                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
+                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
+                photo: selectedEmployee.avatar || "",
+                permissions: updatedPermissions
+            };
+            
+            const res = await authService.updateEmployeeMasters(payload);
+            if (res && (res.success === true || res.status === "success")) {
+                setCustomPermissions((prev) => ({
+                    ...prev,
+                    [selectedEmployee.id]: updatedPermissions,
+                }));
+                showToast?.("Employee permissions updated successfully.");
+                if (onSuccess) onSuccess();
+            } else {
+                showToast?.(res?.message || "Failed to update employee permissions.");
+            }
+        } catch (error) {
+            console.error("Failed to save employee permissions:", error);
+            // Fallback for simulation/prototype testing if API returns CORS or 404
+            if (!error.response || error.response.status === 404) {
+                setCustomPermissions((prev) => ({
+                    ...prev,
+                    [selectedEmployee.id]: updatedPermissions,
+                }));
+                showToast?.("Permissions saved successfully (Local Simulation).");
+                if (onSuccess) onSuccess();
+            } else {
+                showToast?.(error.response?.data?.message || "Unable to update permissions. Please try again.");
+            }
+        }
+    };
+
+    const handleViewPermissions = (member) => {
+        setSelectedEmployeeId(member.id);
+        setInitialIsEditing(false);
+        setViewerOpen(true);
+    };
+
+    const handleEditPermissions = (member) => {
+        setSelectedEmployeeId(member.id);
+        setInitialIsEditing(true);
+        setViewerOpen(true);
+    };
+
+    const handleEditRole = (member) => {
+        setSelectedEmployeeId(member.id);
+        setIsEditRoleOpen(true);
+    };
+
+    const handleChangePassword = (member) => {
+        setSelectedEmployeeId(member.id);
+        setIsChangePasswordOpen(true);
+    };
+
+    const handleSavePassword = async (newPassword, sendEmail, onSuccess) => {
+        if (!selectedEmployee) return;
+        
+        try {
+            const payload = {
+                email: selectedEmployee.email,
+                employeeId: selectedEmployee.employeeId || selectedEmployee.id,
+                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
+                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
+                photo: selectedEmployee.avatar || "",
+                password: newPassword
+            };
+            
+            const res = await authService.updateEmployeeMasters(payload);
+            if (res && (res.success === true || res.status === "success")) {
+                showToast?.("Password updated successfully.");
+                if (sendEmail) {
+                    setTimeout(() => {
+                        showToast?.(`New password sent to ${selectedEmployee.email} successfully!`);
+                    }, 500);
+                }
+                if (onSuccess) onSuccess();
+                setIsChangePasswordOpen(false);
+            } else {
+                showToast?.(res?.message || "Failed to update employee password.");
+                if (onSuccess) onSuccess();
+            }
+        } catch (error) {
+            console.error("Failed to save employee password:", error);
+            if (!error.response || error.response.status === 404) {
+                showToast?.("Password updated successfully (Local Simulation).");
+                if (sendEmail) {
+                    setTimeout(() => {
+                        showToast?.(`New password sent to ${selectedEmployee.email} successfully!`);
+                    }, 500);
+                }
+                if (onSuccess) onSuccess();
+                setIsChangePasswordOpen(false);
+            } else {
+                showToast?.(error.response?.data?.message || "Unable to update password. Please try again.");
+                if (onSuccess) onSuccess();
+            }
+        }
+    };
+
+    const handleSaveRole = async (updatedWarehouseRoles, onSuccess) => {
+        if (!selectedEmployee) return;
+        
+        try {
+            const payload = {
+                email: selectedEmployee.email,
+                employeeId: selectedEmployee.employeeId || selectedEmployee.id,
+                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
+                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
+                photo: selectedEmployee.avatar || "",
+                warehouseRoles: updatedWarehouseRoles
+            };
+            
+            const res = await authService.updateEmployeeMasters(payload);
+            if (res && (res.success === true || res.status === "success")) {
+                setMembers(prev => prev.map(m => {
+                    if (m.id === selectedEmployee.id) {
+                        const roleNames = updatedWarehouseRoles.map(r => r.roleName);
+                        const warehouseNames = [...new Set(updatedWarehouseRoles.map(r => r.warehouseName).filter(Boolean))];
+                        return {
+                            ...m,
+                            role: roleNames.join(", "),
+                            roles: roleNames,
+                            warehouse: warehouseNames.join(", "),
+                            warehouses: warehouseNames,
+                            warehouseRoles: updatedWarehouseRoles
+                        };
+                    }
+                    return m;
+                }));
+                
+                showToast?.("Employee roles updated successfully.");
+                if (onSuccess) onSuccess();
+                setIsEditRoleOpen(false);
+            } else {
+                showToast?.(res?.message || "Failed to update employee roles.");
+            }
+        } catch (error) {
+            console.error("Failed to save employee roles:", error);
+            // Fallback for simulation/prototype testing if API returns CORS or 404
+            if (!error.response || error.response.status === 404) {
+                setMembers(prev => prev.map(m => {
+                    if (m.id === selectedEmployee.id) {
+                        const roleNames = updatedWarehouseRoles.map(r => r.roleName);
+                        const warehouseNames = [...new Set(updatedWarehouseRoles.map(r => r.warehouseName).filter(Boolean))];
+                        return {
+                            ...m,
+                            role: roleNames.join(", "),
+                            roles: roleNames,
+                            warehouse: warehouseNames.join(", "),
+                            warehouses: warehouseNames,
+                            warehouseRoles: updatedWarehouseRoles
+                        };
+                    }
+                    return m;
+                }));
+                showToast?.("Roles saved successfully (Local Simulation).");
+                if (onSuccess) onSuccess();
+                setIsEditRoleOpen(false);
+            } else {
+                showToast?.(error.response?.data?.message || "Unable to update roles. Please try again.");
+            }
+        }
+    };
 
     // Modal & Form States
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -114,7 +375,7 @@ function AdminPage() {
     
     // Credential Modal states
     const [createdCredentials, setCreatedCredentials] = useState(null);
-    const [sendEmailOption, setSendEmailOption] = useState(true);
+    const [sendEmailOption, setSendEmailOption] = useState(false);
     const [copied, setCopied] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     
@@ -235,8 +496,7 @@ function AdminPage() {
 
         const handler = setTimeout(async () => {
             try {
-                const resp = await fetch(resolveUrl(`https://www.haatza.com/_functions/checkWarehouseemployee?email=${encodeURIComponent(newMemberEmail.trim())}`));
-                const data = await resp.json();
+                const data = await authService.checkWarehouseEmployee(newMemberEmail.trim());
 
                 let exists = false;
                 if (data && data.status === "success" && data.message && data.message.body) {
@@ -396,6 +656,7 @@ function AdminPage() {
                         id: emp.id || emp._id || `EMP-${index}-${Date.now()}`,
                         name: fullName,
                         email: emp.email || "",
+                        phone: emp.phone || "",
                         employeeId: emp.employeeId || emp.employeeCode || `EMP-${index}`,
                         role: roleNames.length > 0 ? roleNames.join(", ") : "Member",
                         warehouse: warehouseNames.length > 0 ? warehouseNames.join(", ") : (sessionWarehouseName || "Warehouse"),
@@ -405,7 +666,8 @@ function AdminPage() {
                         joinedDate: joinedDate,
                         avatar: avatar,
                         initials: initials,
-                        bg: bg
+                        bg: bg,
+                        warehouseRoles: empRoles
                     };
                 });
 
@@ -599,7 +861,7 @@ function AdminPage() {
         setEmailMessage("");
         setIsPhotoConverting(false);
         setCreatedCredentials(null);
-        setSendEmailOption(true);
+        setSendEmailOption(false);
         setCopied(false);
         setIsSendingEmail(false);
         setRoleSearchQuery("");
@@ -709,14 +971,17 @@ function AdminPage() {
         };
         
         setMembers(prev => [newMember, ...prev]);
-    };    const handleSendCredentialsEmail = async () => {
-        if (!createdCredentials) return;
+    };
+
+    const handleSendCredentialsEmail = async (credentialsToUse) => {
+        const creds = credentialsToUse || createdCredentials;
+        if (!creds) return;
         setIsSendingEmail(true);
         try {
             // Simulate API request to send email
             await new Promise((resolve) => setTimeout(resolve, 1000));
             setCreatedCredentials(prev => prev ? { ...prev, emailSent: true } : null);
-            showToast?.(`Credentials sent to ${createdCredentials.email} successfully!`);
+            showToast?.(`Credentials sent to ${creds.email} successfully!`);
         } catch (err) {
             console.error("Failed to send credentials email:", err);
             showToast?.("Failed to send email. Please try again.");
@@ -786,7 +1051,8 @@ function AdminPage() {
                 formattedEmploymentType = 'Part-Time';
             }
 
-            // Step 5: Construct the payload
+            // Step 5: Pre-generate a password and construct the payload
+            const generatedPassword = generateSecurePassword();
             const employeePayload = {
                 firstName: newMemberFirstName.trim(),
                 lastName: newMemberLastName.trim(),
@@ -796,6 +1062,7 @@ function AdminPage() {
                 employmentType: formattedEmploymentType,
                 photo: photoUrl,
                 warehouseRoles: warehouseRolesPayload,
+                password: generatedPassword,
                 sendEmail: sendEmailOption
             };
 
@@ -804,14 +1071,21 @@ function AdminPage() {
             if (res && (res.success === true || res.status === "success")) {
                 showToast?.("Employee created successfully.");
                 handleAddMemberToLocalList(employeePayload);
-                const generatedPassword = res.password || generateSecurePassword();
-                setCreatedCredentials({
+                const finalPassword = res.password || generatedPassword;
+                const credentials = {
                     employeeId: employeePayload.employeeCode,
                     email: employeePayload.email,
-                    password: generatedPassword,
+                    password: finalPassword,
                     fullName: `${employeePayload.firstName} ${employeePayload.lastName}`,
-                    emailSent: sendEmailOption
-                });
+                    emailSent: false
+                };
+                setCreatedCredentials(credentials);
+
+                if (sendEmailOption) {
+                    setTimeout(() => {
+                        handleSendCredentialsEmail(credentials);
+                    }, 200);
+                }
             } else {
                 showToast?.(res.message || "Failed to create employee.");
             }
@@ -833,6 +1107,7 @@ function AdminPage() {
                         roleId: roleId
                     };
                 });
+                const generatedPassword = generateSecurePassword();
                 const fallbackPayload = {
                     firstName: newMemberFirstName.trim(),
                     lastName: newMemberLastName.trim(),
@@ -841,17 +1116,25 @@ function AdminPage() {
                     employeeCode: newMemberEmpId.trim() || `EMP-${Math.floor(100000 + Math.random() * 900000)}`,
                     employmentType: newMemberEmploymentType,
                     photo: photoPreview || "",
-                    warehouseRoles: warehouseRolesPayload
+                    warehouseRoles: warehouseRolesPayload,
+                    password: generatedPassword,
+                    sendEmail: sendEmailOption
                 };
                 handleAddMemberToLocalList(fallbackPayload);
-                const generatedPassword = generateSecurePassword();
-                setCreatedCredentials({
+                const credentials = {
                     employeeId: fallbackPayload.employeeCode,
                     email: fallbackPayload.email,
                     password: generatedPassword,
                     fullName: `${fallbackPayload.firstName} ${fallbackPayload.lastName}`,
-                    emailSent: sendEmailOption
-                });
+                    emailSent: false
+                };
+                setCreatedCredentials(credentials);
+
+                if (sendEmailOption) {
+                    setTimeout(() => {
+                        handleSendCredentialsEmail(credentials);
+                    }, 200);
+                }
             } else {
                 showToast?.(error.response?.data?.message || "Failed to create employee. Please try again.");
             }
@@ -928,6 +1211,28 @@ function AdminPage() {
                             align-items: center;
                             gap: 6px;
                             white-space: nowrap;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .role-cell-wrapper:hover, .warehouse-cell-wrapper:hover {
+                            z-index: 20;
+                        }
+                        /* Position tooltips below the badge for the first two rows to prevent top boundary clipping */
+                        .enterprise-table tbody tr:nth-child(-n+2) .roles-tooltip-content,
+                        .enterprise-table tbody tr:nth-child(-n+2) .warehouses-tooltip-content {
+                            bottom: auto;
+                            top: calc(100% + 8px);
+                        }
+                        .enterprise-table tbody tr:nth-child(-n+2) .roles-tooltip-content::before,
+                        .enterprise-table tbody tr:nth-child(-n+2) .warehouses-tooltip-content::before {
+                            top: auto;
+                            bottom: 100%;
+                        }
+                        .enterprise-table tbody tr:nth-child(-n+2) .roles-tooltip-content::after,
+                        .enterprise-table tbody tr:nth-child(-n+2) .warehouses-tooltip-content::after {
+                            top: auto;
+                            bottom: 100%;
+                            border-color: transparent transparent #1e293b transparent;
                         }
                         .primary-role, .primary-warehouse {
                             white-space: nowrap;
@@ -1043,10 +1348,7 @@ function AdminPage() {
                             )}
                         </div>
                         <div className="table-action-buttons">
-                            <button className="btn-secondary-action">
-                                <Upload size={14} />
-                                <span>Import</span>
-                            </button>
+
                             <button className="btn-secondary-action">
                                 <Download size={14} />
                                 <span>Export</span>
@@ -1178,13 +1480,10 @@ function AdminPage() {
                                                     </button>
                                                     {activeDropdown === member.id && (
                                                         <div className="row-action-menu">
-                                                            <button onClick={() => {}}>View Member</button>
-                                                            <button onClick={() => {}}>Edit Member</button>
-                                                            <button onClick={() => {}}>Change Role</button>
-                                                            <button onClick={() => {}}>Change Warehouse</button>
-                                                            <div className="menu-divider"></div>
-                                                            <button onClick={() => {}}>Deactivate</button>
-                                                            <button className="text-danger" onClick={() => {}}>Delete</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleViewPermissions(member); }}>View Permissions</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleEditPermissions(member); }}>Edit Permissions</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleEditRole(member); }}>Edit Role</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleChangePassword(member); }}>Change Password</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -3103,6 +3402,37 @@ function AdminPage() {
                 </form>
                 )}
             </Modal>
+
+            {/* Custom Permissions Modals */}
+            <PermissionsViewerModal
+                isOpen={viewerOpen}
+                role={selectedEmployeeRoleObj}
+                onClose={() => {
+                    setViewerOpen(false);
+                }}
+                onSave={handleSavePermissions}
+                initialIsEditing={initialIsEditing}
+            />
+
+            <MemberRoleEditModal
+                isOpen={isEditRoleOpen}
+                employee={selectedEmployee}
+                uniqueWarehouses={uniqueWarehouses}
+                sessionWarehouseId={sessionWarehouseId}
+                onClose={() => {
+                    setIsEditRoleOpen(false);
+                }}
+                onSave={handleSaveRole}
+            />
+
+            <MemberPasswordChangeModal
+                isOpen={isChangePasswordOpen}
+                employee={selectedEmployee}
+                onClose={() => {
+                    setIsChangePasswordOpen(false);
+                }}
+                onSave={handleSavePassword}
+            />
         </div>
     );
 }

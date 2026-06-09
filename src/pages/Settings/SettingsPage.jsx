@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import { 
     Trash2, 
     Upload, 
@@ -26,36 +25,19 @@ import {
     Monitor,
     Moon,
     Sun,
-    CheckCircle
+    CheckCircle,
+    X
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
 import UserRolesSection from "../../components/Roles/UserRolesSection";
+import { authService } from "../../services/authService";
 import "./Settings.css";
 
 function SettingsPage() {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const queryTab = searchParams.get("tab");
-    const { user, selectedRole, selectedRoleName } = useAuth();
-    
-    // Determine initial tab from query parameters
-    const initialTab = queryTab && ["general", "notifications", "billing", "security"].includes(queryTab)
-        ? queryTab
-        : "general";
-
-    const [activeTab, setActiveTab] = useState(initialTab);
+    const { user, selectedRole, selectedRoleName, userPassword, updatePassword, updateUser } = useAuth();
     const [theme, setTheme] = useState("light");
-
-    // Sync activeTab state when URL query parameters change
-    useEffect(() => {
-        if (queryTab && ["general", "notifications", "billing", "security"].includes(queryTab)) {
-            setActiveTab(queryTab);
-        } else if (!queryTab) {
-            setActiveTab("general");
-        }
-    }, [queryTab]);
-
 
     // Dynamic states for interactive controls
     const [name, setName] = useState(() => user ? `${user.firstName} ${user.lastName}` : "");
@@ -67,66 +49,298 @@ function SettingsPage() {
     const [hasChanges, setHasChanges] = useState(false);
     const { toast, showToast } = useToast(3000);
 
+    // Password change states
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    // File upload ref and loading state
+    const fileInputRef = useRef(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [photoPreview, setPhotoPreview] = useState("");
+    const [selectedImageFile, setSelectedImageFile] = useState(null);
+    const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
+    const [isViewerOpen, setIsViewerOpen] = useState(false);
+
     // Inline editing state for name and phone
     const [editingName, setEditingName] = useState(false);
     const [editingPhone, setEditingPhone] = useState(false);
     const [pendingName, setPendingName] = useState("");
     const [pendingPhone, setPendingPhone] = useState("");
-    
-    // Notification toggles state
-    const [notifs, setNotifs] = useState({
-        orders: true,
-        security: true,
-        weekly: false,
-        registrations: true,
-        stock: true,
-        refunds: false
-    });
-
-    const toggleNotif = (key) => {
-        setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
-        setHasChanges(true);
-    };
 
     const handleResetChanges = () => {
-        setActiveTab("general");
+        if (user) {
+            setName(`${user.firstName} ${user.lastName}`);
+            setPhone(user.phone || "");
+            setEmail(user.email || "");
+        }
+        setPhotoPreview("");
+        setSelectedImageFile(null);
+        setShouldDeleteAvatar(false);
         setHasChanges(false);
         showToast("Changes reset to default!");
     };
 
-    const handleSaveChanges = () => {
-        setHasChanges(false);
-        showToast("Settings saved successfully!");
+    const handleSaveChanges = async (onlyPassword = false) => {
+        if (isSaving) return;
+
+        // 1. Password validation (if onlyPassword is true OR if any password field is filled)
+        const isPasswordChangeAttempted = onlyPassword || currentPassword || newPassword || confirmPassword;
+        if (isPasswordChangeAttempted) {
+            if (!currentPassword) {
+                showToast("Current Password is required.");
+                return;
+            }
+            if (!newPassword) {
+                showToast("New Password is required.");
+                return;
+            }
+            if (!confirmPassword) {
+                showToast("Confirm Password is required.");
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast("New Password and Confirm Password must match.");
+                return;
+            }
+            if (newPassword === currentPassword) {
+                showToast("New Password cannot be the same as Current Password.");
+                return;
+            }
+
+            // Verify current password
+            if (currentPassword !== userPassword) {
+                showToast("Current password is incorrect");
+                return;
+            }
+        }
+
+        // 2. Phone validation (only if not onlyPassword)
+        let cleanPhone = "";
+        if (!onlyPassword) {
+            if (phone === undefined || phone === null || phone === "") {
+                showToast("Phone number is required.");
+                return;
+            }
+            cleanPhone = String(phone).replace(/[\s\-\+\(\)]/g, "");
+            if (!/^[0-9]+$/.test(cleanPhone)) {
+                showToast("Phone number must contain numbers only.");
+                return;
+            }
+            if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+                showToast("Phone number must be between 10 and 15 digits.");
+                return;
+            }
+        }
+
+        setIsSaving(true);
+
+        try {
+            let finalPhotoUrl = user?.ProfileImage || "";
+            // STEP 1 & 2 & 3: Profile Photo Upload (only if not onlyPassword)
+            if (!onlyPassword && selectedImageFile) {
+                try {
+                    // Convert image to base64
+                    const base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const base64String = reader.result.split(',')[1];
+                            resolve(base64String);
+                        };
+                        reader.onerror = (error) => reject(error);
+                        reader.readAsDataURL(selectedImageFile);
+                    });
+
+                    // Call uploadMedia API
+                    const uploadRes = await authService.uploadMedia(selectedImageFile.name, base64Data, selectedImageFile.type);
+                    if (uploadRes && uploadRes.imageUrl) {
+                        finalPhotoUrl = uploadRes.imageUrl;
+                    } else {
+                        throw new Error("Invalid upload response");
+                    }
+                } catch (uploadErr) {
+                    console.error("Image upload failed:", uploadErr);
+                    showToast("Failed to upload profile photo");
+                    setIsSaving(false);
+                    return;
+                }
+            } else if (!onlyPassword && shouldDeleteAvatar) {
+                finalPhotoUrl = "";
+            }
+
+            // Split name into firstName and lastName (only if not onlyPassword)
+            let firstName = user?.firstName || "";
+            let lastName = user?.lastName || "";
+            if (!onlyPassword && name) {
+                const nameParts = name.trim().split(/\s+/);
+                firstName = nameParts[0] || "";
+                lastName = nameParts.slice(1).join(" ") || "";
+            }
+
+            // STEP 6: Call updateEmployeeMasters
+            const updatePayload = {
+                email: user.email,
+                employeeId: user.employeeId || user.employeeCode || "",
+                employeeCode: user.employeeCode || user.employeeId || "",
+                photo: onlyPassword ? (user?.ProfileImage || "") : finalPhotoUrl
+            };
+            
+            if (!onlyPassword) {
+                updatePayload.phone = Number(cleanPhone);
+                updatePayload.firstName = firstName;
+                updatePayload.lastName = lastName;
+            } else {
+                updatePayload.phone = user.phone ? Number(String(user.phone).replace(/\D/g, '')) : "";
+            }
+
+            if (isPasswordChangeAttempted && newPassword) {
+                updatePayload.password = newPassword;
+            }
+
+            const updateRes = await authService.updateEmployeeMasters(updatePayload);
+
+            if (updateRes && (updateRes.success === true || updateRes.status === "success")) {
+                // Update frontend auth context
+                const updatedUserFields = {};
+                if (!onlyPassword) {
+                    updatedUserFields.phone = cleanPhone;
+                    updatedUserFields.ProfileImage = finalPhotoUrl;
+                    updatedUserFields.firstName = firstName;
+                    updatedUserFields.lastName = lastName;
+                } else {
+                    updatedUserFields.ProfileImage = user?.ProfileImage || "";
+                }
+                
+                updateUser(updatedUserFields);
+                
+                if (isPasswordChangeAttempted && newPassword) {
+                    updatePassword(newPassword);
+                }
+
+                // Clear password fields on success
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                
+                if (!onlyPassword) {
+                    setSelectedImageFile(null);
+                    setShouldDeleteAvatar(false);
+                }
+                setHasChanges(false);
+
+                // Show simple, clear context-appropriate toast message
+                if (onlyPassword) {
+                    showToast("Password updated successfully.");
+                } else {
+                    const isProfileChanged = (cleanPhone !== String(user?.phone || "")) || selectedImageFile || shouldDeleteAvatar || (firstName !== user?.firstName) || (lastName !== user?.lastName);
+                    const isPasswordChanged = isPasswordChangeAttempted && newPassword;
+
+                    if (isProfileChanged && isPasswordChanged) {
+                        showToast("Profile and password updated successfully.");
+                    } else if (isPasswordChanged) {
+                        showToast("Password updated successfully.");
+                    } else {
+                        showToast("Profile updated successfully.");
+                    }
+                }
+            } else {
+                showToast(updateRes?.message || "Unable to update profile. Please try again.");
+            }
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+            showToast("Unable to update profile. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    const tabs = [
-        { id: "general", label: "General", icon: User },
-        { id: "notifications", label: "Notifications", icon: Bell },
-        { id: "billing", label: "Billing plans", icon: CreditCard },
-        { id: "security", label: "Login & security", icon: Shield }
-    ];
+    const handleUpdatePassword = () => {
+        handleSaveChanges(true);
+    };
 
-    // Render corresponding settings panel based on activeTab
-    const renderActiveContent = () => {
-        switch (activeTab) {
-            case "general":
-                return (
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPhotoPreview(reader.result);
+            setSelectedImageFile(file);
+            setShouldDeleteAvatar(false);
+            setHasChanges(true);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleDeleteAvatar = () => {
+        setPhotoPreview(avatarImg);
+        setSelectedImageFile(null);
+        setShouldDeleteAvatar(true);
+        setHasChanges(true);
+        showToast("Profile image removed from preview. Click Save Changes to apply.");
+    };
+
+    return (
+        <div className="settings-page-wrapper">
+            {/* Accessible Toast Notification */}
+            {toast && (
+                <div
+                    className="orders-toast slide-in-top"
+                    role="alert"
+                    aria-live="polite"
+                    style={{ position: "fixed", top: 20, right: 24, zIndex: 2000 }}
+                >
+                    <CheckCircle size={15} className="toast-icon" />
+                    <span>{toast}</span>
+                </div>
+            )}
+
+            {/* Top Title Block with Action Buttons */}
+            <div className="settings-page-header">
+                <div className="header-content">
+                    <div className="header-text">
+                        <h1>Settings</h1>
+                        <p className="header-subtitle">Manage account preferences, profile details and password settings.</p>
+                    </div>
+                    <div className="header-actions">
+                        <button className="btn-reset" onClick={handleResetChanges} disabled={isSaving}>Reset</button>
+                        <button className="btn-save" onClick={handleSaveChanges} disabled={isSaving}>
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Split Grid Container Box */}
+            <div className="settings-container">
+                {/* Single Content Pane */}
+                <section className="settings-content">
                     <div className="tab-panel-content fade-in">
                         {/* 1. Profile Picture Row */}
                         <div className="settings-row profile-row">
                             <div className="profile-section-wrapper">
                                 <div className="profile-pic-container">
                                     <img 
-                                        src={user?.ProfileImage || avatarImg} 
+                                        src={photoPreview || user?.ProfileImage || avatarImg} 
                                         alt={`${name} Profile Avatar`} 
-                                        className="settings-profile-avatar"
+                                        className="settings-profile-avatar clickable-avatar"
+                                        onClick={() => setIsViewerOpen(true)}
+                                        title="Click to view profile photo"
                                         onError={(e) => {
                                             e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
                                         }}
                                     />
-                                    <label className="camera-overlay-btn" title="Change photo">
+                                    <label className="camera-overlay-btn" title="Change photo" style={{ cursor: isSaving ? 'not-allowed' : 'pointer' }}>
                                         <Upload size={16} />
-                                        <input type="file" accept="image/*" hidden />
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            accept="image/*" 
+                                            onChange={handleImageUpload} 
+                                            disabled={isSaving} 
+                                            hidden 
+                                        />
                                     </label>
                                 </div>
                                 <div className="profile-meta">
@@ -143,12 +357,21 @@ function SettingsPage() {
                                 </div>
                             </div>
                             <div className="profile-actions">
-                                <button className="btn-delete" aria-label="Delete avatar">
+                                <button 
+                                    className="btn-delete" 
+                                    aria-label="Delete avatar" 
+                                    onClick={handleDeleteAvatar}
+                                    disabled={isSaving}
+                                >
                                     <Trash2 size={16} />
                                 </button>
-                                <button className="btn-upload">
+                                <button 
+                                    className="btn-upload" 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isSaving}
+                                >
                                     <Upload size={14} />
-                                    <span>Upload</span>
+                                    <span>{isSaving ? "Saving..." : "Upload"}</span>
                                 </button>
                             </div>
                         </div>
@@ -273,8 +496,6 @@ function SettingsPage() {
                             </div>
                         </div>
 
-
-
                         {/* 7. Integration Section */}
                         <div className="settings-card-item">
                             <div className="card-icon-wrapper">
@@ -335,177 +556,6 @@ function SettingsPage() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                );
-            case "notifications":
-                return (
-                    <div className="tab-panel-content fade-in">
-                        <div className="panel-title-block">
-                            <h3>Notification Preferences</h3>
-                            <p>Configure how you receive transaction updates and system alerts.</p>
-                        </div>
-
-                        {/* Email Notifications */}
-                        <div className="settings-section-divider">Email Notifications</div>
-                        
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>Order Status Updates</h4>
-                                <p>Receive emails when orders are processed, shipped, or delivered.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.orders} onChange={() => toggleNotif("orders")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>Security Alerts</h4>
-                                <p>Get notified about new logins, password changes, and account recovery.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.security} onChange={() => toggleNotif("security")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>Weekly Performance Report</h4>
-                                <p>Receive weekly summary digests of sales and inventory metrics.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.weekly} onChange={() => toggleNotif("weekly")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        {/* Push Notifications */}
-                        <div className="settings-section-divider">Real-Time Alerts</div>
-
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>New Registrations</h4>
-                                <p>Get push notifications when new customers create accounts.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.registrations} onChange={() => toggleNotif("registrations")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>Low Stock Alerts</h4>
-                                <p>Immediate notification when item stock falls below critical levels.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.stock} onChange={() => toggleNotif("stock")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="notification-card">
-                            <div className="notif-content">
-                                <h4>Refund Processing</h4>
-                                <p>Get notified when customer refund requests are processed.</p>
-                            </div>
-                            <label className="switch-toggle">
-                                <input type="checkbox" checked={notifs.refunds} onChange={() => toggleNotif("refunds")} />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                );
-            case "billing":
-                return (
-                    <div className="tab-panel-content fade-in">
-                        <div className="panel-title-block">
-                            <h3>Billing Plans & Invoices</h3>
-                            <p>Manage your subscription, payment methods, and download invoices.</p>
-                        </div>
-
-                        {/* Plan Card */}
-                        <div className="plan-card-premium">
-                            <div className="plan-badge">Active Plan</div>
-                            <div className="plan-header-section">
-                                <div>
-                                    <h4 className="plan-name">Haatza Premium Pro</h4>
-                                    <p className="plan-desc">Unlimited catalog, real-time analytics, custom domains.</p>
-                                </div>
-                                <div className="plan-pricing">
-                                    <span className="price-amount">₹49</span>
-                                    <span className="price-period">/month</span>
-                                </div>
-                            </div>
-                            <div className="plan-details-row">
-                                <span className="plan-detail"><strong>Users:</strong> 10</span>
-                                <span className="plan-detail"><strong>Renewal:</strong> 1 July 2026</span>
-                            </div>
-                            <div className="plan-actions-row">
-                                <button className="btn-secondary">Upgrade Plan</button>
-                                <button className="btn-outline">Manage Billing</button>
-                            </div>
-                        </div>
-
-                        {/* Payment Method */}
-                        <div className="settings-card-item">
-                            <div className="card-icon-wrapper">
-                                <CreditCard size={18} className="card-icon" />
-                            </div>
-                            <div className="card-content">
-                                <div className="row-info">
-                                    <h3>Payment Method</h3>
-                                    <p>Visa Card ending in 4242 • Expires 12/28</p>
-                                </div>
-                                <button className="btn-edit-pill">Update Card</button>
-                            </div>
-                        </div>
-
-                        {/* Invoices table */}
-                        <div className="settings-section-divider">Billing History</div>
-                        <div className="billing-invoices-container">
-                            <table className="settings-invoice-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Amount</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>01/05/2026</td>
-                                        <td>Haatza Premium Pro - May 2026</td>
-                                        <td>₹49.00</td>
-                                        <td><button className="btn-icon-action" aria-label="Download PDF"><Download size={14} /></button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>01/04/2026</td>
-                                        <td>Haatza Premium Pro - April 2026</td>
-                                        <td>₹49.00</td>
-                                        <td><button className="btn-icon-action" aria-label="Download PDF"><Download size={14} /></button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>01/03/2026</td>
-                                        <td>Haatza Premium Pro - March 2026</td>
-                                        <td>₹49.00</td>
-                                        <td><button className="btn-icon-action" aria-label="Download PDF"><Download size={14} /></button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                );
-            case "security":
-                return (
-                    <div className="tab-panel-content fade-in">
-                        <div className="panel-title-block">
-                            <h3>Login & Account Security</h3>
-                            <p>Protect your account with strong passwords and two-factor authentication.</p>
-                        </div>
 
                         {/* Change Password section */}
                         <div className="settings-card-item">
@@ -518,148 +568,67 @@ function SettingsPage() {
                                     <p>Update your password regularly for better security</p>
                                 </div>
                                 <div className="password-inputs-group">
-                                    <input type="password" placeholder="Current Password" className="settings-input settings-password-field" />
-                                    <input type="password" placeholder="New Password" className="settings-input settings-password-field" />
-                                    <input type="password" placeholder="Confirm Password" className="settings-input settings-password-field" />
+                                    <input 
+                                        type="password" 
+                                        placeholder="Current Password" 
+                                        className="settings-input settings-password-field" 
+                                        value={currentPassword}
+                                        onChange={e => setCurrentPassword(e.target.value)}
+                                    />
+                                    <input 
+                                        type="password" 
+                                        placeholder="New Password" 
+                                        className="settings-input settings-password-field" 
+                                        value={newPassword}
+                                        onChange={e => setNewPassword(e.target.value)}
+                                    />
+                                    <input 
+                                        type="password" 
+                                        placeholder="Confirm Password" 
+                                        className="settings-input settings-password-field" 
+                                        value={confirmPassword}
+                                        onChange={e => setConfirmPassword(e.target.value)}
+                                    />
                                 </div>
-                                <button className="btn-secondary">Update Password</button>
-                            </div>
-                        </div>
-
-                        {/* 2FA */}
-                        <div className="settings-card-item">
-                            <div className="card-icon-wrapper">
-                                <Shield size={18} className="card-icon" />
-                            </div>
-                            <div className="card-content">
-                                <div className="row-info">
-                                    <h3>Two-Factor Authentication (2FA)</h3>
-                                    <p>Add extra security with authenticator apps or SMS</p>
-                                </div>
-                                <div className="security-controls">
-                                    <div className="status-badge-wrapper">
-                                        {twoFAEnabled ? (
-                                            <span className="integration-badge">
-                                                <Check size={12} className="badge-check-icon" />
-                                                <span>Enabled</span>
-                                            </span>
-                                        ) : (
-                                            <span className="integration-badge status-disabled">
-                                                <Lock size={12} className="badge-check-icon" />
-                                                <span>Disabled</span>
-                                            </span>
-                                        )}
-                                    </div>
-                                    <button 
-                                        className={`btn-secondary ${twoFAEnabled ? 'btn-danger' : ''}`}
-                                        onClick={() => setTwoFAEnabled(!twoFAEnabled)}
-                                    >
-                                        {twoFAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Sessions logs */}
-                        <div className="settings-section-divider">Active Sessions</div>
-                        <div className="sessions-list">
-                            <div className="session-item-row">
-                                <div className="session-info">
-                                    <div className="session-dot active-dot"></div>
-                                    <div className="session-details">
-                                        <span className="session-device">Chrome on Windows</span>
-                                        <span className="session-ip">IP: 192.168.1.104 • Mumbai, India • Current</span>
-                                    </div>
-                                </div>
-                                <span className="session-badge">Active</span>
-                            </div>
-                            <div className="session-item-row">
-                                <div className="session-info">
-                                    <div className="session-dot"></div>
-                                    <div className="session-details">
-                                        <span className="session-device">Safari on iPhone</span>
-                                        <span className="session-ip">IP: 122.161.23.45 • Delhi, India • Last active 2 hours ago</span>
-                                    </div>
-                                </div>
-                                <button className="btn-icon-logout" title="Logout from this device">
-                                    <LogOut size={16} />
+                                <button className="btn-secondary" onClick={handleUpdatePassword} disabled={isSaving}>
+                                    {isSaving ? "Saving..." : "Update Password"}
                                 </button>
                             </div>
                         </div>
-
-                        {/* Dangerous Zone */}
-                        <div className="danger-zone-section">
-                            <div className="danger-zone-header">
-                                <h4>Danger Zone</h4>
-                                <p>Irreversible actions that require confirmation</p>
-                            </div>
-                            <button className="btn-danger-outline">Delete Account</button>
-                        </div>
                     </div>
-                );
-            default:
-                return null;
-        }
-    };
-
-    return (
-        <div className="settings-page-wrapper">
-            {/* Accessible Toast Notification */}
-            {toast && (
-                <div
-                    className="orders-toast slide-in-top"
-                    role="alert"
-                    aria-live="polite"
-                    style={{ position: "fixed", top: 20, right: 24, zIndex: 2000 }}
-                >
-                    <CheckCircle size={15} className="toast-icon" />
-                    <span>{toast}</span>
-                </div>
-            )}
-
-            {/* Top Title Block with Action Buttons */}
-            <div className="settings-page-header">
-                <div className="header-content">
-                    <div className="header-text">
-                        <h1>Settings</h1>
-                        <p className="header-subtitle">Manage account preferences, security, billing and workspace settings.</p>
-                    </div>
-                    <div className="header-actions">
-                        <button className="btn-reset" onClick={handleResetChanges}>Reset</button>
-                        <button className="btn-save" onClick={handleSaveChanges}>Save Changes</button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Split Grid Container Box */}
-            <div className="settings-container">
-                {/* Left Sidebar with Icons */}
-                <aside className="settings-sidebar">
-                    <ul className="settings-tab-list">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-                            return (
-                                <li key={tab.id}>
-                                    <button
-                                        className={`settings-tab-btn ${activeTab === tab.id ? "active" : ""}`}
-                                        onClick={() => setSearchParams({ tab: tab.id })}
-                                        title={tab.label}
-                                    >
-                                        <Icon size={18} className="tab-icon" />
-                                        <span className="tab-label">{tab.label}</span>
-                                    </button>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </aside>
-
-                {/* Right Content Pane */}
-                <section className="settings-content">
-                    {renderActiveContent()}
                 </section>
             </div>
 
+            {/* Profile Photo Viewer Modal */}
+            {isViewerOpen && (
+                <div className="profile-photo-modal-overlay" onClick={() => setIsViewerOpen(false)}>
+                    <div className="profile-photo-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="profile-photo-modal-close" onClick={() => setIsViewerOpen(false)} aria-label="Close viewer">
+                            <X size={20} />
+                        </button>
+                        <img 
+                            src={photoPreview || user?.ProfileImage || avatarImg} 
+                            alt={`${name} Profile`} 
+                            className="profile-photo-modal-img"
+                            onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+                            }}
+                        />
+                        <div className="profile-photo-modal-actions">
+                            <a 
+                                href={photoPreview || user?.ProfileImage || avatarImg} 
+                                download={`${name.replace(/\s+/g, "_")}_profile_photo`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="profile-photo-modal-btn"
+                            >
+                                <Download size={16} />
+                                <span>Download</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Activity, Building2, Users, Building, ShieldCheck, Clock, Shield } from "lucide-react";
+import { ArrowRight, Activity, Building2, Users, Building, ShieldCheck, Clock, Shield, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import logoImg from "../../assets/logo.jpeg";
 import SearchableSelect from "../../components/common/SearchableSelect";
@@ -10,7 +10,7 @@ import "./OrgRoleSelectionPage.css";
 
 function OrgRoleSelectionPage() {
     const navigate = useNavigate();
-    const { user, warehouseRoles, completeSetup } = useAuth();
+    const { user, warehouseRoles, completeSetup, logout } = useAuth();
     
     const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
     const [selectedRoleId, setSelectedRoleId] = useState("");
@@ -18,6 +18,49 @@ function OrgRoleSelectionPage() {
     const [fetchedRoles, setFetchedRoles] = useState([]);
     const [rolesLoading, setRolesLoading] = useState(false);
     const [roleErrorText, setRoleErrorText] = useState("");
+
+    const uniqueWarehouses = React.useMemo(() => {
+        const list = [];
+        const warehouseMap = new Map();
+        
+        warehouseRoles.forEach(item => {
+            if (!item || !item.warehouseId) return;
+            if (!warehouseMap.has(item.warehouseId)) {
+                const whObj = {
+                    warehouseId: item.warehouseId,
+                    warehouseName: item.warehouseName || "Warehouse",
+                    roles: []
+                };
+                warehouseMap.set(item.warehouseId, whObj);
+                list.push(whObj);
+            }
+            
+            const whObj = warehouseMap.get(item.warehouseId);
+            
+            if (Array.isArray(item.roles)) {
+                item.roles.forEach(r => {
+                    if (r && r.roleId) {
+                        whObj.roles.push({
+                            roleId: r.roleId,
+                            roleName: r.roleName || r.roleId
+                        });
+                    }
+                });
+            } else if (item.roleId) {
+                whObj.roles.push({
+                    roleId: item.roleId,
+                    roleName: item.roleName || item.roleId
+                });
+            }
+        });
+        return list;
+    }, [warehouseRoles]);
+
+    const totalUniqueRoles = React.useMemo(() => {
+        return new Set(
+            uniqueWarehouses.flatMap(wh => wh.roles.map(r => r.roleId))
+        ).size;
+    }, [uniqueWarehouses]);
 
     useEffect(() => {
         if (!user) {
@@ -43,9 +86,9 @@ function OrgRoleSelectionPage() {
                 if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
                     setFetchedRoles(res.message.roles);
                 } else {
-                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
-                    if (fallback.length > 0) {
-                        setFetchedRoles(fallback);
+                    const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+                    if (whMatch && whMatch.roles.length > 0) {
+                        setFetchedRoles(whMatch.roles);
                     } else {
                         setFetchedRoles([]);
                         setRoleErrorText("No roles available");
@@ -54,9 +97,9 @@ function OrgRoleSelectionPage() {
             })
             .catch(err => {
                 console.error("Failed to load roles:", err);
-                const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
-                if (fallback.length > 0) {
-                    setFetchedRoles(fallback);
+                const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+                if (whMatch && whMatch.roles.length > 0) {
+                    setFetchedRoles(whMatch.roles);
                 } else {
                     setFetchedRoles([]);
                     setRoleErrorText("No roles available");
@@ -65,15 +108,9 @@ function OrgRoleSelectionPage() {
             .finally(() => {
                 setRolesLoading(false);
             });
-    }, [selectedWarehouseId]);
+    }, [selectedWarehouseId, uniqueWarehouses]);
 
     if (!user) return null;
-
-    const uniqueWarehouses = [
-        ...new Map(warehouseRoles.map(item => [item.warehouseId, item])).values()
-    ];
-
-    const totalUniqueRoles = new Set(warehouseRoles.map(r => r.roleId)).size;
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
         value: wh.warehouseId,
@@ -81,11 +118,28 @@ function OrgRoleSelectionPage() {
         rawObj: wh
     }));
 
-    const userRoleIds = warehouseRoles
-        .filter(r => r.warehouseId === selectedWarehouseId)
-        .map(r => r.roleId);
+    const selectedWhObj = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+    const userRoleIds = selectedWhObj ? selectedWhObj.roles.map(r => r.roleId) : [];
 
-    const filteredRoles = fetchedRoles.filter(role => userRoleIds.includes(role.roleId));
+    const filteredRoles = React.useMemo(() => {
+        const map = new Map();
+        
+        // 1. Add roles from user profile first
+        if (selectedWhObj) {
+            selectedWhObj.roles.forEach(role => {
+                map.set(role.roleId, role);
+            });
+        }
+        
+        // 2. Add roles from API fetchedRoles if they match user's role IDs
+        fetchedRoles.forEach(role => {
+            if (userRoleIds.includes(role.roleId)) {
+                map.set(role.roleId, role);
+            }
+        });
+        
+        return Array.from(map.values());
+    }, [selectedWhObj, fetchedRoles, userRoleIds]);
 
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,
@@ -152,6 +206,12 @@ function OrgRoleSelectionPage() {
 
     return (
         <div className="setup-page-container">
+
+            {/* Logout Button */}
+            <button className="setup-logout-btn" onClick={logout}>
+                <LogOut size={16} />
+                <span>Logout</span>
+            </button>
 
             {/* Header */}
             <div className="setup-page-header">

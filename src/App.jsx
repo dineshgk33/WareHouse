@@ -234,7 +234,7 @@ function App() {
                                 </Route>
 
                                 {/* Settings */}
-                                <Route element={<ProtectedRoute pageId="SETTINGS" />}>
+                                <Route element={<ProtectedRoute />}>
                                     <Route path="settings" element={<Settings />} />
                                 </Route>
                             </Route>

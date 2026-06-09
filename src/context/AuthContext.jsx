@@ -237,6 +237,20 @@ export function AuthProvider({ children }) {
         setAccessiblePages([]);
     }, []);
 
+    const updatePassword = useCallback((newPassword) => {
+        setUserPassword(newPassword);
+        sessionStorage.setItem("userPassword", newPassword);
+    }, []);
+
+    const updateUser = useCallback((updatedFields) => {
+        setUser((prev) => {
+            if (!prev) return prev;
+            const updated = { ...prev, ...updatedFields };
+            localStorage.setItem("authUser", JSON.stringify(updated));
+            return updated;
+        });
+    }, []);
+
     const value = {
         isAuthenticated,
         user,
@@ -254,6 +268,8 @@ export function AuthProvider({ children }) {
         userName: user ? `${user.firstName} ${user.lastName}` : "",
         userRole: selectedRoleName,
         userPassword,
+        updatePassword,
+        updateUser,
         accessiblePages,
         permissionsLoading,
         canView,
