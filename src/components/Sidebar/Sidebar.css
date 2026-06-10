@@ -595,3 +595,40 @@
     color: #020079 !important;
   }
 }
+
+/* ─── Premium Wix Studio Style Cascading Sub-menus for Catalogue ───────── */
+.flyout-item-container.has-submenu {
+  position: relative;
+}
+
+.flyout-submenu-indicator {
+  color: var(--text-muted);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.flyout-link:hover .flyout-submenu-indicator,
+.flyout-link.active .flyout-submenu-indicator {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+
+/* Secondary Cascading Popup Panel Card */
+.flyout-secondary-panel {
+  box-sizing: border-box;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: #ffffff !important;
+  border-radius: 18px !important;
+  padding: 16px !important;
+  pointer-events: auto !important;
+}
+
+/* Mobile Nested Submenus Accordion Styling */
+.mobile-submenu-nested-list {
+  list-style: none;
+  padding-left: 16px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.2);
+  margin-left: 14px;
+  margin-top: 2px;
+}
+

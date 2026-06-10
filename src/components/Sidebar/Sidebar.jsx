@@ -103,6 +103,7 @@ const getIconForModule = (moduleName) => {
         "Manage Preview": Eye,
         "Orders": ShoppingBag,
         "Inventory": Database,
+        "Catalogue": Database,
         "Catalog": BookOpen,
         "Darkhouses": Warehouse,
         "Customers": UserCircle,
@@ -152,17 +153,32 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
         const groups = {};
         allowedPages.forEach(page => {
-            const mod = page.moduleName || "General";
+            let mod = page.moduleName || "General";
+            let pName = page.pageName;
+
+            // Map Inventory and Darkhouses to Catalogue module
+            if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
+                mod = "Catalogue";
+            }
+
+            // Map page labels to Catalogue names
+            if (page.pageId === "WAREHOUSE_INVENTORY") {
+                pName = "Warehouse Catalogue";
+            } else if (page.pageId === "DARKHOUSE_INVENTORY") {
+                pName = "Darkhouse Catalogue";
+            }
+
             if (!groups[mod]) {
                 groups[mod] = [];
             }
-            groups[mod].push(page);
+            groups[mod].push({ ...page, pageName: pName });
         });
 
         const MODULE_ORDER = [
             "Dashboard",
             "Manage Preview",
             "Catalog",
+            "Catalogue",
             "Inventory",
             "Orders",
             "Darkhouses",
@@ -196,10 +212,23 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 const singlePage = modulePages[0];
                 item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
             } else {
-                item.submenu = modulePages.map(page => ({
-                    label: page.pageName,
-                    path: getRouteForPage(page.pageId, page.pageName)
-                }));
+                item.submenu = modulePages.map(page => {
+                    const subItem = {
+                        label: page.pageName,
+                        path: getRouteForPage(page.pageId, page.pageName)
+                    };
+
+                    if (page.pageName === "Darkhouse Catalogue" || page.pageName === "Darkhouse Inventory") {
+                        subItem.submenu = [
+                            { label: "Products", path: "/inventory?tab=darkhouse&sub=products" },
+                            { label: "Inventory", path: "/inventory?tab=darkhouse&sub=inventory" },
+                            { label: "Categories", path: "/inventory?tab=darkhouse&sub=categories" },
+                            { label: "Backend stock request", path: "/inventory?tab=darkhouse&sub=backend-stock-request" },
+                            { label: "Find product to sell", path: "/inventory?tab=darkhouse&sub=find-product-to-sell" }
+                        ];
+                    }
+                    return subItem;
+                });
             }
 
             if (BOTTOM_MODULES.includes(moduleName)) {
@@ -387,6 +416,74 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     }}>
                         {item.submenu.map((sub, idx) => {
                             const currentPath = location.pathname + location.search;
+
+                            if (sub.label === "Darkhouse Catalogue") {
+                                const darkhouseSubs = [
+                                    { label: "Products", path: "/inventory?tab=darkhouse&sub=products" },
+                                    { label: "Inventory", path: "/inventory?tab=darkhouse&sub=inventory" },
+                                    { label: "Categories", path: "/inventory?tab=darkhouse&sub=categories" },
+                                    { label: "Backend stock request", path: "/inventory?tab=darkhouse&sub=backend-stock-request" },
+                                    { label: "find product to sell", path: "/inventory?tab=darkhouse&sub=find-product-to-sell" }
+                                ];
+
+                                return (
+                                    <li key={idx} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                        <div
+                                            className="nav-link"
+                                            style={{
+                                                padding: "8px 12px",
+                                                fontSize: "13px",
+                                                minHeight: "36px",
+                                                borderRadius: "10px",
+                                                color: "rgba(255, 255, 255, 0.85)",
+                                                fontWeight: "600",
+                                                cursor: "default"
+                                            }}
+                                        >
+                                            <span className="mobile-submenu-bullet" style={{
+                                                width: "5px",
+                                                height: "5px",
+                                                borderRadius: "50%",
+                                                backgroundColor: "rgba(255, 255, 255, 0.5)",
+                                                marginRight: "8px",
+                                                flexShrink: 0
+                                            }}></span>
+                                            {sub.label}
+                                        </div>
+                                        <ul className="mobile-submenu-nested-list" style={{
+                                            listStyle: "none",
+                                            paddingLeft: "20px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "4px"
+                                        }}>
+                                            {darkhouseSubs.map((dSub, dIdx) => {
+                                                const isDSubActive = currentPath === dSub.path;
+                                                return (
+                                                    <li key={dIdx}>
+                                                        <Link
+                                                            to={dSub.path}
+                                                            className={`nav-link ${isDSubActive ? "active" : ""}`}
+                                                            onClick={handleSubmenuItemClick}
+                                                            style={{
+                                                                padding: "6px 12px",
+                                                                fontSize: "12px",
+                                                                minHeight: "32px",
+                                                                borderRadius: "8px",
+                                                                backgroundColor: isDSubActive ? "#ffffff" : "transparent",
+                                                                color: isDSubActive ? "#020079" : "rgba(255, 255, 255, 0.75)"
+                                                            }}
+                                                        >
+                                                            {dSub.label}
+                                                        </Link>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </li>
+                                );
+                            }
+
                             const isSubActive = sub.path.includes("?") 
                                 ? currentPath === sub.path 
                                 : location.pathname === sub.path;
@@ -489,7 +586,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             </div>
 
             {/* Wix Studio-Style Floating Submenu flyout */}
-            {!isMobile && hoveredMenu && hoveredMenu.id === "inventory" ? (
+            {!isMobile && hoveredMenu && (hoveredMenu.id === "inventory" || hoveredMenu.id === "catalogue") ? (
                 <InventoryFlyout
                     menu={hoveredMenu}
                     position={flyoutPosition}

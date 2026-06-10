@@ -9,6 +9,8 @@ import {
     Filter,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
+    ChevronUp,
     ArrowUpDown,
     XCircle,
     Store,
@@ -28,11 +30,451 @@ import { getInventoryStatusClass } from "../../utils/statusUtils";
 import { useAuth } from "../../context/AuthContext";
 import "./Inventory.css";
 
+const MOCK_GLOBAL_PRODUCTS = [
+    { id: "GP-01", sku: "FRT-MNG-ALP", name: "Fresh Alphonso Mangoes", category: "Fruits & Vegetables", price: 150, stock: 120 },
+    { id: "GP-02", sku: "DRY-MLK-TAZ", name: "Amul Taaza Toned Milk", category: "Dairy & Bread", price: 30, stock: 350 },
+    { id: "GP-03", sku: "SNK-LYS-CLT", name: "Lay's Classic Salted Chips", category: "Munchies & Snacks", price: 20, stock: 450 },
+    { id: "GP-04", sku: "DRK-COK-ZER", name: "Coca-Cola Zero Sugar", category: "Cold Drinks & Juices", price: 40, stock: 280 },
+    { id: "GP-05", sku: "FZN-MCN-FRS", name: "McCain French Fries", category: "Instant & Frozen Food", price: 110, stock: 15 },
+    { id: "GP-06", sku: "PSC-DTL-HDW", name: "Dettol Liquid Handwash", category: "Personal Care", price: 99, stock: 0 },
+    { id: "GP-07", sku: "HSE-SRF-EXC", name: "Surf Excel Easy Wash", category: "Household Essentials", price: 140, stock: 180 },
+    { id: "GP-08", sku: "BBY-JHN-POW", name: "Johnson's Baby Powder", category: "Baby Care", price: 190, stock: 8 },
+    { id: "GP-09", sku: "FRT-APP-RDL", name: "Red Delicious Apples", category: "Fruits & Vegetables", price: 180, stock: 95 },
+    { id: "GP-10", sku: "DRY-BRD-BRN", name: "Britannia Brown Bread", category: "Dairy & Bread", price: 45, stock: 110 },
+];
+
+function FindProductToSell({ darkhouseStock, setDarkhouseStock, currentDhSelect, setDhSelect, darkhouses }) {
+    const [selectedDh, setSelectedDh] = useState(
+        currentDhSelect === "All" || !currentDhSelect
+            ? (darkhouses.find(d => d !== "All") || "HAATZA Koramangala Hub")
+            : currentDhSelect
+    );
+
+    const [tempLocalProducts, setTempLocalProducts] = useState([]);
+    const [tempGlobalProducts, setTempGlobalProducts] = useState([]);
+
+    const [globalSearch, setGlobalSearch] = useState("");
+    const [localSearch, setLocalSearch] = useState("");
+
+    const [globalSelectedSkus, setGlobalSelectedSkus] = useState(new Set());
+    const [localSelectedSkus, setLocalSelectedSkus] = useState(new Set());
+
+    const [toast, setToast] = useState({ show: false, message: "" });
+
+    // Re-initialize lists when selected darkhouse changes or database stock updates
+    useEffect(() => {
+        const localSkus = new Set(
+            darkhouseStock
+                .filter(item => item.darkhouse === selectedDh)
+                .map(item => item.sku)
+        );
+
+        const local = MOCK_GLOBAL_PRODUCTS.filter(p => localSkus.has(p.sku));
+        const global = MOCK_GLOBAL_PRODUCTS.filter(p => !localSkus.has(p.sku));
+
+        setTempLocalProducts(local);
+        setTempGlobalProducts(global);
+        setGlobalSelectedSkus(new Set());
+        setLocalSelectedSkus(new Set());
+    }, [selectedDh]);
+
+    const handleMoveRight = () => {
+        const selectedItems = tempGlobalProducts.filter(p => globalSelectedSkus.has(p.sku));
+        if (selectedItems.length === 0) return;
+
+        setTempLocalProducts(prev => [...prev, ...selectedItems]);
+        setTempGlobalProducts(prev => prev.filter(p => !globalSelectedSkus.has(p.sku)));
+        setGlobalSelectedSkus(new Set());
+    };
+
+    const handleMoveLeft = () => {
+        const selectedItems = tempLocalProducts.filter(p => localSelectedSkus.has(p.sku));
+        if (selectedItems.length === 0) return;
+
+        setTempGlobalProducts(prev => [...prev, ...selectedItems]);
+        setTempLocalProducts(prev => prev.filter(p => !localSelectedSkus.has(p.sku)));
+        setLocalSelectedSkus(new Set());
+    };
+
+    const handleSave = () => {
+        const existingStockMap = new Map();
+        darkhouseStock
+            .filter(item => item.darkhouse === selectedDh)
+            .forEach(item => {
+                existingStockMap.set(item.sku, item);
+            });
+
+        const updatedLocalStock = tempLocalProducts.map(p => {
+            if (existingStockMap.has(p.sku)) {
+                return existingStockMap.get(p.sku);
+            } else {
+                return {
+                    id: `DHS-${Math.floor(1000 + Math.random() * 9000)}`,
+                    darkhouse: selectedDh,
+                    product: p.name,
+                    sku: p.sku,
+                    available: 0,
+                    reserved: 0,
+                    reorder: 10,
+                    status: "Out of Stock"
+                };
+            }
+        });
+
+        setDarkhouseStock(prev => {
+            const otherStock = prev.filter(item => item.darkhouse !== selectedDh);
+            return [...otherStock, ...updatedLocalStock];
+        });
+
+        setToast({ show: true, message: `Successfully saved catalogue for ${selectedDh}!` });
+        setTimeout(() => setToast({ show: false, message: "" }), 3000);
+    };
+
+    const handleDiscard = () => {
+        const localSkus = new Set(
+            darkhouseStock
+                .filter(item => item.darkhouse === selectedDh)
+                .map(item => item.sku)
+        );
+
+        const local = MOCK_GLOBAL_PRODUCTS.filter(p => localSkus.has(p.sku));
+        const global = MOCK_GLOBAL_PRODUCTS.filter(p => !localSkus.has(p.sku));
+
+        setTempLocalProducts(local);
+        setTempGlobalProducts(global);
+        setGlobalSelectedSkus(new Set());
+        setLocalSelectedSkus(new Set());
+
+        setToast({ show: true, message: "Discarded temporary changes." });
+        setTimeout(() => setToast({ show: false, message: "" }), 2000);
+    };
+
+    const filteredGlobal = tempGlobalProducts.filter(p =>
+        p.name.toLowerCase().includes(globalSearch.toLowerCase()) ||
+        p.sku.toLowerCase().includes(globalSearch.toLowerCase()) ||
+        p.category.toLowerCase().includes(globalSearch.toLowerCase())
+    );
+
+    const filteredLocal = tempLocalProducts.filter(p =>
+        p.name.toLowerCase().includes(localSearch.toLowerCase()) ||
+        p.sku.toLowerCase().includes(localSearch.toLowerCase()) ||
+        p.category.toLowerCase().includes(localSearch.toLowerCase())
+    );
+
+    const toggleGlobalSelected = (sku) => {
+        setGlobalSelectedSkus(prev => {
+            const next = new Set(prev);
+            if (next.has(sku)) next.delete(sku);
+            else next.add(sku);
+            return next;
+        });
+    };
+
+    const toggleLocalSelected = (sku) => {
+        setLocalSelectedSkus(prev => {
+            const next = new Set(prev);
+            if (next.has(sku)) next.delete(sku);
+            else next.add(sku);
+            return next;
+        });
+    };
+
+    const toggleAllGlobal = () => {
+        const allFilteredSkus = filteredGlobal.map(p => p.sku);
+        const isAllSelected = allFilteredSkus.length > 0 && allFilteredSkus.every(sku => globalSelectedSkus.has(sku));
+
+        setGlobalSelectedSkus(prev => {
+            const next = new Set(prev);
+            if (isAllSelected) {
+                allFilteredSkus.forEach(sku => next.delete(sku));
+            } else {
+                allFilteredSkus.forEach(sku => next.add(sku));
+            }
+            return next;
+        });
+    };
+
+    const toggleAllLocal = () => {
+        const allFilteredSkus = filteredLocal.map(p => p.sku);
+        const isAllSelected = allFilteredSkus.length > 0 && allFilteredSkus.every(sku => localSelectedSkus.has(sku));
+
+        setLocalSelectedSkus(prev => {
+            const next = new Set(prev);
+            if (isAllSelected) {
+                allFilteredSkus.forEach(sku => next.delete(sku));
+            } else {
+                allFilteredSkus.forEach(sku => next.add(sku));
+            }
+            return next;
+        });
+    };
+
+    const EmptyState = ({ message, type }) => (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
+                {type === "global" ? <Package size={28} /> : <Store size={28} />}
+            </div>
+            <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
+            <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
+                {type === "global"
+                    ? "All global items are already added or search filters returned no matches."
+                    : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
+            </p>
+        </div>
+    );
+
+    return (
+        <div className="p-1 sm:p-4 bg-slate-50/50 rounded-2xl">
+            {/* Darkhouse selection panel */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <div>
+                    <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 m-0">
+                        <Store className="text-[#020079]" size={18} />
+                        <span>Configure Catalogue for Darkhouse Hub</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 m-0 mt-1">Select a destination darkhouse hub to manage its sellable catalog items</p>
+                </div>
+                <select
+                    value={selectedDh}
+                    onChange={(e) => {
+                        setSelectedDh(e.target.value);
+                        setDhSelect(e.target.value); // Sync with parent filter
+                    }}
+                    className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#020079]/20 focus:border-[#020079] cursor-pointer shadow-sm min-w-[250px]"
+                >
+                    {darkhouses.filter(d => d !== "All").map(d => (
+                        <option key={d} value={d}>{d}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Transfer Lists Container */}
+            <div className="flex flex-col lg:flex-row items-stretch gap-6">
+                {/* Left Card: Global Products */}
+                <div className="flex-1 bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col min-h-[480px]">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 m-0">Global Products</h3>
+                            <p className="text-xs text-slate-400 m-0 mt-0.5">Master product catalogue</p>
+                        </div>
+                        <span className="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-1 rounded-full">
+                            {filteredGlobal.length} products
+                        </span>
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative mb-3">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                        <input
+                            type="text"
+                            placeholder="Search global products..."
+                            value={globalSearch}
+                            onChange={(e) => setGlobalSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#020079]/20 focus:border-[#020079] transition-all text-sm"
+                        />
+                    </div>
+
+                    {/* Scrollable list box */}
+                    <div className="flex-1 overflow-y-auto max-h-[380px] min-h-[250px] border border-slate-100 rounded-xl bg-slate-50/20">
+                        {filteredGlobal.length === 0 ? (
+                            <EmptyState message="No global products found" type="global" />
+                        ) : (
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
+                                        <th className="p-3 text-left w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={filteredGlobal.length > 0 && filteredGlobal.every(p => globalSelectedSkus.has(p.sku))}
+                                                onChange={toggleAllGlobal}
+                                                className="w-4 h-4 rounded text-[#020079] border-slate-300 focus:ring-[#020079] cursor-pointer"
+                                            />
+                                        </th>
+                                        <th className="p-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">SKU</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                                        <th className="p-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Price / Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredGlobal.map((p) => {
+                                        const isSelected = globalSelectedSkus.has(p.sku);
+                                        return (
+                                            <tr
+                                                key={p.sku}
+                                                onClick={() => toggleGlobalSelected(p.sku)}
+                                                className={`border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer ${isSelected ? "bg-slate-50" : ""}`}
+                                            >
+                                                <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleGlobalSelected(p.sku)}
+                                                        className="w-4 h-4 rounded text-[#020079] border-slate-300 focus:ring-[#020079] cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="p-3 text-xs font-mono font-semibold text-slate-500">{p.sku}</td>
+                                                <td className="p-3">
+                                                    <div className="text-sm font-semibold text-slate-700">{p.name}</div>
+                                                    <div className="text-xs text-slate-400 font-medium">{p.category}</div>
+                                                </td>
+                                                <td className="p-3 text-right">
+                                                    <div className="text-xs font-semibold text-slate-700">₹{p.price}</div>
+                                                    <div className={`text-[10px] font-medium ${p.stock === 0 ? "text-red-500" : "text-slate-400"}`}>
+                                                        {p.stock === 0 ? "Out of Stock" : `${p.stock} units`}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+
+                {/* Arrow Action Buttons */}
+                <div className="flex lg:flex-col items-center justify-center gap-4 py-4 lg:py-0 px-2">
+                    <button
+                        onClick={handleMoveRight}
+                        disabled={globalSelectedSkus.size === 0}
+                        title="Move Selected to Local Catalogue"
+                        className={`p-3.5 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 border ${
+                            globalSelectedSkus.size > 0
+                                ? "bg-[#020079] text-white hover:bg-[#020079]/90 hover:scale-105 active:scale-95 border-transparent cursor-pointer"
+                                : "bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed"
+                        }`}
+                    >
+                        <ChevronRight size={20} className="hidden lg:block font-bold" />
+                        <ChevronDown size={20} className="block lg:hidden font-bold" />
+                    </button>
+                    <button
+                        onClick={handleMoveLeft}
+                        disabled={localSelectedSkus.size === 0}
+                        title="Remove Selected from Local Catalogue"
+                        className={`p-3.5 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 border ${
+                            localSelectedSkus.size > 0
+                                ? "bg-[#020079] text-white hover:bg-[#020079]/90 hover:scale-105 active:scale-95 border-transparent cursor-pointer"
+                                : "bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed"
+                        }`}
+                    >
+                        <ChevronLeft size={20} className="hidden lg:block font-bold" />
+                        <ChevronUp size={20} className="block lg:hidden font-bold" />
+                    </button>
+                </div>
+
+                {/* Right Card: Local Products */}
+                <div className="flex-1 bg-white border border-slate-100 shadow-sm rounded-2xl p-5 flex flex-col min-h-[480px]">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 m-0">Local Products</h3>
+                            <p className="text-xs text-slate-400 m-0 mt-0.5">Assigned to local store</p>
+                        </div>
+                        <span className="bg-[#020079]/10 text-[#020079] text-xs font-semibold px-2.5 py-1 rounded-full">
+                            {filteredLocal.length} products
+                        </span>
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative mb-3">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                        <input
+                            type="text"
+                            placeholder="Search local products..."
+                            value={localSearch}
+                            onChange={(e) => setLocalSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#020079]/20 focus:border-[#020079] transition-all text-sm"
+                        />
+                    </div>
+
+                    {/* Scrollable list box */}
+                    <div className="flex-1 overflow-y-auto max-h-[380px] min-h-[250px] border border-slate-100 rounded-xl bg-slate-50/20">
+                        {filteredLocal.length === 0 ? (
+                            <EmptyState message="No local products added" type="local" />
+                        ) : (
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
+                                        <th className="p-3 text-left w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={filteredLocal.length > 0 && filteredLocal.every(p => localSelectedSkus.has(p.sku))}
+                                                onChange={toggleAllLocal}
+                                                className="w-4 h-4 rounded text-[#020079] border-slate-300 focus:ring-[#020079] cursor-pointer"
+                                            />
+                                        </th>
+                                        <th className="p-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">SKU</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                                        <th className="p-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredLocal.map((p) => {
+                                        const isSelected = localSelectedSkus.has(p.sku);
+                                        return (
+                                            <tr
+                                                key={p.sku}
+                                                onClick={() => toggleLocalSelected(p.sku)}
+                                                className={`border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer ${isSelected ? "bg-slate-50" : ""}`}
+                                            >
+                                                <td className="p-3 text-center" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleLocalSelected(p.sku)}
+                                                        className="w-4 h-4 rounded text-[#020079] border-slate-300 focus:ring-[#020079] cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="p-3 text-xs font-mono font-semibold text-slate-500">{p.sku}</td>
+                                                <td className="p-3">
+                                                    <div className="text-sm font-semibold text-slate-700">{p.name}</div>
+                                                    <div className="text-xs text-slate-400 font-medium">{p.category}</div>
+                                                </td>
+                                                <td className="p-3 text-right">
+                                                    <div className="text-xs font-semibold text-slate-700">₹{p.price}</div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex justify-center items-center gap-4 mt-8 pb-4">
+                <button
+                    onClick={handleDiscard}
+                    className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-all cursor-pointer text-sm shadow-sm"
+                >
+                    Discard Changes
+                </button>
+                <button
+                    onClick={handleSave}
+                    className="px-8 py-2.5 bg-[#020079] hover:bg-[#020079]/95 text-white font-semibold rounded-xl shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer text-sm"
+                >
+                    Save Catalogue Changes
+                </button>
+            </div>
+
+            {/* Success Toast */}
+            {toast.show && (
+                <div className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 animate-slide-in z-50">
+                    <CheckCircle className="text-emerald-400" size={18} />
+                    <span className="text-sm font-medium">{toast.message}</span>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const ROWS_PER_PAGE = 6;
 
 function InventoryPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { canCreate, canEdit, canApprove, canView } = useAuth();
+    const activeSubTab = searchParams.get("sub") || "products";
 
     // Determine the active tab: respect URL param first, then fall back based on permissions
     const getDefaultTab = () => {
@@ -355,13 +797,17 @@ function InventoryPage() {
             <div className="inv-header">
                 <div className="inv-header__title-block">
                     <h1 className="inv-header__title">
-                        {activeTab === "warehouse" && "Warehouse Inventory"}
-                        {activeTab === "darkhouse" && "Darkhouse Inventory"}
+                        {activeTab === "warehouse" && "Warehouse Catalogue"}
+                        {activeTab === "darkhouse" && (activeSubTab === "find-product-to-sell" ? "Find Product to Sell" : "Darkhouse Catalogue")}
                         {activeTab === "transfers" && "Stock Transfers Control"}
                     </h1>
                     <p className="inv-header__subtitle">
                         {activeTab === "warehouse" && "Monitor, edit, and adjust products inside your central warehouse shelves."}
-                        {activeTab === "darkhouse" && "Manage quick-commerce fronting darkhouses available and reserved inventory pools."}
+                        {activeTab === "darkhouse" && (
+                            activeSubTab === "find-product-to-sell"
+                                ? "Link global warehouse inventory pools to local darkhouse catalogue offerings."
+                                : "Manage quick-commerce fronting darkhouses available and reserved catalogue pools."
+                        )}
                         {activeTab === "transfers" && "Coordinate central stock allocations and dispatcher hub-to-hub deliveries."}
                     </p>
                 </div>
@@ -372,10 +818,12 @@ function InventoryPage() {
                             <span>New Stock Transfer</span>
                         </button>
                     )}
-                    <button className="inv-export-btn" onClick={handleExportCSV}>
-                        <Download size={15} />
-                        <span>Export CSV</span>
-                    </button>
+                    {activeSubTab !== "find-product-to-sell" && (
+                        <button className="inv-export-btn" onClick={handleExportCSV}>
+                            <Download size={15} />
+                            <span>Export CSV</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -509,7 +957,7 @@ function InventoryPage() {
                                 className={`inv-tab ${activeTab === "warehouse" ? "inv-tab--active" : ""}`}
                                 onClick={() => handleTabClick("warehouse")}
                             >
-                                Warehouse Inventory
+                                Warehouse Catalogue
                             </button>
                         )}
                         {canView("DARKHOUSE_INVENTORY") && (
@@ -519,7 +967,7 @@ function InventoryPage() {
                                 className={`inv-tab ${activeTab === "darkhouse" ? "inv-tab--active" : ""}`}
                                 onClick={() => handleTabClick("darkhouse")}
                             >
-                                Darkhouse Inventory
+                                Darkhouse Catalogue
                             </button>
                         )}
                         {canView("STOCK_TRANSFERS") && (
@@ -534,7 +982,51 @@ function InventoryPage() {
                         )}
                     </div>
 
-                    <div className="inv-toolbar__actions">
+                    <div className="inv-toolbar__actions" style={{ flexWrap: "wrap", gap: "12px", width: "100%" }}>
+                        {activeTab === "darkhouse" && (
+                            <div className="dkh-subtabs-bar" style={{
+                                display: "flex",
+                                gap: "8px",
+                                padding: "4px 0 12px 0",
+                                width: "100%",
+                                overflowX: "auto",
+                                borderBottom: "1px solid rgba(0, 0, 0, 0.05)"
+                            }}>
+                                {["products", "inventory", "categories", "backend-stock-request", "find-product-to-sell"].map(subTab => {
+                                    const labels = {
+                                        "products": "Products",
+                                        "inventory": "Inventory",
+                                        "categories": "Categories",
+                                        "backend-stock-request": "Backend stock request",
+                                        "find-product-to-sell": "find product to sell"
+                                    };
+                                    const isSubActive = activeSubTab === subTab;
+                                    return (
+                                        <button
+                                            key={subTab}
+                                            role="tab"
+                                            aria-selected={isSubActive}
+                                            onClick={() => setSearchParams({ tab: "darkhouse", sub: subTab })}
+                                            style={{
+                                                padding: "6px 16px",
+                                                borderRadius: "20px",
+                                                border: "none",
+                                                fontSize: "13px",
+                                                fontWeight: isSubActive ? "600" : "500",
+                                                backgroundColor: isSubActive ? "#020079" : "#F1F5F9",
+                                                color: isSubActive ? "#ffffff" : "#475569",
+                                                cursor: "pointer",
+                                                transition: "all 0.2s",
+                                                whiteSpace: "nowrap"
+                                            }}
+                                        >
+                                            {labels[subTab]}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {activeTab === "warehouse" && (
                             <>
                                 <div className="inv-search-wrap">
@@ -570,38 +1062,63 @@ function InventoryPage() {
                             </>
                         )}
 
-                        {activeTab === "darkhouse" && (
+                        {activeTab === "darkhouse" && activeSubTab !== "find-product-to-sell" && (
                             <>
                                 <div className="inv-search-wrap">
                                     <Search size={14} className="inv-search-icon" />
                                     <input
                                         type="text"
                                         className="inv-search"
-                                        placeholder="Search by SKU or item..."
+                                        placeholder={
+                                            activeSubTab === "categories" ? "Search categories..." :
+                                            activeSubTab === "backend-stock-request" ? "Search requests..." :
+                                            "Search by SKU or item..."
+                                        }
                                         value={dhSearch}
                                         onChange={(e) => { setDhSearch(e.target.value); setDhPage(1); }}
                                     />
                                 </div>
-                                <select
-                                    className="inv-toolbar-select"
-                                    value={dhSelect}
-                                    onChange={(e) => { setDhSelect(e.target.value); setDhPage(1); }}
-                                >
-                                    <option value="All">All Darkhouses</option>
-                                    {darkhouses.filter(d => d !== "All").map(d => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    className="inv-toolbar-select"
-                                    value={dhStatusFilter}
-                                    onChange={(e) => { setDhStatusFilter(e.target.value); setDhPage(1); }}
-                                >
-                                    <option value="All">All stock status</option>
-                                    <option value="In Stock">In Stock</option>
-                                    <option value="Low Stock">Low Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
-                                </select>
+                                {activeSubTab !== "categories" && activeSubTab !== "backend-stock-request" && (
+                                    <select
+                                        className="inv-toolbar-select"
+                                        value={dhSelect}
+                                        onChange={(e) => { setDhSelect(e.target.value); setDhPage(1); }}
+                                    >
+                                        <option value="All">All Darkhouses</option>
+                                        {darkhouses.filter(d => d !== "All").map(d => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </select>
+                                )}
+                                {activeSubTab === "inventory" && (
+                                    <select
+                                        className="inv-toolbar-select"
+                                        value={dhStatusFilter}
+                                        onChange={(e) => { setDhStatusFilter(e.target.value); setDhPage(1); }}
+                                    >
+                                        <option value="All">All stock status</option>
+                                        <option value="In Stock">In Stock</option>
+                                        <option value="Low Stock">Low Stock</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                    </select>
+                                )}
+                                {activeSubTab === "backend-stock-request" && (
+                                    <button 
+                                        className="inv-action-btn-primary" 
+                                        onClick={openNewTransfer}
+                                        style={{
+                                            padding: "6px 12px",
+                                            fontSize: "13px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "6px",
+                                            marginLeft: "8px"
+                                        }}
+                                    >
+                                        <Plus size={14} />
+                                        <span>Request Stock</span>
+                                    </button>
+                                )}
                             </>
                         )}
 
@@ -633,152 +1150,226 @@ function InventoryPage() {
                 </div>
 
                 {/* Data Grid Area */}
-                <div className="inv-table-responsive">
-                    <table className="inv-table">
-                        {activeTab === "warehouse" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>SKU</th>
-                                        <th>Product Name</th>
-                                        <th>Category</th>
-                                        <th>Warehouse Location</th>
-                                        <th>In Stock</th>
-                                        <th>Reorder Level</th>
-                                        <th>Status</th>
-                                        <th>Last Updated</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedWhStock.length === 0 ? (
+                {activeTab === "darkhouse" && activeSubTab === "find-product-to-sell" ? (
+                    <FindProductToSell
+                        darkhouseStock={darkhouseStock}
+                        setDarkhouseStock={setDarkhouseStock}
+                        currentDhSelect={dhSelect}
+                        setDhSelect={setDhSelect}
+                        darkhouses={darkhouses}
+                    />
+                ) : (
+                    <div className="inv-table-responsive">
+                        <table className="inv-table">
+                            {activeTab === "warehouse" && (
+                                <>
+                                    <thead>
                                         <tr>
-                                            <td colSpan={9} className="inv-empty">
-                                                <Package size={32} className="inv-empty__icon" />
-                                                <p>No warehouse items found matching filters.</p>
-                                            </td>
+                                            <th>SKU</th>
+                                            <th>Product Name</th>
+                                            <th>Category</th>
+                                            <th>Warehouse Location</th>
+                                            <th>In Stock</th>
+                                            <th>Reorder Level</th>
+                                            <th>Status</th>
+                                            <th>Last Updated</th>
+                                            <th style={{ textAlign: "right" }}>Actions</th>
                                         </tr>
-                                    ) : (
-                                        paginatedWhStock.map(item => (
-                                            <tr key={item.sku} className="inventory-row-hover">
-                                                <td className="inv-td--sku">{item.sku}</td>
-                                                <td className="inv-td--name">{item.product}</td>
-                                                <td><span className="inv-category-badge">{item.category}</span></td>
-                                                <td className="inv-td--warehouse">{item.location}</td>
-                                                <td>
-                                                    <span className={`inv-stock-number ${item.stock === 0 ? "out" : item.stock <= item.reorderPoint ? "low" : ""}`}>
-                                                        {item.stock}
-                                                    </span>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedWhStock.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={9} className="inv-empty">
+                                                    <Package size={32} className="inv-empty__icon" />
+                                                    <p>No warehouse items found matching filters.</p>
                                                 </td>
-                                                <td className="inv-td--reorder">{item.reorderPoint}</td>
-                                                <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                <td className="inv-td--date">{item.lastUpdated}</td>
-                                                <td>
-                                                    <div className="inv-actions-cell">
-                                                        <button className="inv-row-action-btn" title="View details" onClick={() => openWhView(item)}>
-                                                            <Eye size={13} />
-                                                        </button>
-                                                        {canEdit("WAREHOUSE_INVENTORY") && (
-                                                            <>
-                                                                <button className="inv-row-action-btn" title="Edit" onClick={() => openWhEdit(item)}>
-                                                                    <Edit2 size={13} />
-                                                                </button>
-                                                                <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openWhAdjust(item)}>
+                                            </tr>
+                                        ) : (
+                                            paginatedWhStock.map(item => (
+                                                <tr key={item.sku} className="inventory-row-hover">
+                                                    <td className="inv-td--sku">{item.sku}</td>
+                                                    <td className="inv-td--name">{item.product}</td>
+                                                    <td><span className="inv-category-badge">{item.category}</span></td>
+                                                    <td className="inv-td--warehouse">{item.location}</td>
+                                                    <td>
+                                                        <span className={`inv-stock-number ${item.stock === 0 ? "out" : item.stock <= item.reorderPoint ? "low" : ""}`}>
+                                                            {item.stock}
+                                                        </span>
+                                                    </td>
+                                                    <td className="inv-td--reorder">{item.reorderPoint}</td>
+                                                    <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                    <td className="inv-td--date">{item.lastUpdated}</td>
+                                                    <td>
+                                                        <div className="inv-actions-cell">
+                                                            <button className="inv-row-action-btn" title="View details" onClick={() => openWhView(item)}>
+                                                                <Eye size={13} />
+                                                            </button>
+                                                            {canEdit("WAREHOUSE_INVENTORY") && (
+                                                                <>
+                                                                    <button className="inv-row-action-btn" title="Edit" onClick={() => openWhEdit(item)}>
+                                                                        <Edit2 size={13} />
+                                                                    </button>
+                                                                    <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openWhAdjust(item)}>
+                                                                        <SlidersHorizontal size={13} />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </>
+                            )}
+
+                            {activeTab === "darkhouse" && activeSubTab === "products" && (
+                                <>
+                                    <thead>
+                                        <tr>
+                                            <th>SKU</th>
+                                            <th>Product Name</th>
+                                            <th>Category</th>
+                                            <th>Darkhouse Hub</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: "right" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedDhStock.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="inv-empty">
+                                                    <Store size={32} className="inv-empty__icon" />
+                                                    <p>No products found in the catalogue matching filters.</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            paginatedDhStock.map(item => (
+                                                <tr key={item.id} className="inventory-row-hover">
+                                                    <td className="inv-td--sku">{item.sku}</td>
+                                                    <td className="inv-td--name">{item.product}</td>
+                                                    <td><span className="inv-category-badge">{item.sku.startsWith("FRT") ? "Fruits & Vegetables" : item.sku.startsWith("DRY") ? "Dairy & Bread" : "Snacks & Munchies"}</span></td>
+                                                    <td className="inv-td--darkhouse">{item.darkhouse}</td>
+                                                    <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                    <td>
+                                                        <div className="inv-actions-cell">
+                                                            <button className="inv-row-action-btn" title="View details" onClick={() => openDhView(item)}>
+                                                                <Eye size={13} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </>
+                            )}
+
+                            {activeTab === "darkhouse" && activeSubTab === "inventory" && (
+                                <>
+                                    <thead>
+                                        <tr>
+                                            <th>Darkhouse Hub</th>
+                                            <th>Product Name</th>
+                                            <th>SKU</th>
+                                            <th>Available Stock</th>
+                                            <th>Reserved Stock</th>
+                                            <th>Reorder Level</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: "right" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedDhStock.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={8} className="inv-empty">
+                                                    <Store size={32} className="inv-empty__icon" />
+                                                    <p>No inventory allocations found matching filters.</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            paginatedDhStock.map(item => (
+                                                <tr key={item.id} className="inventory-row-hover">
+                                                    <td className="inv-td--darkhouse">{item.darkhouse}</td>
+                                                    <td className="inv-td--name">{item.product}</td>
+                                                    <td className="inv-td--sku">{item.sku}</td>
+                                                    <td>
+                                                        <span className={`inv-stock-number ${item.available === 0 ? "out" : item.available <= item.reorder ? "low" : ""}`}>
+                                                            {item.available}
+                                                        </span>
+                                                    </td>
+                                                    <td className="inv-td--reserved">{item.reserved}</td>
+                                                    <td className="inv-td--reorder">{item.reorder}</td>
+                                                    <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                    <td>
+                                                        <div className="inv-actions-cell">
+                                                            <button className="inv-row-action-btn" title="View details" onClick={() => openDhView(item)}>
+                                                                <Eye size={13} />
+                                                            </button>
+                                                            {canEdit("DARKHOUSE_INVENTORY") && (
+                                                                <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openDhAdjust(item)}>
                                                                     <SlidersHorizontal size={13} />
                                                                 </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </>
+                            )}
 
-                        {activeTab === "darkhouse" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Darkhouse Hub</th>
-                                        <th>Product Name</th>
-                                        <th>SKU</th>
-                                        <th>Available Stock</th>
-                                        <th>Reserved Stock</th>
-                                        <th>Reorder Level</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedDhStock.length === 0 ? (
+                            {activeTab === "darkhouse" && activeSubTab === "categories" && (
+                                <>
+                                    <thead>
                                         <tr>
-                                            <td colSpan={8} className="inv-empty">
-                                                <Store size={32} className="inv-empty__icon" />
-                                                <p>No darkhouse stock allocations found matching filters.</p>
-                                            </td>
+                                            <th>Category ID</th>
+                                            <th>Category Name</th>
+                                            <th>Category Code</th>
+                                            <th>Active Products Count</th>
+                                            <th>Status</th>
                                         </tr>
-                                    ) : (
-                                        paginatedDhStock.map(item => (
-                                            <tr key={item.id} className="inventory-row-hover">
-                                                <td className="inv-td--darkhouse">{item.darkhouse}</td>
-                                                <td className="inv-td--name">{item.product}</td>
-                                                <td className="inv-td--sku">{item.sku}</td>
-                                                <td>
-                                                    <span className={`inv-stock-number ${item.available === 0 ? "out" : item.available <= item.reorder ? "low" : ""}`}>
-                                                        {item.available}
-                                                    </span>
-                                                </td>
-                                                <td className="inv-td--reserved">{item.reserved}</td>
-                                                <td className="inv-td--reorder">{item.reorder}</td>
-                                                <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                <td>
-                                                    <div className="inv-actions-cell">
-                                                        <button className="inv-row-action-btn" title="View details" onClick={() => openDhView(item)}>
-                                                            <Eye size={13} />
-                                                        </button>
-                                                        {canEdit("DARKHOUSE_INVENTORY") && (
-                                                            <button className="inv-row-action-btn inv-row-action-btn--adjust" title="Stock Adjust" onClick={() => openDhAdjust(item)}>
-                                                                <SlidersHorizontal size={13} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-
-                        {activeTab === "transfers" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Transfer ID</th>
-                                        <th>Source Warehouse</th>
-                                        <th>Destination Darkhouse</th>
-                                        <th>Total Items Mapped</th>
-                                        <th>Dispatched Date</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedTransfers.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="inv-empty">
-                                                <Repeat size={32} className="inv-empty__icon" />
-                                                <p>No stock transfer orders found matching filters.</p>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedTransfers.map(item => (
+                                    </thead>
+                                    <tbody>
+                                        {[
+                                            { id: "CAT-01", name: "Fruits & Vegetables", code: "FRT-VEG", count: 12, status: "Active" },
+                                            { id: "CAT-02", name: "Dairy & Bread", code: "DRY-BRD", count: 8, status: "Active" },
+                                            { id: "CAT-03", name: "Snacks & Munchies", code: "SNK-MNC", count: 15, status: "Active" },
+                                            { id: "CAT-04", name: "Beverages", code: "BEV-DRK", count: 10, status: "Active" },
+                                            { id: "CAT-05", name: "Instant Foods", code: "INS-FOD", count: 6, status: "Active" }
+                                        ].filter(c => c.name.toLowerCase().includes(dhSearch.toLowerCase()) || c.code.toLowerCase().includes(dhSearch.toLowerCase())).map(item => (
                                             <tr key={item.id} className="inventory-row-hover">
                                                 <td className="inv-td--sku">{item.id}</td>
-                                                <td className="inv-td--warehouse">{item.source}</td>
+                                                <td className="inv-td--name">{item.name}</td>
+                                                <td><span className="inv-category-badge">{item.code}</span></td>
+                                                <td>{item.count} items</td>
+                                                <td><span className="inv-status-pill in">{item.status}</span></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </>
+                            )}
+
+                            {activeTab === "darkhouse" && activeSubTab === "backend-stock-request" && (
+                                <>
+                                    <thead>
+                                        <tr>
+                                            <th>Request ID</th>
+                                            <th>Destination Darkhouse</th>
+                                            <th>Source Warehouse</th>
+                                            <th>Requested SKUs</th>
+                                            <th>Created Date</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: "right" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transfers.filter(t => t.destination.toLowerCase().includes(dhSearch.toLowerCase()) || t.id.toLowerCase().includes(dhSearch.toLowerCase())).map(item => (
+                                            <tr key={item.id} className="inventory-row-hover">
+                                                <td className="inv-td--sku">{item.id}</td>
                                                 <td className="inv-td--darkhouse">{item.destination}</td>
+                                                <td className="inv-td--warehouse">{item.source}</td>
                                                 <td>
                                                     <span className="inv-transfer-count-badge">
                                                         {item.productsCount} SKUs
@@ -788,37 +1379,100 @@ function InventoryPage() {
                                                 <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
                                                 <td>
                                                     <div className="inv-actions-cell">
-                                                        {item.status === "Pending" && canApprove("STOCK_TRANSFERS") && (
-                                                            <>
-                                                                <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
-                                                                    Approve
-                                                                </button>
-                                                                <button className="inv-action-inline-btn inv-action-inline-btn--warning" onClick={() => handleApproveTransfer(item.id)}>
-                                                                    Dispatch
-                                                                </button>
-                                                            </>
+                                                        {item.status === "Pending" && (
+                                                            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                                                                Awaiting dispatch
+                                                            </span>
                                                         )}
-                                                        {item.status === "Dispatched" && canApprove("STOCK_TRANSFERS") && (
-                                                            <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleReceiveTransfer(item.id)}>
+                                                        {item.status === "Dispatched" && (
+                                                            <button 
+                                                                className="inv-action-inline-btn inv-action-inline-btn--success" 
+                                                                onClick={() => handleReceiveTransfer(item.id)}
+                                                            >
                                                                 Mark Received
                                                             </button>
                                                         )}
                                                         {item.status === "Received" && (
-                                                            <span className="inv-action-completed-text">Completed</span>
+                                                            <span style={{ fontSize: "12px", color: "var(--success-color)", fontWeight: "600" }}>
+                                                                Received & Checked
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-                    </table>
-                </div>
+                                        ))}
+                                    </tbody>
+                                </>
+                            )}
+
+                            {activeTab === "transfers" && (
+                                <>
+                                    <thead>
+                                        <tr>
+                                            <th>Transfer ID</th>
+                                            <th>Source Warehouse</th>
+                                            <th>Destination Darkhouse</th>
+                                            <th>Total Items Mapped</th>
+                                            <th>Dispatched Date</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: "right" }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedTransfers.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="inv-empty">
+                                                    <Repeat size={32} className="inv-empty__icon" />
+                                                    <p>No stock transfer orders found matching filters.</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            paginatedTransfers.map(item => (
+                                                <tr key={item.id} className="inventory-row-hover">
+                                                    <td className="inv-td--sku">{item.id}</td>
+                                                    <td className="inv-td--warehouse">{item.source}</td>
+                                                    <td className="inv-td--darkhouse">{item.destination}</td>
+                                                    <td>
+                                                        <span className="inv-transfer-count-badge">
+                                                            {item.productsCount} SKUs
+                                                        </span>
+                                                    </td>
+                                                    <td className="inv-td--date">{item.createdDate}</td>
+                                                    <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                    <td>
+                                                        <div className="inv-actions-cell">
+                                                            {item.status === "Pending" && canApprove("STOCK_TRANSFERS") && (
+                                                                <>
+                                                                    <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleApproveTransfer(item.id)}>
+                                                                        Approve
+                                                                    </button>
+                                                                    <button className="inv-action-inline-btn inv-action-inline-btn--warning" onClick={() => handleApproveTransfer(item.id)}>
+                                                                        Dispatch
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {item.status === "Dispatched" && canApprove("STOCK_TRANSFERS") && (
+                                                                <button className="inv-action-inline-btn inv-action-inline-btn--success" onClick={() => handleReceiveTransfer(item.id)}>
+                                                                    Mark Received
+                                                                </button>
+                                                            )}
+                                                            {item.status === "Received" && (
+                                                                <span className="inv-action-completed-text">Completed</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </>
+                            )}
+                        </table>
+                    </div>
+                )}
 
                 {/* Pagination */}
-                {((activeTab === "warehouse" && filteredWarehouseStock.length > ROWS_PER_PAGE) ||
+                {activeSubTab !== "find-product-to-sell" && ((activeTab === "warehouse" && filteredWarehouseStock.length > ROWS_PER_PAGE) ||
                   (activeTab === "darkhouse" && filteredDarkhouseStock.length > ROWS_PER_PAGE) ||
                   (activeTab === "transfers" && filteredTransfers.length > ROWS_PER_PAGE)) && (
                     <div className="inv-pagination">

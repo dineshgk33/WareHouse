@@ -1081,3 +1081,20 @@
   background-color: var(--primary-hover);
   box-shadow: var(--shadow-md);
 }
+
+/* ─── Find Product to Sell & Toast Upgrades ──────── */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
