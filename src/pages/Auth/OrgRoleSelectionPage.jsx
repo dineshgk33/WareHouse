@@ -180,8 +180,8 @@ function OrgRoleSelectionPage() {
                 const firstPageId = firstPage ? (firstPage.pageId ? firstPage.pageId.toUpperCase() : "") : "";
                 switch (firstPageId) {
                     case "ORDERS": targetPath = "/orders"; break;
-                    case "WAREHOUSE_INVENTORY": targetPath = "/inventory"; break;
-                    case "DARKHOUSE_INVENTORY": targetPath = "/inventory?tab=darkhouse"; break;
+                    case "WAREHOUSE_INVENTORY": targetPath = "/catalogue/warehouse"; break;
+                    case "DARKHOUSE_INVENTORY": targetPath = "/catalogue/darkhouse"; break;
                     case "CATALOG": targetPath = "/catalog/products"; break;
                     case "CUSTOMERS": targetPath = "/customers"; break;
                     case "BILLING": targetPath = "/billing"; break;

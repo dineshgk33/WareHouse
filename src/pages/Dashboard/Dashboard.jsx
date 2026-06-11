@@ -573,7 +573,7 @@ function Dashboard() {
             icon: AlertTriangle,
             trend: "+5.22%",
             isUp: false,
-            route: "/inventory",
+            route: "/catalogue/warehouse",
             pageId: "WAREHOUSE_INVENTORY",
             sparkData: statSparklineData["Low Stock Items"],
             stroke: "#EF4444",
@@ -711,7 +711,7 @@ function Dashboard() {
                         <p className="ai-rec-text">Koramangala darkhouse is running low on high-demand essentials. Restock recommended.</p>
                         <button 
                              className="ai-rec-action-btn btn-warning-outline"
-                             onClick={() => navigate("/inventory")}
+                             onClick={() => navigate("/catalogue/warehouse")}
                         >
                             <span>Restock</span>
                             <ArrowUpRight size={12} />

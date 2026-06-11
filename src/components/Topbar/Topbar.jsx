@@ -29,7 +29,7 @@ function Topbar({ onOpenMobileSidebar }) {
     const getPageTitle = () => {
         const path = location.pathname.toLowerCase();
         if (path.includes('/dashboard')) return 'Dashboard';
-        if (path.includes('/inventory')) return 'Inventory';
+        if (path.includes('/catalogue')) return 'Catalogue';
         if (path.includes('/orders')) return 'Orders';
         if (path.includes('/customers')) return 'Customers';
         if (path.includes('/settings')) return 'Settings';

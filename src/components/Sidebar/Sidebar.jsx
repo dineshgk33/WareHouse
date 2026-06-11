@@ -46,11 +46,13 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Label History") return "/orders?tab=label-history";
             return "/orders";
         case "WAREHOUSE_INVENTORY":
-            return "/inventory";
+        case "WAREHOUSE_CATALOGUE":
+            return "/catalogue/warehouse";
         case "DARKHOUSE_INVENTORY":
-            return "/inventory?tab=darkhouse";
+        case "DARKHOUSE_CATALOGUE":
+            return "/catalogue/darkhouse";
         case "STOCK_TRANSFERS":
-            return "/inventory?tab=transfers";
+            return "/catalogue/transfers";
         case "EMPLOYEES":
             return "/employees";
         case "REPORTS":
@@ -208,26 +210,21 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 icon: getIconForModule(moduleName),
             };
 
-            if (modulePages.length === 1) {
+            if (moduleName === "Catalogue") {
+                item.submenu = [
+                    { label: "Products", path: "/catalogue/darkhouse/products" },
+                    { label: "Inventory", path: "/catalogue/darkhouse/inventory" },
+                    { label: "Find Product to Sell", path: "/catalogue/darkhouse/find-product-to-sell" }
+                ];
+            } else if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
                 item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
             } else {
                 item.submenu = modulePages.map(page => {
-                    const subItem = {
+                    return {
                         label: page.pageName,
                         path: getRouteForPage(page.pageId, page.pageName)
                     };
-
-                    if (page.pageName === "Darkhouse Catalogue" || page.pageName === "Darkhouse Inventory") {
-                        subItem.submenu = [
-                            { label: "Products", path: "/inventory?tab=darkhouse&sub=products" },
-                            { label: "Inventory", path: "/inventory?tab=darkhouse&sub=inventory" },
-                            { label: "Categories", path: "/inventory?tab=darkhouse&sub=categories" },
-                            { label: "Backend stock request", path: "/inventory?tab=darkhouse&sub=backend-stock-request" },
-                            { label: "Find product to sell", path: "/inventory?tab=darkhouse&sub=find-product-to-sell" }
-                        ];
-                    }
-                    return subItem;
                 });
             }
 
@@ -275,6 +272,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     };
 
     const { main: activeSidebarMenu, bottom: activeBottomMenu } = buildDynamicMenu(accessiblePages || []);
+
+
 
     // Helper to check active highlighting on parents
     const isParentActive = (item) => {
@@ -342,10 +341,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     };
 
     const handleSubmenuItemClick = () => {
-        setHoveredMenu(null);
-        if (setMobileOpen) {
-            setMobileOpen(false);
-        }
+        handleItemClick();
     };
 
     const handleParentClick = (item, e) => {
@@ -381,7 +377,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         return (
             <li 
                 key={item.id}
-                className="sidebar-item-container"
+                className={`sidebar-item-container sidebar-item-${item.id}`}
                 onMouseEnter={!isMobile ? (e) => handleParentMouseEnter(item, e) : undefined}
                 onMouseLeave={!isMobile ? handleParentMouseLeave : undefined}
             >
@@ -417,72 +413,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                         {item.submenu.map((sub, idx) => {
                             const currentPath = location.pathname + location.search;
 
-                            if (sub.label === "Darkhouse Catalogue") {
-                                const darkhouseSubs = [
-                                    { label: "Products", path: "/inventory?tab=darkhouse&sub=products" },
-                                    { label: "Inventory", path: "/inventory?tab=darkhouse&sub=inventory" },
-                                    { label: "Categories", path: "/inventory?tab=darkhouse&sub=categories" },
-                                    { label: "Backend stock request", path: "/inventory?tab=darkhouse&sub=backend-stock-request" },
-                                    { label: "find product to sell", path: "/inventory?tab=darkhouse&sub=find-product-to-sell" }
-                                ];
 
-                                return (
-                                    <li key={idx} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                        <div
-                                            className="nav-link"
-                                            style={{
-                                                padding: "8px 12px",
-                                                fontSize: "13px",
-                                                minHeight: "36px",
-                                                borderRadius: "10px",
-                                                color: "rgba(255, 255, 255, 0.85)",
-                                                fontWeight: "600",
-                                                cursor: "default"
-                                            }}
-                                        >
-                                            <span className="mobile-submenu-bullet" style={{
-                                                width: "5px",
-                                                height: "5px",
-                                                borderRadius: "50%",
-                                                backgroundColor: "rgba(255, 255, 255, 0.5)",
-                                                marginRight: "8px",
-                                                flexShrink: 0
-                                            }}></span>
-                                            {sub.label}
-                                        </div>
-                                        <ul className="mobile-submenu-nested-list" style={{
-                                            listStyle: "none",
-                                            paddingLeft: "20px",
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "4px"
-                                        }}>
-                                            {darkhouseSubs.map((dSub, dIdx) => {
-                                                const isDSubActive = currentPath === dSub.path;
-                                                return (
-                                                    <li key={dIdx}>
-                                                        <Link
-                                                            to={dSub.path}
-                                                            className={`nav-link ${isDSubActive ? "active" : ""}`}
-                                                            onClick={handleSubmenuItemClick}
-                                                            style={{
-                                                                padding: "6px 12px",
-                                                                fontSize: "12px",
-                                                                minHeight: "32px",
-                                                                borderRadius: "8px",
-                                                                backgroundColor: isDSubActive ? "#ffffff" : "transparent",
-                                                                color: isDSubActive ? "#020079" : "rgba(255, 255, 255, 0.75)"
-                                                            }}
-                                                        >
-                                                            {dSub.label}
-                                                        </Link>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    </li>
-                                );
-                            }
 
                             const isSubActive = sub.path.includes("?") 
                                 ? currentPath === sub.path 
@@ -585,13 +516,13 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 </ul>
             </div>
 
-            {/* Wix Studio-Style Floating Submenu flyout */}
             {!isMobile && hoveredMenu && (hoveredMenu.id === "inventory" || hoveredMenu.id === "catalogue") ? (
                 <InventoryFlyout
                     menu={hoveredMenu}
                     position={flyoutPosition}
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
+                    onItemClick={handleSubmenuItemClick}
                 />
             ) : !isMobile && hoveredMenu && hoveredMenu.id === "orders" ? (
                 <OrdersFlyout
@@ -607,14 +538,14 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
                 />
-            ) : !isMobile && hoveredMenu && (
+            ) : !isMobile && hoveredMenu ? (
                 <FlyoutMenu 
                     menu={hoveredMenu}
                     position={flyoutPosition}
                     onMouseEnter={handleFlyoutMouseEnter}
                     onMouseLeave={handleFlyoutMouseLeave}
                 />
-            )}
+            ) : null}
         </aside>
     );
 }

@@ -23,13 +23,13 @@ function AccessDeniedPage() {
                 case "ORDERS": navigate("/orders"); break;
                 case "INVENTORY":
                 case "WAREHOUSE_INVENTORY":
-                    navigate("/inventory");
+                    navigate("/catalogue/warehouse");
                     break;
                 case "DARKHOUSE_INVENTORY":
-                    navigate("/inventory?tab=darkhouse");
+                    navigate("/catalogue/darkhouse");
                     break;
                 case "STOCK_TRANSFERS":
-                    navigate("/inventory?tab=transfers");
+                    navigate("/catalogue/transfers");
                     break;
                 case "CATALOG": navigate("/catalog/products"); break;
                 case "CUSTOMERS": navigate("/customers"); break;

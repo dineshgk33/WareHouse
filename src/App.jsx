@@ -15,7 +15,11 @@ const OPERATION_HEAD_ONLY = [ROLES.OPERATION_HEAD];
 const MainLayout              = lazy(() => import("./layouts/MainLayout"));
 const Dashboard               = lazy(() => import("./pages/Dashboard/Dashboard.jsx"));
 const Orders                  = lazy(() => import("./pages/Orders/OrdersPage.jsx"));
-const Inventory               = lazy(() => import("./pages/Inventory/InventoryPage.jsx"));
+const WarehouseCatalogue      = lazy(() => import("./pages/Catalogue/WarehouseCatalogue/WarehouseCataloguePage.jsx"));
+const DarkhouseProducts       = lazy(() => import("./pages/Catalogue/DarkhouseCatalogue/ProductsPage.jsx"));
+const DarkhouseInventory      = lazy(() => import("./pages/Catalogue/DarkhouseCatalogue/InventoryPage.jsx"));
+const FindProductToSell       = lazy(() => import("./pages/Catalogue/DarkhouseCatalogue/FindProductToSellPage.jsx"));
+const StockTransfers          = lazy(() => import("./pages/Catalogue/StockTransfersPage.jsx"));
 const Analytics               = lazy(() => import("./pages/Analytics/AnalyticsPage.jsx"));
 const Customers               = lazy(() => import("./pages/Customers/CustomersPage.jsx"));
 const Billing                 = lazy(() => import("./pages/Billing/BillingPage.jsx"));
@@ -180,9 +184,13 @@ function App() {
                                     <Route path="orders/pending" element={<Orders />} />
                                 </Route>
 
-                                {/* Warehouse & Darkhouse Inventory */}
+                                {/* Warehouse & Darkhouse Catalogue */}
                                 <Route element={<ProtectedRoute pageId={["WAREHOUSE_INVENTORY", "DARKHOUSE_INVENTORY", "STOCK_TRANSFERS"]} />}>
-                                    <Route path="inventory" element={<Inventory />} />
+                                    <Route path="catalogue/warehouse" element={<WarehouseCatalogue />} />
+                                    <Route path="catalogue/darkhouse/products" element={<DarkhouseProducts />} />
+                                    <Route path="catalogue/darkhouse/inventory" element={<DarkhouseInventory />} />
+                                    <Route path="catalogue/darkhouse/find-product-to-sell" element={<FindProductToSell />} />
+                                    <Route path="catalogue/transfers" element={<StockTransfers />} />
                                 </Route>
 
                                 {/* Catalog Module Routes */}
