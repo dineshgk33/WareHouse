@@ -149,8 +149,13 @@ const WIDGET_METADATA = {
             "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=500&q=80",
             "https://images.unsplash.com/photo-1534349762230-e0cadf78f5da?auto=format&fit=crop&w=500&q=80"
         ],
-        labels: ["Premium Doormat", "Cotton Runner Rug", "Luxury Bath Mat"],
-        prices: ["₹399", "₹899", "₹450"]
+        labels: ["Floor Mat Yaris Brown & Beige", "Floor Mat Glanza Brown", "Floor Mat Monaco Red"],
+        prices: ["₹69", "₹69", "₹69"],
+        oldPrices: ["₹199", "₹199", "₹199"],
+        discounts: ["65% OFF", "65% OFF", "65% OFF"],
+        brands: ["ELEGANT WEAVERS", "ELEGANT WEAVERS", "ELEGANT WEAVERS"],
+        quantities: ["1 pc", "1 pc", "1 pc"],
+        deliveries: ["8 mins", "8 mins", "8 mins"]
     },
     roomgrid: {
         name: "Room Grid Category",
@@ -175,16 +180,18 @@ const WIDGET_METADATA = {
         maxSizeDisplay: "1 MB",
         formats: ["image/png", "image/jpeg", "image/webp"],
         formatsDisplay: "PNG, JPG, WEBP",
-        requiredCount: 4,
+        requiredCount: 5,
         defaultImages: [
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=500&q=80"
+            "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=500&q=80"
         ],
-        labels: ["Sports Shoes", "Vaporizer Watch", "Studio Pro Headset", "Classic Aviators"],
-        prices: ["₹2,499", "₹4,999", "₹8,999", "₹1,599"],
-        ratings: [4.5, 4.2, 4.8, 4.6]
+        labels: ["Sattu & desi coolers", "Vegan specials", "Ice creams & yoghurts", "Sattu & desi coolers", "Vegan specials"],
+        prices: ["₹2,499", "₹4,999", "₹8,999", "₹1,599", "₹1,899"],
+        ratings: [4.5, 4.2, 4.8, 4.6, 4.6],
+        discounts: ["STARTING @ ₹31", "UP TO 20% OFF", "UP TO 40% OFF", "STARTING @ ₹31", "UP TO 20% OFF"]
     },
     productSection: {
         name: "Product Section",
@@ -193,16 +200,20 @@ const WIDGET_METADATA = {
         maxSizeDisplay: "1.5 MB",
         formats: ["image/png", "image/jpeg", "image/webp"],
         formatsDisplay: "PNG, JPG, WEBP",
-        requiredCount: 4,
+        requiredCount: 3,
         defaultImages: [
-            "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=500&q=80",
-            "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=500&q=80"
+            "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=500&q=80"
         ],
-        labels: ["Retro Yellow Chucks", "Premium Black Tee", "Airforce White High", "Summer Polo Shirt"],
-        prices: ["₹3,499", "₹1,299", "₹6,999", "₹1,899"],
-        ratings: [4.7, 4.3, 4.9, 4.4]
+        labels: ["Groundnut Oil", "Sesame Oil", "Til Oil"],
+        prices: ["₹1,619", "₹299", "₹519"],
+        ratings: [4.5, 4.5, 4.5],
+        oldPrices: ["₹1,900", "₹340", "₹619"],
+        discounts: ["₹281 OFF", "12% OFF", "₹100 OFF"],
+        quantities: ["5 ltr", "500 ml", "1 ltr"],
+        deliveries: ["12 mins", "12 mins", "12 mins"],
+        unitPrices: ["₹32.4/100 ml", "₹32.4/100 ml", "₹32.4/100 ml"]
     },
     perfumeSection: {
         name: "Perfume Section",
@@ -217,9 +228,15 @@ const WIDGET_METADATA = {
             "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80",
             "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80"
         ],
-        labels: ["Coco Noir Luxury", "Sauvage Intense", "Velvet Rose Oud"],
-        prices: ["₹11,500", "₹13,800", "₹16,200"],
-        ratings: [4.9, 4.8, 5.0]
+        labels: ["Ajmal Blu Moon Attar (Blu Moon)", "Jaguar Eau de Toilette (Classic)", "Tommy Girl Perfume"],
+        prices: ["₹449", "₹3,199", "₹8,939"],
+        ratings: [4.5, 4.5, 4.5],
+        oldPrices: ["₹800", "₹4,900", "₹9,900"],
+        discounts: ["10% OFF on MRP", "₹1,701 OFF", "₹961 OFF"],
+        quantities: ["5 ml", "100 ml", "100 ml"],
+        deliveries: ["15 mins", "15 mins", "15 mins"],
+        tag1: ["Fresh", "Fresh", "Floral"],
+        tag2: [null, "Lasts up to 10 hours", "Lasts up to 36 hours"]
     },
     kidsSection: {
         name: "Kids Section",
@@ -228,16 +245,15 @@ const WIDGET_METADATA = {
         maxSizeDisplay: "1.5 MB",
         formats: ["image/png", "image/jpeg", "image/webp"],
         formatsDisplay: "PNG, JPG, WEBP",
-        requiredCount: 4,
+        requiredCount: 3,
         defaultImages: [
-            "https://images.unsplash.com/photo-1515488042361-404e9250afef?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1555009393-f20bdb245c4d?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1533512900305-6601b9ad4def?auto=format&fit=crop&w=800&q=80"
+            "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=400&q=80",
+            "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=400&q=80",
+            "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80"
         ],
-        labels: ["Wooden Toddler Toys", "Cozy Cotton Jumper", "Rainbow Building Blocks", "Mini Active Trainers"],
-        prices: ["₹999", "₹1,499", "₹1,200", "₹2,200"],
-        ratings: [4.6, 4.7, 4.5, 4.8]
+        labels: ["0-3 Years", "3-10 Years", "10 Years & Above"],
+        prices: ["₹999", "₹1,499", "₹1,200"],
+        ratings: [4.6, 4.7, 4.5]
     }
 };
 
@@ -531,6 +547,35 @@ function ManagePreviewPage() {
     // Compare Mode (Side-by-Side)
     const [isCompareMode, setIsCompareMode] = useState(false);
 
+    // Custom Drag-to-Scroll handler for desktop mouse scrolling in simulator
+    const handleDragScroll = useCallback((e) => {
+        const ele = e.currentTarget;
+        const startX = e.pageX - ele.offsetLeft;
+        const scrollLeft = ele.scrollLeft;
+        let isDragging = false;
+        
+        const handleMouseMove = (moveEvent) => {
+            const x = moveEvent.pageX - ele.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            if (Math.abs(walk) > 5) {
+                isDragging = true;
+                ele.style.pointerEvents = 'none';
+            }
+            ele.scrollLeft = scrollLeft - walk;
+        };
+        
+        const handleMouseUp = () => {
+            setTimeout(() => {
+                ele.style.pointerEvents = 'auto';
+            }, 50);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }, []);
+
     // ─── Lite_Banner Configuration States ────────────────────────
     const [liteBannerConfig, setLiteBannerConfig] = useState(() => {
         try {
@@ -591,8 +636,13 @@ function ManagePreviewPage() {
     const MATS_SLOT_DEFAULT = (idx) => ({
         productName: WIDGET_METADATA.matsSection?.labels[idx] || `Mat ${idx + 1}`,
         productId: "",
-        price: WIDGET_METADATA.matsSection?.prices[idx] || "₹400",
-        offer: "10% Off",
+        price: WIDGET_METADATA.matsSection?.prices[idx] || "₹69",
+        oldPrice: WIDGET_METADATA.matsSection?.oldPrices?.[idx] || "₹199",
+        discount: WIDGET_METADATA.matsSection?.discounts?.[idx] || "65% OFF",
+        brand: WIDGET_METADATA.matsSection?.brands?.[idx] || "ELEGANT WEAVERS",
+        quantity: WIDGET_METADATA.matsSection?.quantities?.[idx] || "1 pc",
+        delivery: WIDGET_METADATA.matsSection?.deliveries?.[idx] || "8 mins",
+        offer: WIDGET_METADATA.matsSection?.discounts?.[idx] || "65% OFF",
         destProductId: "",
         destProductName: "",
         destPrice: "",
@@ -601,15 +651,34 @@ function ManagePreviewPage() {
         destSubCategory: ""
     });
     const [matsConfig, setMatsConfig] = useState(() => {
+        let config = {
+            title: "Mats & doormats starting @ Rs.49",
+            subtitle: "Comfort for your feet",
+            seeAllText: "View All",
+            items: []
+        };
         try {
             const saved = localStorage.getItem("haatza_mats_config");
-            if (saved) return JSON.parse(saved);
+            if (saved) {
+                config = JSON.parse(saved);
+            }
         } catch (e) {}
-        return {
-            title: "✨ Premium Mats & Rugs",
-            seeAllText: "View All",
-            items: Array.from({ length: 3 }, (_, idx) => MATS_SLOT_DEFAULT(idx))
-        };
+        
+        if (!config.title) config.title = "Mats & doormats starting @ Rs.49";
+        if (!config.subtitle) config.subtitle = "Comfort for your feet";
+        if (!config.items) config.items = [];
+        const requiredCount = WIDGET_METADATA.matsSection?.requiredCount || 3;
+        while (config.items.length < requiredCount) {
+            config.items.push(MATS_SLOT_DEFAULT(config.items.length));
+        }
+        config.items = config.items.slice(0, requiredCount).map((item, idx) => {
+            const defaults = MATS_SLOT_DEFAULT(idx);
+            return {
+                ...defaults,
+                ...item
+            };
+        });
+        return config;
     });
     const [matsErrors, setMatsErrors] = useState({});
     const [matsProductSearch, setMatsProductSearch] = useState({});
@@ -684,6 +753,7 @@ function ManagePreviewPage() {
         };
     });
     const [litePromobannerErrors, setLitePromobannerErrors] = useState({});
+    const [litePromobannerExpandedSlot, setLitePromobannerExpandedSlot] = useState(null);
     const [litePromobannerProductSearch, setLitePromobannerProductSearch] = useState("");
 
     // ─── Lite Shop by Category Configuration States ────────────────────────
@@ -749,15 +819,25 @@ function ManagePreviewPage() {
         destSubCategory: ""
     });
     const [trendingConfig, setTrendingConfig] = useState(() => {
-        try {
-            const saved = localStorage.getItem("haatza_trending_config");
-            if (saved) return JSON.parse(saved);
-        } catch (e) {}
-        return {
+        let config = {
             title: "🔥 Trending Products",
             seeAllText: "See All",
-            items: Array.from({ length: 4 }, (_, idx) => TRENDING_SLOT_DEFAULT(idx))
+            items: []
         };
+        try {
+            const saved = localStorage.getItem("haatza_trending_config");
+            if (saved) {
+                config = JSON.parse(saved);
+            }
+        } catch (e) {}
+        
+        const requiredCount = WIDGET_METADATA.trendingSection?.requiredCount || 5;
+        if (!config.items) config.items = [];
+        while (config.items.length < requiredCount) {
+            config.items.push(TRENDING_SLOT_DEFAULT(config.items.length));
+        }
+        config.items = config.items.slice(0, requiredCount);
+        return config;
     });
     const [trendingErrors, setTrendingErrors] = useState({});
     const [trendingProductSearch, setTrendingProductSearch] = useState({});
@@ -837,17 +917,28 @@ function ManagePreviewPage() {
         destMainCategory: "",
         destSubCategory: ""
     });
+
     const [kidsConfig, setKidsConfig] = useState(() => {
         try {
             const saved = localStorage.getItem("haatza_kids_config");
-            if (saved) return JSON.parse(saved);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed.items) {
+                    parsed.items = parsed.items.slice(0, 3);
+                    while (parsed.items.length < 3) {
+                        parsed.items.push(KIDS_SLOT_DEFAULT(parsed.items.length));
+                    }
+                }
+                return parsed;
+            }
         } catch (e) {}
         return {
             title: "Smiles, Giggles, Party Time!",
             bgImage: "",
-            items: Array.from({ length: 4 }, (_, idx) => KIDS_SLOT_DEFAULT(idx))
+            items: Array.from({ length: 3 }, (_, idx) => KIDS_SLOT_DEFAULT(idx))
         };
     });
+
     const [kidsErrors, setKidsErrors] = useState({});
     const [kidsProductSearch, setKidsProductSearch] = useState({});
     const [kidsExpandedSlot, setKidsExpandedSlot] = useState(null);
@@ -1047,6 +1138,7 @@ function ManagePreviewPage() {
             }
             setLitePromobannerErrors({});
             setLitePromobannerProductSearch("");
+            setLitePromobannerExpandedSlot(null);
         }
 
         if (selectedWidgetId === "roomgrid") {
@@ -1666,6 +1758,7 @@ function ManagePreviewPage() {
             const errors = validateLitePromobannerForm();
             if (Object.keys(errors).length > 0) {
                 setLitePromobannerErrors(errors);
+                setLitePromobannerExpandedSlot(0);
                 triggerToast("Please fix the validation errors in the Configuration Panel before saving.", "error");
                 return;
             }
@@ -1869,6 +1962,7 @@ function ManagePreviewPage() {
             const errors = validateLitePromobannerForm();
             if (Object.keys(errors).length > 0) {
                 setLitePromobannerErrors(errors);
+                setLitePromobannerExpandedSlot(0);
                 triggerToast("Please fix the validation errors in the Configuration Panel.", "error");
                 return;
             }
@@ -2010,6 +2104,7 @@ function ManagePreviewPage() {
             const errors = validateLitePromobannerForm();
             if (Object.keys(errors).length > 0) {
                 setLitePromobannerErrors(errors);
+                setLitePromobannerExpandedSlot(0);
                 triggerToast("Cannot publish. Please fix the validation errors in the Configuration Panel.", "error");
                 setShowPublishModal(false);
                 return;
@@ -2833,7 +2928,7 @@ function ManagePreviewPage() {
                                 {freshmarketConfig.seeAllText || "See All"}
                             </span>
                         </div>
-                        <div className="freshmarket-horizontal-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                        <div className="freshmarket-horizontal-scroll" onMouseDown={handleDragScroll} style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', cursor: 'grab' }}>
                             {[0, 1, 2, 3].map(idx => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
                                 const slotCfg = freshmarketConfig.items[idx] || {};
@@ -2901,22 +2996,44 @@ function ManagePreviewPage() {
 
             case "matsSection":
                 return (
-                    <div className="mock-widget-mats animate-fade" style={{ background: '#fafaf9', padding: '12px', borderRadius: '8px' }}>
-                        <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <h4 className="widget-header-title" style={{ color: '#78350f', margin: 0, fontSize: '14px', fontWeight: 700 }}>
-                                {matsConfig.title || "✨ Premium Mats & Rugs"}
-                            </h4>
-                            <span className="section-see-all" style={{ fontSize: '11px', color: '#b45309', fontWeight: 600, cursor: 'pointer' }}>
-                                {matsConfig.seeAllText || "View All"}
-                            </span>
+                    <div className="mock-widget-mats animate-fade" style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                        <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <div>
+                                <h4 className="widget-header-title" style={{ color: '#111827', margin: 0, fontSize: '14px', fontWeight: 800, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                    {matsConfig.title || "Mats & doormats starting @ Rs.49"}
+                                </h4>
+                                {matsConfig.subtitle && (
+                                    <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#6b7280', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                        {matsConfig.subtitle}
+                                    </p>
+                                )}
+                            </div>
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); triggerToast(`Clicked See All: ${matsConfig.seeAllText || "View All"}`); }} 
+                                style={{ 
+                                    width: '26px', 
+                                    height: '26px', 
+                                    borderRadius: '6px', 
+                                    border: '1px solid #e5e7eb', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    background: '#ffffff', 
+                                    cursor: 'pointer',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                }}
+                            >
+                                <ChevronRight size={14} style={{ color: '#1f2937' }} />
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                            {[0, 1, 2].map(idx => {
+                        <div onMouseDown={handleDragScroll} style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', cursor: 'grab' }}>
+                            {matsConfig.items.map((slotCfg, idx) => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
-                                const slotCfg = matsConfig.items[idx] || {};
                                 const title = slotCfg.productName || (meta.labels && meta.labels[idx]) || `Mat ${idx + 1}`;
-                                const price = slotCfg.price || (meta.prices && meta.prices[idx]) || "₹400";
-                                const offer = slotCfg.offer || "10% Off";
+                                const price = slotCfg.price || (meta.prices && meta.prices[idx]) || "₹69";
+                                const oldPrice = slotCfg.oldPrice || (meta.oldPrices && meta.oldPrices[idx]) || "₹199";
+                                const discount = slotCfg.discount || (meta.discounts && meta.discounts[idx]) || "65% OFF";
+                                const delivery = slotCfg.delivery || (meta.deliveries && meta.deliveries[idx]) || "8 mins";
 
                                 return (
                                     <div 
@@ -2924,44 +3041,92 @@ function ManagePreviewPage() {
                                         key={idx} 
                                         onClick={(e) => handleMatsItemClick(idx, title, price, img)}
                                         style={{ 
-                                            flex: '1 0 120px', 
+                                            flex: '0 0 92px', 
                                             background: '#ffffff', 
-                                            borderRadius: '6px', 
-                                            border: '1px solid #f3f4f6', 
-                                            padding: '8px', 
+                                            borderRadius: '8px', 
+                                            display: 'flex',
+                                            flexDirection: 'column',
                                             cursor: 'pointer',
-                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                            position: 'relative'
                                         }}
                                     >
-                                        <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '4px', overflow: 'hidden', background: '#f4f4f5' }}>
+                                        <div style={{ position: 'relative', width: '92px', height: '92px', borderRadius: '12px', overflow: 'hidden', background: '#f4f4f5', border: '1px solid #f3f4f6' }}>
                                             {img ? <img src={img} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: '#e4e4e7' }} />}
-                                            {offer && (
-                                                <span style={{ 
+                                            <div 
+                                                onClick={(e) => { e.stopPropagation(); triggerToast(`Added ${title} to Cart!`); }}
+                                                style={{ 
                                                     position: 'absolute', 
-                                                    bottom: '4px', 
-                                                    right: '4px', 
-                                                    background: '#ea580c', 
-                                                    color: '#fff', 
-                                                    fontSize: '8px', 
-                                                    fontWeight: 700, 
-                                                    padding: '2px 4px', 
-                                                    borderRadius: '3px' 
+                                                    bottom: '6px', 
+                                                    right: '6px', 
+                                                    width: '26px', 
+                                                    height: '26px', 
+                                                    borderRadius: '8px', 
+                                                    background: '#ffffff', 
+                                                    border: '1.5px solid #22c55e', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+                                                    cursor: 'pointer',
+                                                    zIndex: 10
+                                                }}
+                                            >
+                                                <Plus size={16} style={{ color: '#22c55e', strokeWidth: 3 }} />
+                                            </div>
+                                        </div>
+                                        <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                            {discount && (
+                                                <span style={{ 
+                                                    background: '#fde047', 
+                                                    color: '#111827', 
+                                                    fontSize: '9px', 
+                                                    fontWeight: 800, 
+                                                    padding: '2px 6px', 
+                                                    borderRadius: '6px',
+                                                    textTransform: 'uppercase',
+                                                    marginBottom: '4px',
+                                                    fontFamily: 'system-ui, -apple-system, sans-serif'
                                                 }}>
-                                                    {offer}
+                                                    {discount}
                                                 </span>
                                             )}
-                                        </div>
-                                        <div style={{ marginTop: '6px' }}>
-                                            <span style={{ fontSize: '10px', fontWeight: 600, color: '#1f2937', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{title}</span>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#111827' }}>{price}</span>
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); triggerToast(`Added ${title} to Cart!`); }} 
-                                                    style={{ border: 'none', background: '#78350f', color: '#fff', fontSize: '9px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }}
-                                                >
-                                                    Add
-                                                </button>
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '3px' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 800, color: '#111827', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{price}</span>
+                                                {oldPrice && <span style={{ fontSize: '9px', textDecoration: 'line-through', color: '#9ca3af', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{oldPrice}</span>}
                                             </div>
+                                            <span style={{ 
+                                                border: '1px solid #3b82f6', 
+                                                color: '#2563eb', 
+                                                fontSize: '8px', 
+                                                fontWeight: 700, 
+                                                padding: '1px 6px', 
+                                                borderRadius: '6px',
+                                                marginBottom: '6px',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif'
+                                            }}>
+                                                Har Din Sasta!
+                                            </span>
+                                            <span style={{ 
+                                                fontSize: '11px', 
+                                                fontWeight: 500, 
+                                                color: '#1f2937', 
+                                                height: '28px', 
+                                                overflow: 'hidden', 
+                                                display: '-webkit-box', 
+                                                WebkitLineClamp: 2, 
+                                                WebkitBoxOrient: 'vertical', 
+                                                lineHeight: '14px',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                textAlign: 'left'
+                                            }}>
+                                                {title}
+                                            </span>
+                                            {delivery && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '4px' }}>
+                                                    <span style={{ color: '#22c55e', fontSize: '10px' }}>⚡</span>
+                                                    <span style={{ fontSize: '10px', fontWeight: 500, color: '#4b5563', fontFamily: 'system-ui, -apple-system, sans-serif' }}>{delivery}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -2972,40 +3137,74 @@ function ManagePreviewPage() {
 
             case "trendingSection":
                 return (
-                    <div className="mock-widget-trending animate-fade">
-                        <div className="section-title-row">
-                            <h4 className="widget-header-title">{trendingConfig.title || "🔥 Trending Products"}</h4>
-                            <span className="section-see-all" onClick={(e) => { e.stopPropagation(); triggerToast(`Clicked See All: ${trendingConfig.seeAllText || "See All"}`); }} style={{ cursor: 'pointer' }}>{trendingConfig.seeAllText || "See All"}</span>
+                    <div className="mock-widget-trending animate-fade" style={{ background: '#f4f4f5', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                        <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <h4 className="widget-header-title" style={{ color: '#111827', margin: 0, fontSize: '14px', fontWeight: 800, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                {trendingConfig.title || "Trending this week"}
+                            </h4>
                         </div>
-                        <div className="trending-horizontal-scroll">
-                            {[0, 1, 2, 3].map(idx => {
+                        <div onMouseDown={handleDragScroll} style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', cursor: 'grab' }}>
+                            {validImgs.map((_, idx) => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
                                 const defaultLabel = meta.labels && meta.labels[idx];
-                                const defaultPrice = meta.prices && meta.prices[idx];
-                                const defaultRating = meta.ratings && meta.ratings[idx];
+                                const defaultDiscount = meta.discounts && meta.discounts[idx];
                                 
                                 const slotCfg = trendingConfig.items[idx] || {};
                                 const title = slotCfg.productName || defaultLabel || `Product ${idx + 1}`;
-                                const price = slotCfg.price || defaultPrice || "₹1,999";
-                                const rating = slotCfg.rating || defaultRating || "4.5";
-                                const badgeTag = slotCfg.discount || "Hot";
+                                const badgeTag = slotCfg.discount || defaultDiscount || "STARTING @ ₹31";
 
                                 return (
-                                    <div className="trending-item-card" key={idx} onClick={(e) => handleTrendingItemClick(idx, defaultLabel, defaultPrice, badgeTag, img)} style={{ cursor: 'pointer' }}>
-                                        <div className="trending-card-img-wrap">
-                                            {img ? <img src={img} alt={title} loading="lazy" /> : <div className="trending-placeholder" />}
-                                            {badgeTag && <span className="trending-tag">{badgeTag}</span>}
+                                    <div 
+                                        className="trending-item-card" 
+                                        key={idx} 
+                                        onClick={(e) => handleTrendingItemClick(idx, title, badgeTag, img)} 
+                                        style={{ 
+                                            flex: '0 0 86px', 
+                                            width: '86px', 
+                                            background: '#ffffff', 
+                                            borderRadius: '16px', 
+                                            overflow: 'hidden', 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            cursor: 'pointer',
+                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025)',
+                                            border: '1px solid #f3f4f6'
+                                        }}
+                                    >
+                                        <div style={{ width: '100%', height: '80px', overflow: 'hidden', background: '#f4f4f5' }}>
+                                            {img ? <img src={img} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: '#e4e4e7' }} />}
                                         </div>
-                                        <div className="trending-card-details">
-                                            <span className="trending-item-title">{title}</span>
-                                            <div className="trending-rating">
-                                                <Star size={10} className="star-icon-filled" />
-                                                <span>{rating}</span>
-                                            </div>
-                                            <div className="trending-price-row">
-                                                <span className="trending-price">{price}</span>
-                                                <button className="trending-add-btn" onClick={(e) => { e.stopPropagation(); triggerToast(`Added ${title} to Cart!`); }}><Plus size={12} /></button>
-                                            </div>
+                                        <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                            <span style={{ 
+                                                fontSize: '10px', 
+                                                fontWeight: 700, 
+                                                color: '#111827', 
+                                                height: '26px', 
+                                                overflow: 'hidden', 
+                                                display: '-webkit-box', 
+                                                WebkitLineClamp: 2, 
+                                                WebkitBoxOrient: 'vertical', 
+                                                lineHeight: '13px',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                textAlign: 'left',
+                                                marginBottom: '6px'
+                                            }}>
+                                                {title}
+                                            </span>
+                                            <span style={{ 
+                                                background: '#f43f5e', 
+                                                color: '#ffffff', 
+                                                fontSize: '7.5px', 
+                                                fontWeight: 900, 
+                                                padding: '3px 8px', 
+                                                borderRadius: '9999px',
+                                                textTransform: 'uppercase',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                textAlign: 'center',
+                                                display: 'inline-block'
+                                            }}>
+                                                {badgeTag}
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -3014,91 +3213,398 @@ function ManagePreviewPage() {
                     </div>
                 );
 
-            case "productSection":
+             case "productSection":
                 return (
-                    <div className="mock-widget-products animate-fade">
-                        <div className="section-title-row">
-                            <h4 className="widget-header-title">{productConfig.brandTitle || "Weekly Specials"}</h4>
-                            <span className="section-see-all" onClick={(e) => { e.stopPropagation(); triggerToast(`Clicked See All: ${productConfig.seeAllText || "View 18 Items"}`); }} style={{ cursor: 'pointer' }}>{productConfig.seeAllText || "View 18 Items"}</span>
+                    <div className="mock-widget-products animate-fade" style={{ background: '#0a2540', padding: '12px', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: '12px' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <h4 className="widget-header-title" style={{ color: '#ffffff', margin: 0, fontSize: '15px', fontWeight: 800, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                    {productConfig.brandTitle || "Tata Simply Better"}
+                                </h4>
+                                <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#94a3b8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                    {productConfig.subtitle || "Better lifestyle"}
+                                </p>
+                            </div>
+                            <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: '28px', height: '28px', borderRadius: '4px', overflow: 'hidden', background: '#ffffff', padding: '2px' }}>
+                                <img src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=80&q=80" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            </div>
                         </div>
-                        <div className="product-two-column-grid">
-                            {[0, 1, 2, 3].map(idx => {
+                        <div 
+                            onMouseDown={handleDragScroll} 
+                            style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', cursor: 'grab' }}
+                        >
+                            {validImgs.map((_, idx) => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
                                 const defaultLabel = meta.labels && meta.labels[idx];
                                 const defaultPrice = meta.prices && meta.prices[idx];
                                 const defaultRating = meta.ratings && meta.ratings[idx];
+                                const defaultOldPrice = meta.oldPrices && meta.oldPrices[idx];
+                                const defaultDiscount = meta.discounts && meta.discounts[idx];
+                                const defaultQuantity = meta.quantities && meta.quantities[idx];
+                                const defaultDelivery = meta.deliveries && meta.deliveries[idx];
+                                const defaultUnitPrice = meta.unitPrices && meta.unitPrices[idx];
 
                                 const slotCfg = productConfig.items[idx] || {};
                                 const title = slotCfg.productName || defaultLabel || `Product ${idx + 1}`;
                                 const price = slotCfg.price || defaultPrice || "₹1,299";
+                                const oldPrice = slotCfg.oldPrice || defaultOldPrice || "";
+                                const discount = slotCfg.discount || defaultDiscount || "";
+                                const quantity = slotCfg.quantity || defaultQuantity || "";
                                 const rating = slotCfg.rating || defaultRating || "4.5";
+                                const delivery = slotCfg.delivery || defaultDelivery || "12 mins";
+                                const unitPrice = slotCfg.unitPrice || defaultUnitPrice || "₹32.4/100 ml";
 
                                 return (
-                                    <div className="grid-product-card" key={idx} onClick={(e) => handleProductSectionItemClick(idx, defaultLabel, defaultPrice, slotCfg.discount, img)} style={{ cursor: 'pointer' }}>
-                                        <div className="product-img-wrap">
-                                            {img ? <img src={img} alt={title} loading="lazy" /> : <div className="product-placeholder" />}
-                                            {slotCfg.discount && <span className="product-discount-badge" style={{ position: 'absolute', top: '8px', left: '8px', background: '#ec4899', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', zIndex: 2 }}>{slotCfg.discount}</span>}
-                                            <div className="wishlist-btn-mock">❤️</div>
-                                        </div>
-                                        <div className="product-info-wrap">
-                                            <span className="product-title-text">{title}</span>
-                                            {slotCfg.quantity && <span className="product-quantity-text" style={{ fontSize: '10px', color: '#64748b', display: 'block', margin: '2px 0 4px 0' }}>{slotCfg.quantity}</span>}
-                                            <div className="product-rating-row">
-                                                <Star size={10} className="star-icon-filled" />
-                                                <span className="rating-score">{rating}</span>
-                                                <span className="reviews-count">(42)</span>
-                                            </div>
-                                            <div className="product-footer-row">
-                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span className="product-price-val">{price}</span>
-                                                    {slotCfg.oldPrice && <span className="product-old-price-val" style={{ textDecoration: 'line-through', fontSize: '10px', color: '#94a3b8' }}>{slotCfg.oldPrice}</span>}
+                                    <div 
+                                        className="product-section-card" 
+                                        key={idx} 
+                                        onClick={(e) => handleProductSectionItemClick(idx, title, price, discount, img)} 
+                                        style={{ 
+                                            flex: '0 0 100px', 
+                                            width: '100px', 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            cursor: 'pointer' 
+                                        }}
+                                    >
+                                        {/* Card white wrapper */}
+                                        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '6px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                            {/* Image container with heart overlay */}
+                                            <div style={{ position: 'relative', width: '100%', height: '80px', borderRadius: '12px', overflow: 'hidden', background: '#f4f4f5' }}>
+                                                {img ? <img src={img} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: '#e4e4e7' }} />}
+                                                {/* Heart button */}
+                                                <div style={{ position: 'absolute', top: '4px', right: '4px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <span style={{ fontSize: '10px', color: '#64748b' }}>♡</span>
                                                 </div>
-                                                <button className="product-add-cart-btn" onClick={(e) => { e.stopPropagation(); triggerToast(`Added ${title} to Cart!`); }}>Add</button>
+                                            </div>
+                                            {/* Quantity and ADD button row */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                                                <span style={{ fontSize: '9px', fontWeight: 600, color: '#4b5563', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                    {quantity}
+                                                </span>
+                                                <div 
+                                                    onClick={(e) => { e.stopPropagation(); triggerToast(`Added ${title} to Cart!`); }}
+                                                    style={{ 
+                                                        border: '1px solid #22c55e', 
+                                                        color: '#22c55e', 
+                                                        fontSize: '8px', 
+                                                        fontWeight: 800, 
+                                                        padding: '2px 8px', 
+                                                        borderRadius: '6px', 
+                                                        background: '#ffffff' 
+                                                    }}
+                                                >
+                                                    ADD
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Details below card (on dark blue background) */}
+                                        <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0 4px' }}>
+                                            <span style={{ fontSize: '8px', color: '#94a3b8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                {unitPrice}
+                                            </span>
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '3px', marginTop: '2px' }}>
+                                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#ffffff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                    {price}
+                                                </span>
+                                                {oldPrice && (
+                                                    <span style={{ fontSize: '8px', textDecoration: 'line-through', color: '#94a3b8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                        {oldPrice}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {discount && (
+                                                <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#4ade80', marginTop: '1px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                    {discount}
+                                                </span>
+                                            )}
+                                            <span style={{ 
+                                                fontSize: '10px', 
+                                                fontWeight: 700, 
+                                                color: '#ffffff', 
+                                                marginTop: '2px',
+                                                height: '24px', 
+                                                overflow: 'hidden', 
+                                                display: '-webkit-box', 
+                                                WebkitLineClamp: 2, 
+                                                WebkitBoxOrient: 'vertical', 
+                                                lineHeight: '12px',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                textAlign: 'left'
+                                            }}>
+                                                {title}
+                                            </span>
+                                            {/* Rating and clock row */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', fontSize: '9px', color: '#94a3b8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
+                                                    <span style={{ color: '#fbbf24', fontSize: '9px' }}>★</span>
+                                                    <span style={{ color: '#ffffff', fontWeight: 600 }}>{rating}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                    <span>⏱</span>
+                                                    <span>{delivery}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })}
+                        </div>
+                        {/* Bottom See all products button */}
+                        <div 
+                            onClick={(e) => { e.stopPropagation(); triggerToast("Redirecting to all products..."); }}
+                            style={{ 
+                                background: '#ffffff', 
+                                color: '#1e293b', 
+                                fontSize: '11px', 
+                                fontWeight: 700, 
+                                padding: '8px', 
+                                borderRadius: '9999px', 
+                                textAlign: 'center', 
+                                cursor: 'pointer', 
+                                marginTop: '4px',
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            <span>See all products</span>
+                            <span style={{ fontSize: '10px' }}>&gt;</span>
                         </div>
                     </div>
                 );
 
             case "perfumeSection":
                 return (
-                    <div className="mock-widget-perfume animate-fade">
-                        <div className="perfume-dark-header">
-                            <div className="perfume-glow-circle" />
-                            <span className="perfume-pretitle">HAATZA PRIVATE COLLECTION</span>
-                            <h3 className="perfume-title">{perfumeConfig.title || "Look good, smell great"}</h3>
-                            <p className="perfume-desc">{perfumeConfig.subtitle || "Rare elixirs sourced for high society scent profiles"}</p>
-                        </div>
-                        <div className="perfume-carousel-scroller">
-                            {[0, 1, 2].map(idx => {
+                    <div className="mock-widget-perfume animate-fade" style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '16px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                        <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', textAlign: 'left', margin: '0 0 12px 0', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                            {perfumeConfig.title || "Look good, smell great"}
+                        </h3>
+                        <div className="perfume-carousel-scroller" onMouseDown={handleDragScroll} style={{ cursor: 'grab', display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px' }}>
+                            {validImgs.map((_, idx) => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
                                 const defaultLabel = meta.labels && meta.labels[idx];
                                 const defaultPrice = meta.prices && meta.prices[idx];
-                                
+                                const defaultOldPrice = meta.oldPrices && meta.oldPrices[idx];
+                                const defaultDiscount = meta.discounts && meta.discounts[idx];
+                                const defaultQuantity = meta.quantities && meta.quantities[idx];
+                                const defaultDelivery = meta.deliveries && meta.deliveries[idx];
+                                const defaultRating = meta.ratings && meta.ratings[idx];
+                                const tag1 = meta.tag1 && meta.tag1[idx];
+                                const tag2 = meta.tag2 && meta.tag2[idx];
+
                                 const slotCfg = perfumeConfig.items[idx] || {};
                                 const title = slotCfg.productName || defaultLabel || `Perfume ${idx + 1}`;
                                 const price = slotCfg.price || defaultPrice || "₹12,000";
+                                const oldPrice = slotCfg.oldPrice || defaultOldPrice || "";
+                                const discount = slotCfg.discount || defaultDiscount || "";
+                                const quantity = slotCfg.quantity || defaultQuantity || "100 ml";
+                                const delivery = slotCfg.deliveryTime || defaultDelivery || "15 mins";
+                                const rating = slotCfg.rating || defaultRating || "4.5";
 
                                 return (
-                                    <div className="perfume-luxury-card" key={idx} onClick={(e) => handlePerfumeItemClick(idx, defaultLabel, defaultPrice, slotCfg.offerTag, img)} style={{ cursor: 'pointer' }}>
-                                        <div className="perfume-img-container">
-                                            {img ? <img src={img} alt={title} loading="lazy" /> : <div className="perfume-placeholder" />}
-                                            {slotCfg.offerTag && <span className="perfume-offer-tag" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(255,255,255,0.9)', color: '#111', fontSize: '8px', fontWeight: 700, padding: '2px 6px', borderRadius: '12px' }}>{slotCfg.offerTag}</span>}
+                                    <div 
+                                        key={idx} 
+                                        onClick={(e) => handlePerfumeItemClick(idx, defaultLabel, defaultPrice, slotCfg.offerTag, img)} 
+                                        style={{ 
+                                            width: '96px', 
+                                            flexShrink: 0, 
+                                            backgroundColor: '#ffffff', 
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            flexDirection: 'column'
+                                        }}
+                                    >
+                                        {/* Card Container Box */}
+                                        <div style={{
+                                            width: '96px',
+                                            height: '115px',
+                                            backgroundColor: '#ffffff',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '12px',
+                                            overflow: 'hidden',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between',
+                                            padding: '6px',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            {/* Upper part: Image + Heart icon */}
+                                            <div style={{ position: 'relative', width: '100%', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {img ? (
+                                                    <img src={img} alt={title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} loading="lazy" />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', borderRadius: '6px' }} />
+                                                )}
+                                                
+                                                {/* Heart Icon Overlay */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '0px',
+                                                    right: '0px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    background: '#ffffff',
+                                                    borderRadius: '50%',
+                                                    padding: '4px',
+                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                                                }}>
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                                    </svg>
+                                                </div>
+
+                                                {/* 3 Dots Indicator (bottom-left of image container) */}
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    bottom: '0px',
+                                                    left: '2px',
+                                                    display: 'flex',
+                                                    gap: '2px'
+                                                }}>
+                                                    <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#475569' }} />
+                                                    <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#cbd5e1' }} />
+                                                    <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#cbd5e1' }} />
+                                                </div>
+                                            </div>
+
+                                            {/* Bottom row inside card: Volume + ADD button */}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                width: '100%',
+                                                marginTop: '4px'
+                                            }}>
+                                                {/* Volume */}
+                                                <span style={{
+                                                    fontSize: '8px',
+                                                    fontWeight: 700,
+                                                    color: '#334155',
+                                                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                                                }}>
+                                                    {quantity}
+                                                </span>
+
+                                                {/* ADD Button */}
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        triggerToast(`Added to cart: ${title}`);
+                                                    }}
+                                                    style={{
+                                                        border: '1px solid #16a34a',
+                                                        color: '#16a34a',
+                                                        fontSize: '8px',
+                                                        fontWeight: 700,
+                                                        padding: '2px 8px',
+                                                        borderRadius: '20px',
+                                                        backgroundColor: '#ffffff',
+                                                        cursor: 'pointer',
+                                                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                        lineHeight: '1',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    ADD
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="perfume-content-footer">
-                                            <span className="perfume-card-title">{title}</span>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: '4px' }}>
-                                                <span className="perfume-card-price">{price}</span>
-                                                <span style={{ fontSize: '8px', color: '#a78bfa' }}>⏱ {slotCfg.deliveryTime || "10 mins"}</span>
+
+                                        {/* Details below card container */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 4px 0 4px', width: '96px', boxSizing: 'border-box' }}>
+                                            {/* Price Row: Current Price + Old Price */}
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginTop: '4px' }}>
+                                                <span style={{ fontSize: '10px', fontWeight: 800, color: '#1e293b', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                    {price}
+                                                </span>
+                                                {oldPrice && (
+                                                    <span style={{ fontSize: '8px', textDecoration: 'line-through', color: '#94a3b8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                        {oldPrice}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '9px', color: '#fbbf24', marginTop: '2px' }}>
-                                                <Star size={8} fill="currentColor" stroke="none" />
-                                                <span>{slotCfg.rating || "4.8"}</span>
+
+                                            {/* Discount/Offer Tag */}
+                                            {discount && (
+                                                <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#2563eb', display: 'block', margin: '1px 0 0 0', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                                                    {discount}
+                                                </span>
+                                            )}
+                                            {idx === 2 && discount === "₹961 OFF" && (
+                                                <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#2563eb', display: 'block', margin: '1px 0 0 0', fontFamily: 'system-ui, -apple-system, sans-serif', textAlign: 'left' }}>
+                                                    ₹200 Cashback on EMI
+                                                </span>
+                                            )}
+
+                                            {/* Product Title */}
+                                            <span style={{ 
+                                                fontSize: '9px', 
+                                                fontWeight: 700, 
+                                                color: '#475569', 
+                                                marginTop: '3px',
+                                                height: '24px', 
+                                                overflow: 'hidden', 
+                                                display: '-webkit-box', 
+                                                WebkitLineClamp: 2, 
+                                                WebkitBoxOrient: 'vertical', 
+                                                lineHeight: '12px',
+                                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                textAlign: 'left'
+                                            }}>
+                                                {title}
+                                            </span>
+
+                                            {/* Badges Column */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-start', marginTop: '3px' }}>
+                                                {tag1 && (
+                                                    <span style={{
+                                                        backgroundColor: '#f3f4f6',
+                                                        color: '#4b5563',
+                                                        fontSize: '8px',
+                                                        fontWeight: 700,
+                                                        padding: '2px 5px',
+                                                        borderRadius: '4px',
+                                                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                        lineHeight: '1'
+                                                    }}>
+                                                        {tag1}
+                                                    </span>
+                                                )}
+                                                {tag2 && (
+                                                    <span style={{
+                                                        backgroundColor: '#fef3c7',
+                                                        color: '#d97706',
+                                                        fontSize: '8px',
+                                                        fontWeight: 700,
+                                                        padding: '2px 5px',
+                                                        borderRadius: '4px',
+                                                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                                                        lineHeight: '1'
+                                                    }}>
+                                                        {tag2}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <button className="perfume-buy-btn" style={{ width: '100%', marginTop: '6px' }} onClick={(e) => { e.stopPropagation(); triggerToast(`Acquired: ${title}`); }}>Acquire</button>
+
+                                            {/* Rating and Delivery time row */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', fontSize: '8.5px', color: '#64748b', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
+                                                    <span style={{ color: '#fbbf24', fontSize: '9px' }}>★</span>
+                                                    <span style={{ color: '#475569', fontWeight: 700 }}>{rating}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                    <span>⏱</span>
+                                                    <span>{delivery}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -3107,33 +3613,181 @@ function ManagePreviewPage() {
                     </div>
                 );
 
-            case "kidsSection":
+            case "kidsSection": {
+                const displayItems = (kidsConfig.items || []).slice(0, 3);
+                
+                // Helper to split labels into main and sub line
+                const splitLabel = (label) => {
+                    if (!label) return { main: "", sub: "" };
+                    if (label.toLowerCase().includes("0-3")) {
+                        return { main: "0-3", sub: "Years" };
+                    }
+                    if (label.toLowerCase().includes("3-10")) {
+                        return { main: "3-10", sub: "Years" };
+                    }
+                    if (label.toLowerCase().includes("10")) {
+                        return { main: "10 Years", sub: "& Above" };
+                    }
+                    const parts = label.split(" ");
+                    if (parts.length > 1) {
+                        return { main: parts[0], sub: parts.slice(1).join(" ") };
+                    }
+                    return { main: label, sub: "" };
+                };
+
                 return (
-                    <div className="mock-widget-kids animate-fade" style={{ backgroundImage: kidsConfig.bgImage ? `url(${kidsConfig.bgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                        <div className="kids-header-cloud">
-                            <span className="kids-tagline">🎨 PLAY TIME!</span>
-                            <h3 className="kids-section-title">{kidsConfig.title || "Kids Active Zone"}</h3>
+                    <div className="mock-widget-kids animate-fade" style={{ backgroundColor: '#ffffff', padding: '0 0 16px 0', borderBottom: '1px solid #f1f5f9', overflow: 'hidden' }}>
+                        {/* Wavy Header Banner */}
+                        <div style={{ position: 'relative', backgroundColor: '#fef9c3', padding: '16px 12px 20px 12px', textAlign: 'center', minHeight: '60px', boxSizing: 'border-box' }}>
+                            {/* Wavy bottom border using SVG */}
+                            <div style={{ position: 'absolute', bottom: '-8px', left: 0, width: '100%', height: '10px', zIndex: 1 }}>
+                                <svg viewBox="0 0 100 10" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                                    <path d="M0 0 L100 0 L100 6 Q75 2 50 5 T0 4 Z" fill="#fef9c3" />
+                                </svg>
+                            </div>
+
+                            {/* Left Kid Illustration */}
+                            <div style={{ position: 'absolute', left: '8px', bottom: '-2px', zIndex: 2 }}>
+                                <svg width="45" height="50" viewBox="0 0 64 64" style={{ display: 'block' }}>
+                                    {/* Hair back */}
+                                    <circle cx="28" cy="22" r="14" fill="#6f4e37" />
+                                    <circle cx="38" cy="22" r="14" fill="#6f4e37" />
+                                    <circle cx="32" cy="16" r="14" fill="#6f4e37" />
+                                    {/* Ears */}
+                                    <circle cx="18" cy="30" r="4" fill="#ffd1a9" />
+                                    <circle cx="46" cy="30" r="4" fill="#ffd1a9" />
+                                    {/* Face */}
+                                    <circle cx="32" cy="30" r="12" fill="#ffd1a9" />
+                                    {/* Hair front/bangs */}
+                                    <path d="M20 24 Q32 16 44 24 Q38 18 32 20 Q26 18 20 24 Z" fill="#5c3a21" />
+                                    <circle cx="22" cy="22" r="6" fill="#5c3a21" />
+                                    <circle cx="42" cy="22" r="6" fill="#5c3a21" />
+                                    {/* Eyes */}
+                                    <circle cx="28" cy="30" r="1.5" fill="#2d3748" />
+                                    <circle cx="36" cy="30" r="1.5" fill="#2d3748" />
+                                    {/* Cheeks */}
+                                    <circle cx="25" cy="33" r="1.5" fill="#f56565" opacity="0.6" />
+                                    <circle cx="39" cy="33" r="1.5" fill="#f56565" opacity="0.6" />
+                                    {/* Smile */}
+                                    <path d="M30 34 Q32 37 34 34" stroke="#2d3748" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                                    {/* Neck */}
+                                    <rect x="29" y="40" width="6" height="6" fill="#ffd1a9" />
+                                    {/* Body/Clothes (Green Vest) */}
+                                    <path d="M20 46 C20 46 22 60 32 60 C42 60 44 46 44 46 Z" fill="#059669" />
+                                    {/* Waving Arm (Left arm of girl, which is on the left side of SVG) */}
+                                    <path d="M20 46 Q10 32 14 28 C16 26 20 30 20 38" fill="#ffd1a9" />
+                                    {/* Other Arm */}
+                                    <path d="M44 46 Q48 54 48 58" stroke="#ffd1a9" strokeWidth="4" strokeLinecap="round" />
+                                </svg>
+                            </div>
+
+                            {/* Right Kid Illustration */}
+                            <div style={{ position: 'absolute', right: '8px', bottom: '-2px', zIndex: 2 }}>
+                                <svg width="45" height="50" viewBox="0 0 64 64" style={{ display: 'block' }}>
+                                    {/* Hair back */}
+                                    <circle cx="32" cy="20" r="13" fill="#8b5a2b" />
+                                    <circle cx="25" cy="18" r="8" fill="#8b5a2b" />
+                                    <circle cx="39" cy="18" r="8" fill="#8b5a2b" />
+                                    {/* Ears */}
+                                    <circle cx="19" cy="28" r="3.5" fill="#ffd1a9" />
+                                    <circle cx="45" cy="28" r="3.5" fill="#ffd1a9" />
+                                    {/* Face */}
+                                    <circle cx="32" cy="28" r="11" fill="#ffd1a9" />
+                                    {/* Hair bangs */}
+                                    <path d="M22 21 Q32 16 42 21" stroke="#6f4e37" strokeWidth="4" strokeLinecap="round" />
+                                    {/* Eyes */}
+                                    <circle cx="28" cy="28" r="1.5" fill="#2d3748" />
+                                    <circle cx="36" cy="28" r="1.5" fill="#2d3748" />
+                                    {/* Cheeks */}
+                                    <circle cx="25" cy="31" r="1.5" fill="#f56565" opacity="0.6" />
+                                    <circle cx="39" cy="31" r="1.5" fill="#f56565" opacity="0.6" />
+                                    {/* Smile */}
+                                    <path d="M30 32 Q32 35 34 32" stroke="#2d3748" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                                    {/* Neck */}
+                                    <rect x="30" y="38" width="4" height="5" fill="#ffd1a9" />
+                                    {/* Body (Red Shirt) */}
+                                    <path d="M22 43 C22 43 24 60 32 60 C40 60 42 43 42 43 Z" fill="#dc2626" />
+                                    {/* Right arm pointing (which is on the right side of SVG) */}
+                                    <path d="M42 43 Q54 35 50 31 C47 28 44 32 42 38" fill="#ffd1a9" />
+                                    {/* Other Arm */}
+                                    <path d="M22 43 Q16 50 18 55" stroke="#ffd1a9" strokeWidth="4" strokeLinecap="round" />
+                                </svg>
+                            </div>
+
+                            {/* Center Title */}
+                            <h3 style={{
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                color: '#1e293b',
+                                margin: '0 auto',
+                                padding: '0 40px',
+                                lineHeight: '1.4',
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                textAlign: 'center'
+                            }}>
+                                {kidsConfig.title || "Smiles, Giggles, Party Time!"}
+                            </h3>
                         </div>
-                        <div className="kids-cards-grid">
-                            {[0, 1, 2, 3].map(idx => {
-                                const img = validImgs[idx] || meta.defaultImages[idx];
+
+                        {/* Cards Grid */}
+                        <div style={{ display: 'flex', gap: '8px', padding: '24px 12px 4px 12px', backgroundColor: '#ffffff', justifyContent: 'center', boxSizing: 'border-box' }}>
+                            {displayItems.map((_, idx) => {
+                                const img = widgetImages[idx] || meta.defaultImages[idx];
                                 const defaultLabel = meta.labels && meta.labels[idx];
-                                const defaultPrice = meta.prices && meta.prices[idx];
                                 
                                 const slotCfg = kidsConfig.items[idx] || {};
-                                const title = slotCfg.label || defaultLabel || `Age Group ${idx + 1}`;
+                                const rawLabel = slotCfg.label || defaultLabel || `Age Group ${idx + 1}`;
+                                const { main, sub } = splitLabel(rawLabel);
 
                                 return (
-                                    <div className="kids-play-card" key={idx} onClick={(e) => handleKidsItemClick(idx, defaultLabel, img)} style={{ backgroundColor: ["#FFEBEB", "#EBF3FF", "#F1FFE5", "#FFFBE5"][idx], cursor: 'pointer' }}>
-                                        <div className="kids-img-container">
-                                            {img ? <img src={img} alt={title} loading="lazy" /> : <div className="kids-placeholder" />}
+                                    <div 
+                                        key={idx} 
+                                        onClick={(e) => handleKidsItemClick(idx, defaultLabel, img)} 
+                                        style={{ 
+                                            width: '94px',
+                                            height: '115px',
+                                            backgroundColor: '#ffffff', 
+                                            cursor: 'pointer',
+                                            borderRadius: '16px',
+                                            border: '1px solid #e2e8f0',
+                                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between',
+                                            overflow: 'hidden',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    >
+                                        {/* Card Header Text (Centered age label) */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 4px 0 4px', lineHeight: '1.1' }}>
+                                            <span style={{ fontSize: '10px', fontWeight: 800, color: '#1e293b', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                {main}
+                                            </span>
+                                            {sub && (
+                                                <span style={{ fontSize: '8px', fontWeight: 600, color: '#64748b', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                                    {sub}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="kids-card-footer">
-                                            <span className="kids-card-label">{title}</span>
-                                            <div className="kids-price-row">
-                                                <span className="kids-card-price">{defaultPrice}</span>
-                                                <span className="kids-add-icon">⭐</span>
-                                            </div>
+
+                                        {/* Card Image Area at Bottom */}
+                                        <div style={{ width: '100%', height: '78px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden' }}>
+                                            {img ? (
+                                                <img 
+                                                    src={img} 
+                                                    alt={rawLabel} 
+                                                    style={{ 
+                                                        width: '100%', 
+                                                        height: '100%', 
+                                                        objectFit: 'cover',
+                                                        borderBottomLeftRadius: '15px',
+                                                        borderBottomRightRadius: '15px'
+                                                    }} 
+                                                    loading="lazy" 
+                                                />
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }} />
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -3141,6 +3795,7 @@ function ManagePreviewPage() {
                         </div>
                     </div>
                 );
+            }
 
             case "Lite_Shopbycategory": {
                 const beautyCatMap = [
@@ -3160,7 +3815,7 @@ function ManagePreviewPage() {
                             <MoreVertical size={14} className="lite-shopbycategory-menu-icon" />
                         </div>
                         <div className="lite-shopbycategory-grid">
-                            {[0, 1, 2, 3, 4, 5, 6, 7].map(idx => {
+                            {validImgs.map((_, idx) => {
                                 const img = validImgs[idx] || meta.defaultImages[idx];
                                 const label = meta.labels[idx];
                                 const catItem = beautyCatMap[idx];
@@ -3226,21 +3881,44 @@ function ManagePreviewPage() {
         }
     }, [selectedWidgetId, liteBannerConfig, litePromobannerConfig, roomgridConfig, liteBannercarouselConfig, trendingConfig, productConfig, perfumeConfig, kidsConfig, freshmarketConfig, matsConfig, handleLiteBannerClick, handleRoomgridClick, handleLitePromobannerClick, handleLiteBannercarouselClick, handleTrendingItemClick, handleProductSectionItemClick, handlePerfumeItemClick, handleKidsItemClick, handleFreshmarketItemClick, handleMatsItemClick, liteShopbycategoryConfig, productsMasterList, widgetImages]);
 
-    const renderWidgetList = useCallback((widgetIds, imagesSource, isBeforeLabel) => {
-        if (!widgetIds || widgetIds.length === 0) return null;
-        return widgetIds.map(widgetId => {
-            const isEditingThis = widgetId === selectedWidgetId;
-            return (
-                <div 
-                    key={widgetId}
-                    className={`phone-widget-interactive-wrapper ${isEditingThis ? "editing-highlight" : ""}`}
-                    onClick={() => setSelectedWidgetId(widgetId)}
-                >
-                    {renderWidgetMock(widgetId, imagesSource, isBeforeLabel)}
+    const renderStaticFiller = useCallback(() => {
+        let fillerWidgetId = "productSection";
+        if (selectedWidgetId === "productSection") {
+            fillerWidgetId = "trendingSection";
+        } else if (selectedWidgetId === "trendingSection") {
+            fillerWidgetId = "productSection";
+        } else if (selectedWidgetId === "matsSection") {
+            fillerWidgetId = "productSection";
+        } else if (selectedWidgetId === "freshmarketSection") {
+            fillerWidgetId = "productSection";
+        } else {
+            fillerWidgetId = "trendingSection";
+        }
+
+        const fillerImagesSource = "DEFAULT";
+
+        return (
+            <div style={{ pointerEvents: 'none', userSelect: 'none', marginTop: '16px', borderTop: '1px dashed #e5e7eb', paddingTop: '16px', opacity: 0.85 }}>
+                <div style={{ padding: '0 16px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Suggested for You
+                    </span>
                 </div>
-            );
-        });
-    }, [selectedWidgetId, renderWidgetMock, setSelectedWidgetId]);
+                {renderWidgetMock(fillerWidgetId, fillerImagesSource, false)}
+            </div>
+        );
+    }, [selectedWidgetId, renderWidgetMock]);
+
+    const renderWidgetList = useCallback((widgetIds, imagesSource, isBeforeLabel) => {
+        return (
+            <div 
+                key={selectedWidgetId}
+                className="phone-widget-interactive-wrapper editing-highlight"
+            >
+                {renderWidgetMock(selectedWidgetId, imagesSource, isBeforeLabel)}
+            </div>
+        );
+    }, [selectedWidgetId, renderWidgetMock]);
 
     // ─── Dynamic Simulator Frame Context Mock ───────────────────────────
     const renderSimulatorContent = useCallback((imagesSource, isBeforeLabel = false) => {
@@ -3380,6 +4058,7 @@ function ManagePreviewPage() {
                 {simulatorTab === "home" && (
                     <div className="simulator-scroll-content" ref={phoneBodyRef}>
                         {renderWidgetList(WIDGET_BY_CATEGORY.home, imagesSource, isBeforeLabel)}
+                        {renderStaticFiller()}
                     </div>
                 )}
 
@@ -3672,6 +4351,7 @@ function ManagePreviewPage() {
                             <span className="sim-page-header-title">Product Listing</span>
                         </div>
                         {renderWidgetList(WIDGET_BY_CATEGORY.listing, imagesSource, isBeforeLabel)}
+                        {renderStaticFiller()}
                     </div>
                 )}
 
@@ -3682,6 +4362,7 @@ function ManagePreviewPage() {
                             <span className="sim-page-header-title">Promotions & Offers</span>
                         </div>
                         {renderWidgetList(WIDGET_BY_CATEGORY.promotions, imagesSource, isBeforeLabel)}
+                        {renderStaticFiller()}
                     </div>
                 )}
 
@@ -3764,7 +4445,7 @@ function ManagePreviewPage() {
                 <div className="phone-home-indicator" />
             </div>
         );
-    }, [selectedCat, selectedWidgetId, phoneTime, activeMeta, renderWidgetMock, renderWidgetList, simulatorTab, simSearchQuery, selectedCategoryInSim, selectedProductInSim, productsMasterList]);
+    }, [selectedCat, selectedWidgetId, phoneTime, activeMeta, renderWidgetMock, renderWidgetList, renderStaticFiller, simulatorTab, simSearchQuery, selectedCategoryInSim, selectedProductInSim, productsMasterList]);
 
     return (
         <div className="manage-preview-container fade-in">
@@ -3825,16 +4506,6 @@ function ManagePreviewPage() {
                                         onChange={(e) => {
                                             const val = e.target.value;
                                             setSelectedWidgetId(val);
-                                            // Auto-update Page Category if the newly selected widget is not in the current category
-                                            const currentCatWidgets = WIDGET_BY_CATEGORY[selectedCat] || [];
-                                            if (!currentCatWidgets.includes(val)) {
-                                                const newCat = Object.keys(WIDGET_BY_CATEGORY).find(cat => 
-                                                    WIDGET_BY_CATEGORY[cat].includes(val)
-                                                );
-                                                if (newCat) {
-                                                    setSelectedCat(newCat);
-                                                }
-                                            }
                                         }}
                                     >
                                         {Object.keys(WIDGET_METADATA).map(wid => (
@@ -3865,153 +4536,300 @@ function ManagePreviewPage() {
                             </div>
                         </div>
 
-                        {selectedWidgetId === "Lite_Banner" && (
-                            <div className="lite-banner-config-section animate-fade">
-                                <div className="config-section-header">
-                                    <h3>Lite Banner Configuration</h3>
-                                    <span className="cms-badge">Single Banner</span>
-                                </div>
-                                <div className="config-section-body">
-                                    {/* STEP 1: BANNER IMAGE */}
-                                    <div className="cms-step-card">
-                                        <div className="cms-step-header">
-                                            <span className="step-num">1</span>
-                                            <h4>Banner Image *</h4>
+                        {selectedWidgetId === "Lite_Banner" && (() => {
+                            const imgUrl = widgetImages[0];
+                            const isExpanded = liteBannerExpandedSlot === 0;
+                            const isUploaded = imgUrl !== null && imgUrl !== undefined && imgUrl !== "";
+                            const hasLink = liteBannerConfig.categoryId || liteBannerConfig.destProductId;
+
+                            return (
+                                <div className="lite-shopbycategory-config-section animate-fade">
+                                    <div className="config-section-header">
+                                        <h3>Lite Banner Configuration</h3>
+                                        <span className="cms-badge" style={{ background: 'linear-gradient(135deg, #f9a8d4, #ec4899)', color: '#fff' }}>Single Banner</span>
+                                    </div>
+
+                                    {/* Stats Row */}
+                                    <div className="widget-slot-stats-row" style={{ marginBottom: '4px' }}>
+                                        <div className="slot-stat-chip uploaded">
+                                            <span className="chip-num">{stats.uploaded}</span>
+                                            <span className="chip-label">Images Uploaded</span>
                                         </div>
-                                        <div className="cms-step-content">
-                                            <div className={`banner-upload-dropzone-wrapper ${liteBannerErrors.bannerImage ? 'has-error' : ''}`}>
-                                                {liteBannerConfig.imageUrl ? (
-                                                    <div className="cms-image-preview-card">
-                                                        <div className="preview-image-container">
-                                                            <img src={liteBannerConfig.imageUrl} alt="Uploaded Banner" className="preview-image-element" />
-                                                        </div>
-                                                        <div className="preview-image-details">
-                                                            <div className="detail-row">
-                                                                <span className="detail-label">Image Name:</span>
-                                                                <span className="detail-value text-ellipsis" title={imageMetadata[0]?.name || "lite_banner-preset-1.png"}>
-                                                                    {imageMetadata[0]?.name || "lite_banner-preset-1.png"}
-                                                                </span>
-                                                            </div>
-                                                            <div className="detail-row">
-                                                                <span className="detail-label">Resolution:</span>
-                                                                <span className="detail-value">{imageMetadata[0]?.resolution || "1200 × 600 px"}</span>
-                                                            </div>
-                                                            <div className="detail-row">
-                                                                <span className="detail-label">File Size:</span>
-                                                                <span className="detail-value">{imageMetadata[0]?.size || "-"}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="preview-image-actions">
-                                                            <button 
-                                                                type="button" 
-                                                                className="btn-preview-action replace" 
-                                                                onClick={() => document.getElementById('file-input-lite-banner').click()}
-                                                            >
-                                                                Replace
-                                                            </button>
-                                                            <button 
-                                                                type="button" 
-                                                                className="btn-preview-action delete" 
-                                                                onClick={() => handleDeleteClick(0)}
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
+                                        <div className="slot-stat-chip pending">
+                                            <span className="chip-num">{stats.pending}</span>
+                                            <span className="chip-label">Pending</span>
+                                        </div>
+                                        <div className="slot-stat-chip total">
+                                            <span className="chip-num">
+                                                {hasLink ? 1 : 0}
+                                            </span>
+                                            <span className="chip-label">Links Configured</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="lite-shopbycategory-slots-accordion">
+                                        <div className={`lite-shopbycategory-slot-accordion-card ${isExpanded ? 'expanded' : ''} ${isUploaded ? 'has-image' : ''} ${hasLink ? 'has-link' : ''} ${Object.keys(liteBannerErrors).length > 0 ? 'has-errors' : ''}`}>
+                                            {/* Accordion Header */}
+                                            <div
+                                                className="lite-shopbycategory-slot-accordion-header"
+                                                onClick={() => setLiteBannerExpandedSlot(isExpanded ? null : 0)}
+                                            >
+                                                <div className="lite-shopbycategory-slot-thumb-wrap">
+                                                    {isUploaded
+                                                        ? <img src={imgUrl} alt="Banner" className="lite-shopbycategory-slot-thumb" />
+                                                        : <div className="lite-shopbycategory-slot-thumb-empty"><Upload size={14} /></div>
+                                                    }
+                                                </div>
+                                                <div className="lite-shopbycategory-slot-header-info">
+                                                    <span className="lite-shopbycategory-slot-label-name">Main Banner</span>
+                                                    <div className="lite-shopbycategory-slot-status-row">
+                                                        <span className={`lite-shopbycategory-slot-img-badge ${isUploaded ? 'ok' : 'missing'}`}>
+                                                            {isUploaded ? '✓ Image' : '✗ No Image'}
+                                                        </span>
+                                                        <span className={`lite-shopbycategory-slot-link-badge ${hasLink ? 'ok' : 'missing'}`}>
+                                                            {hasLink
+                                                                ? (liteBannerConfig.redirectType === 'PRODUCT'
+                                                                    ? `→ ${liteBannerConfig.destProductName ? liteBannerConfig.destProductName.substring(0, 18) + '...' : 'Product'}`
+                                                                    : `→ ${liteBannerConfig.categoryName || 'Category'}`)
+                                                                : '✗ No Link'
+                                                            }
+                                                        </span>
                                                     </div>
-                                                ) : (
-                                                    <div className="banner-upload-placeholder" onClick={() => document.getElementById('file-input-lite-banner').click()}>
-                                                        <div className="upload-icon">📤</div>
-                                                        <div className="upload-text">Upload Banner Image</div>
-                                                        <div className="upload-reqs">
-                                                            <div>Resolution: 1200 × 600 px</div>
-                                                            <div>Formats: PNG, JPG, WEBP</div>
-                                                            <div>Maximum: 2 MB</div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                <input 
-                                                    type="file" 
-                                                    id="file-input-lite-banner" 
-                                                    style={{ display: 'none' }} 
-                                                    accept="image/*" 
-                                                    onChange={(e) => handleFileChange(e, 0)} 
-                                                />
+                                                </div>
+                                                <div className="lite-shopbycategory-slot-expand-icon">
+                                                    <ChevronRight size={16} style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+                                                </div>
                                             </div>
-                                            {liteBannerErrors.bannerImage && (
-                                                <div className="error-message-inline">{liteBannerErrors.bannerImage}</div>
+
+                                            {/* Accordion Body */}
+                                            {isExpanded && (
+                                                <div className="lite-shopbycategory-slot-accordion-body animate-fade">
+                                                    {/* Step 1: Banner Image */}
+                                                    <div className="lite-shopbycategory-slot-step">
+                                                        <div className="lite-shopbycategory-slot-step-title">
+                                                            <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>1</span>
+                                                            <span>Banner Image</span>
+                                                            <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: 'auto' }}>1200×600 px • max 2 MB</span>
+                                                        </div>
+                                                        <div className="lite-shopbycategory-slot-img-upload-area">
+                                                            {isUploaded ? (
+                                                                <div className="lite-shopbycategory-slot-uploaded-preview">
+                                                                    <img src={imgUrl} alt="Banner" />
+                                                                    <div className="lite-shopbycategory-slot-img-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="slot-action-btn upload-btn"
+                                                                            onClick={() => handleReplaceClick(0)}
+                                                                        >
+                                                                            <RefreshCw size={12} /> Replace
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="slot-action-btn delete-btn"
+                                                                            onClick={() => handleDeleteClick(0)}
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    className="lite-shopbycategory-slot-upload-dropzone"
+                                                                    onClick={() => handleReplaceClick(0)}
+                                                                >
+                                                                    <Upload size={20} style={{ color: '#ec4899', marginBottom: '6px' }} />
+                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>Upload Banner Image</span>
+                                                                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>PNG, JPG, WEBP • 1200×600 px</span>
+                                                                </div>
+                                                            )}
+                                                            <input
+                                                                type="file"
+                                                                id="file-input-0"
+                                                                style={{ display: "none" }}
+                                                                accept="image/png, image/jpeg, image/webp"
+                                                                onChange={(e) => handleFileChange(e, 0)}
+                                                            />
+                                                        </div>
+                                                        {liteBannerErrors.bannerImage && (
+                                                            <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                <AlertTriangle size={12} />
+                                                                {liteBannerErrors.bannerImage}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Step 2: Redirect Destination */}
+                                                    <div className="lite-shopbycategory-slot-step">
+                                                        <div className="lite-shopbycategory-slot-step-title">
+                                                            <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>2</span>
+                                                            <span>Redirect Destination</span>
+                                                        </div>
+
+                                                        {/* Redirect Type Toggle */}
+                                                        <div className="modern-segmented-control" style={{ marginBottom: '12px' }}>
+                                                            <button
+                                                                type="button"
+                                                                className={`segment-btn ${liteBannerConfig.redirectType === 'CATEGORY' ? 'active' : ''}`}
+                                                                onClick={() => {
+                                                                    setLiteBannerConfig(p => ({
+                                                                        ...p,
+                                                                        redirectType: "CATEGORY",
+                                                                        categoryId: "",
+                                                                        categoryName: "",
+                                                                        destProductId: "",
+                                                                        destProductName: "",
+                                                                        destPrice: "",
+                                                                        destDiscount: "",
+                                                                        destMainCategory: "",
+                                                                        destSubCategory: ""
+                                                                    }));
+                                                                    setLiteBannerErrors(prev => {
+                                                                        const next = { ...prev };
+                                                                        delete next.categoryId;
+                                                                        delete next.destProductId;
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                Category Page
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`segment-btn ${liteBannerConfig.redirectType === 'PRODUCT' ? 'active' : ''}`}
+                                                                onClick={() => {
+                                                                    setLiteBannerConfig(p => ({
+                                                                        ...p,
+                                                                        redirectType: "PRODUCT",
+                                                                        categoryId: "",
+                                                                        categoryName: "",
+                                                                        destProductId: "",
+                                                                        destProductName: "",
+                                                                        destPrice: "",
+                                                                        destDiscount: "",
+                                                                        destMainCategory: "",
+                                                                        destSubCategory: ""
+                                                                    }));
+                                                                    setLiteBannerErrors(prev => {
+                                                                        const next = { ...prev };
+                                                                        delete next.categoryId;
+                                                                        delete next.destProductId;
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                Product Page
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Category Redirect */}
+                                                        {liteBannerConfig.redirectType === 'CATEGORY' && (
+                                                            <div className="form-group-wrap animate-fade">
+                                                                <label className="form-field-label">Select Category</label>
+                                                                <SearchableSelect
+                                                                    placeholder="Search category..."
+                                                                    options={(categoriesList.length > 0 ? categoriesList : MOCK_CATEGORIES).map(cat => ({ value: cat.categoryId, label: cat.categoryName }))}
+                                                                    value={liteBannerConfig.categoryId}
+                                                                    onChange={(val, option) => {
+                                                                        setLiteBannerConfig(p => ({ ...p, categoryId: val, categoryName: option ? option.label : "" }));
+                                                                        setLiteBannerErrors(prev => {
+                                                                            const next = { ...prev };
+                                                                            delete next.categoryId;
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                    displayKey="label"
+                                                                    valueKey="value"
+                                                                    searchKey="label"
+                                                                />
+                                                                {liteBannerErrors.categoryId && (
+                                                                    <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <AlertTriangle size={12} />
+                                                                        {liteBannerErrors.categoryId}
+                                                                    </div>
+                                                                )}
+                                                                {liteBannerConfig.categoryId && (
+                                                                    <div className="selected-info-display-card category-theme animate-scale" style={{ marginTop: '8px' }}>
+                                                                        <div className="display-card-title">Selected Category</div>
+                                                                        <div className="display-card-body">
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">Name:</span>
+                                                                                <strong className="info-val">{liteBannerConfig.categoryName}</strong>
+                                                                            </div>
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">ID:</span>
+                                                                                <strong className="info-val code-font">{liteBannerConfig.categoryId}</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Product Redirect */}
+                                                        {liteBannerConfig.redirectType === 'PRODUCT' && (
+                                                            <div className="form-group-wrap animate-fade">
+                                                                <label className="form-field-label">Select Product</label>
+                                                                <SearchableSelect
+                                                                    placeholder="Search product by name or SKU..."
+                                                                    options={productsMasterList.map(prod => ({ value: prod.productId, label: prod.productName, sku: prod.sku, price: prod.price, discount: prod.discount, image: prod.image, mainCategoryId: prod.mainCategoryId, subCategoryId: prod.subCategoryId }))}
+                                                                    value={liteBannerConfig.destProductId}
+                                                                    onChange={(val, option) => {
+                                                                        setLiteBannerConfig(p => ({
+                                                                            ...p,
+                                                                            destProductId: val,
+                                                                            destProductName: option ? option.label : "",
+                                                                            destPrice: option ? option.price : "",
+                                                                            destDiscount: option ? option.discount : "",
+                                                                            destMainCategory: option ? option.mainCategoryId : "",
+                                                                            destSubCategory: option ? option.subCategoryId : ""
+                                                                        }));
+                                                                        setLiteBannerErrors(prev => {
+                                                                            const next = { ...prev };
+                                                                            delete next.destProductId;
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                    displayKey="label"
+                                                                    valueKey="value"
+                                                                    searchKey="label"
+                                                                />
+                                                                {liteBannerErrors.destProductId && (
+                                                                    <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <AlertTriangle size={12} />
+                                                                        {liteBannerErrors.destProductId}
+                                                                    </div>
+                                                                )}
+                                                                {liteBannerConfig.destProductId && (
+                                                                    <div className="selected-info-display-card product-theme animate-scale" style={{ marginTop: '8px' }}>
+                                                                        <div className="display-card-title">Selected Product</div>
+                                                                        <div className="display-card-body">
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">Name:</span>
+                                                                                <strong className="info-val">{liteBannerConfig.destProductName}</strong>
+                                                                            </div>
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">ID:</span>
+                                                                                <strong className="info-val code-font">{liteBannerConfig.destProductId}</strong>
+                                                                            </div>
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">Price:</span>
+                                                                                <strong className="info-val">{liteBannerConfig.destPrice}</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* STEP 2: REDIRECT DESTINATION */}
-                                    <div className="cms-step-card">
-                                        <div className="cms-step-header">
-                                            <span className="step-num">2</span>
-                                            <h4>Redirect Destination *</h4>
-                                        </div>
-                                        <div className="cms-step-content">
-                                            <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
-                                                <label className="form-field-label">Redirect Type *</label>
-                                                <div className="modern-segmented-control">
-                                                    <button 
-                                                        type="button" 
-                                                        className={`segment-btn ${liteBannerConfig.redirectType === "CATEGORY" ? "active" : ""}`} 
-                                                        onClick={() => setLiteBannerConfig(p => ({ ...p, redirectType: "CATEGORY", categoryId: "", categoryName: "" }))}
-                                                    >
-                                                        Category Page
-                                                    </button>
-                                                    <button 
-                                                        type="button" 
-                                                        className={`segment-btn ${liteBannerConfig.redirectType === "PRODUCT" ? "active" : ""}`} 
-                                                        onClick={() => setLiteBannerConfig(p => ({ ...p, redirectType: "PRODUCT", destProductId: "", destProductName: "" }))}
-                                                    >
-                                                        Product Page
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {liteBannerConfig.redirectType === "CATEGORY" ? (
-                                                <div className="form-group-wrap animate-fade">
-                                                    <label className="form-field-label">Search Category</label>
-                                                    <SearchableSelect
-                                                        placeholder="Search category..."
-                                                        options={MOCK_CATEGORIES.map(cat => ({ value: cat.categoryId, label: cat.categoryName }))}
-                                                        value={liteBannerConfig.categoryId}
-                                                        onChange={(val, option) => setLiteBannerConfig(p => ({ ...p, categoryId: val, categoryName: option ? option.label : "" }))}
-                                                        displayKey="label"
-                                                        valueKey="value"
-                                                        searchKey="label"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="form-group-wrap animate-fade">
-                                                    <label className="form-field-label">Search Product</label>
-                                                    <SearchableSelect
-                                                        placeholder="Search product by name or SKU..."
-                                                        options={productsMasterList.map(prod => ({ value: prod.productId, label: prod.productName, sku: prod.sku, price: prod.price, discount: prod.discount, image: prod.image, mainCategoryId: prod.mainCategoryId, subCategoryId: prod.subCategoryId }))}
-                                                        value={liteBannerConfig.destProductId}
-                                                        onChange={(val, option) => setLiteBannerConfig(p => ({
-                                                            ...p,
-                                                            destProductId: val,
-                                                            destProductName: option ? option.label : "",
-                                                            destPrice: option ? option.price : "",
-                                                            destDiscount: option ? option.discount : "",
-                                                            destMainCategory: option ? option.mainCategoryId : "",
-                                                            destSubCategory: option ? option.subCategoryId : ""
-                                                        }))}
-                                                        displayKey="label"
-                                                        valueKey="value"
-                                                        searchKey="label"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* STEP 3: CONFIGURATION SUMMARY */}
+                                    {/* Configuration Summary */}
                                     <div className="cms-step-card summary-card" style={{ marginTop: '16px' }}>
                                         <div className="cms-step-header">
-                                            <span className="step-num">3</span>
+                                            <span className="step-num">✓</span>
                                             <h4>Configuration Summary</h4>
                                         </div>
                                         <div className="cms-step-content">
@@ -4053,191 +4871,424 @@ function ManagePreviewPage() {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
+                        {selectedWidgetId === "Lite_Promobanner" && (() => {
+                            const imgUrl = widgetImages[0];
+                            const isExpanded = litePromobannerExpandedSlot === 0;
+                            const isUploaded = imgUrl !== null && imgUrl !== undefined && imgUrl !== "";
+                            const hasLink = litePromobannerConfig.categoryId || litePromobannerConfig.destProductId;
 
-                        {/* ─── PROMOBANNER SECTION CONFIG SECTION ─── */}
-                        {selectedWidgetId === "Lite_Promobanner" && (
-                            <div className="lite-banner-config-section animate-fade">
-                                <div className="config-section-header">
-                                    <h3>Lite Promobanner Configuration</h3>
-                                    <span className="cms-badge">Promo Card</span>
-                                </div>
-                                <div className="config-section-body">
-                                    {/* STEP 1: PROMO IMAGE */}
-                                    <div className="cms-step-card">
-                                        <div className="cms-step-header">
-                                            <span className="step-num">1</span>
-                                            <h4>Promo Image *</h4>
+                            return (
+                                <div className="lite-shopbycategory-config-section animate-fade">
+                                    <div className="config-section-header">
+                                        <h3>Lite Promobanner Configuration</h3>
+                                        <span className="cms-badge" style={{ background: 'linear-gradient(135deg, #f9a8d4, #ec4899)', color: '#fff' }}>Promo Card</span>
+                                    </div>
+
+                                    {/* Stats Row */}
+                                    <div className="widget-slot-stats-row" style={{ marginBottom: '4px' }}>
+                                        <div className="slot-stat-chip uploaded">
+                                            <span className="chip-num">{stats.uploaded}</span>
+                                            <span className="chip-label">Images Uploaded</span>
                                         </div>
-                                        <div className="cms-step-content">
-                                            <div className={`banner-upload-dropzone-wrapper ${litePromobannerErrors.bannerImage ? 'has-error' : ''}`}>
-                                                {litePromobannerConfig.imageUrl ? (
-                                                    <div className="cms-image-preview-card">
-                                                        <div className="preview-image-container">
-                                                            <img src={litePromobannerConfig.imageUrl} alt="Promo" className="preview-image-element" />
-                                                        </div>
-                                                        <div className="preview-image-details">
-                                                            <div className="detail-row">
-                                                                <span className="detail-label">Resolution:</span>
-                                                                <span className="detail-value">{imageMetadata[0]?.resolution || "1080 × 1080 px"}</span>
-                                                            </div>
-                                                            <div className="detail-row">
-                                                                <span className="detail-label">File Size:</span>
-                                                                <span className="detail-value">{imageMetadata[0]?.size || "-"}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="preview-image-actions">
-                                                            <button type="button" className="btn-preview-action replace" onClick={() => document.getElementById('file-input-0').click()}>Replace</button>
-                                                            <button type="button" className="btn-preview-action delete" onClick={() => handleDeleteClick(0)}>Delete</button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="banner-upload-placeholder" onClick={() => document.getElementById('file-input-0').click()}>
-                                                        <div className="upload-icon">📤</div>
-                                                        <div className="upload-text">Upload Promo Image</div>
-                                                    </div>
-                                                )}
-                                                <input type="file" id="file-input-0" style={{ display: 'none' }} accept="image/*" onChange={(e) => handleFileChange(e, 0)} />
-                                            </div>
-                                            {litePromobannerErrors.bannerImage && <div className="error-message-inline">{litePromobannerErrors.bannerImage}</div>}
+                                        <div className="slot-stat-chip pending">
+                                            <span className="chip-num">{stats.pending}</span>
+                                            <span className="chip-label">Pending</span>
+                                        </div>
+                                        <div className="slot-stat-chip total">
+                                            <span className="chip-num">
+                                                {hasLink ? 1 : 0}
+                                            </span>
+                                            <span className="chip-label">Links Configured</span>
                                         </div>
                                     </div>
 
-                                    {/* STEP 2: CONTENT DETAILS */}
-                                    <div className="cms-step-card">
-                                        <div className="cms-step-header">
-                                            <span className="step-num">2</span>
-                                            <h4>Content Details</h4>
-                                        </div>
-                                        <div className="cms-step-content">
-                                            <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
-                                                <label className="form-field-label">Headline / Title *</label>
-                                                <input 
-                                                    type="text" 
-                                                    className={`styled-input ${litePromobannerErrors.title ? 'has-error' : ''}`}
-                                                    value={litePromobannerConfig.title} 
-                                                    onChange={e => setLitePromobannerConfig(p => ({ ...p, title: e.target.value }))}
-                                                />
-                                                {litePromobannerErrors.title && <div className="error-message-inline">{litePromobannerErrors.title}</div>}
-                                            </div>
-                                            <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
-                                                <label className="form-field-label">Subtitle / Description</label>
-                                                <textarea 
-                                                    className="styled-input" 
-                                                    style={{ minHeight: '60px', fontFamily: 'inherit', padding: '8px' }}
-                                                    value={litePromobannerConfig.description} 
-                                                    onChange={e => setLitePromobannerConfig(p => ({ ...p, description: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div className="form-group-wrap">
-                                                <label className="form-field-label">Button CTA Text</label>
-                                                <input 
-                                                    type="text" 
-                                                    className="styled-input" 
-                                                    value={litePromobannerConfig.ctaText} 
-                                                    onChange={e => setLitePromobannerConfig(p => ({ ...p, ctaText: e.target.value }))}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* STEP 3: REDIRECT DESTINATION */}
-                                    <div className="cms-step-card">
-                                        <div className="cms-step-header">
-                                            <span className="step-num">3</span>
-                                            <h4>Redirect Destination</h4>
-                                        </div>
-                                        <div className="cms-step-content">
-                                            <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
-                                                <label className="form-field-label">Redirect Type</label>
-                                                <div className="modern-segmented-control">
-                                                    <button type="button" className={`segment-btn ${litePromobannerConfig.redirectType === "CATEGORY" ? "active" : ""}`} onClick={() => setLitePromobannerConfig(p => ({ ...p, redirectType: "CATEGORY", categoryId: "", categoryName: "" }))}>Category Page</button>
-                                                    <button type="button" className={`segment-btn ${litePromobannerConfig.redirectType === "PRODUCT" ? "active" : ""}`} onClick={() => setLitePromobannerConfig(p => ({ ...p, redirectType: "PRODUCT", destProductId: "", destProductName: "" }))}>Product Page</button>
+                                    <div className="lite-shopbycategory-slots-accordion">
+                                        <div className={`lite-shopbycategory-slot-accordion-card ${isExpanded ? 'expanded' : ''} ${isUploaded ? 'has-image' : ''} ${hasLink ? 'has-link' : ''} ${Object.keys(litePromobannerErrors).length > 0 ? 'has-errors' : ''}`}>
+                                            {/* Accordion Header */}
+                                            <div
+                                                className="lite-shopbycategory-slot-accordion-header"
+                                                onClick={() => setLitePromobannerExpandedSlot(isExpanded ? null : 0)}
+                                            >
+                                                <div className="lite-shopbycategory-slot-thumb-wrap">
+                                                    {isUploaded
+                                                        ? <img src={imgUrl} alt="Promo" className="lite-shopbycategory-slot-thumb" />
+                                                        : <div className="lite-shopbycategory-slot-thumb-empty"><Upload size={14} /></div>
+                                                    }
+                                                </div>
+                                                <div className="lite-shopbycategory-slot-header-info">
+                                                    <span className="lite-shopbycategory-slot-label-name">Main Promobanner</span>
+                                                    <div className="lite-shopbycategory-slot-status-row">
+                                                        <span className={`lite-shopbycategory-slot-img-badge ${isUploaded ? 'ok' : 'missing'}`}>
+                                                            {isUploaded ? '✓ Image' : '✗ No Image'}
+                                                        </span>
+                                                        <span className={`lite-shopbycategory-slot-link-badge ${hasLink ? 'ok' : 'missing'}`}>
+                                                            {hasLink
+                                                                ? (litePromobannerConfig.redirectType === 'PRODUCT'
+                                                                    ? `→ ${litePromobannerConfig.destProductName ? litePromobannerConfig.destProductName.substring(0, 18) + '...' : 'Product'}`
+                                                                    : `→ ${litePromobannerConfig.categoryName || 'Category'}`)
+                                                                : '✗ No Link'
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="lite-shopbycategory-slot-expand-icon">
+                                                    <ChevronRight size={16} style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
                                                 </div>
                                             </div>
 
-                                            {litePromobannerConfig.redirectType === "CATEGORY" ? (
-                                                <div className="form-group-wrap animate-fade">
-                                                    <label className="form-field-label">Search Category</label>
-                                                    <SearchableSelect
-                                                        placeholder="Search category..."
-                                                        options={MOCK_CATEGORIES.map(cat => ({ value: cat.categoryId, label: cat.categoryName }))}
-                                                        value={litePromobannerConfig.categoryId}
-                                                        onChange={(val, option) => setLitePromobannerConfig(p => ({ ...p, categoryId: val, categoryName: option ? option.label : "" }))}
-                                                        displayKey="label"
-                                                        valueKey="value"
-                                                        searchKey="label"
-                                                    />
-                                                    {litePromobannerConfig.categoryId && (
-                                                        <div className="selected-info-display-card category-theme animate-scale" style={{ marginTop: '8px' }}>
-                                                            <div className="display-card-title">Selected Category</div>
-                                                            <div className="display-card-body">
-                                                                <div className="display-info-row"><span>Name:</span> <strong>{litePromobannerConfig.categoryName}</strong></div>
-                                                                <div className="display-info-row"><span>ID:</span> <strong className="code-font">{litePromobannerConfig.categoryId}</strong></div>
-                                                            </div>
+                                            {/* Accordion Body */}
+                                            {isExpanded && (
+                                                <div className="lite-shopbycategory-slot-accordion-body animate-fade">
+                                                    {/* Step 1: Promo Image */}
+                                                    <div className="lite-shopbycategory-slot-step">
+                                                        <div className="lite-shopbycategory-slot-step-title">
+                                                            <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>1</span>
+                                                            <span>Promo Image</span>
+                                                            <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: 'auto' }}>1080×1080 px • max 1.5 MB</span>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="form-group-wrap animate-fade">
-                                                    <label className="form-field-label">Search Product</label>
-                                                    <div className="product-search-box-wrapper">
-                                                        <div className="product-search-input-container">
-                                                            <Search size={14} className="search-icon" />
-                                                            <input
-                                                                type="text"
-                                                                className="styled-select search-input"
-                                                                placeholder="Search products..."
-                                                                value={litePromobannerProductSearch}
-                                                                onChange={(e) => setLitePromobannerProductSearch(e.target.value)}
-                                                            />
-                                                            {litePromobannerProductSearch && (
-                                                                <button type="button" className="btn-clear-selection" onClick={() => setLitePromobannerProductSearch("")}><X size={14} /></button>
-                                                            )}
-                                                        </div>
-                                                        {litePromobannerProductSearch && (
-                                                            <div className="product-search-results-list">
-                                                                {productsMasterList.filter(p => p.productName.toLowerCase().includes(litePromobannerProductSearch.toLowerCase())).map(prod => (
-                                                                    <div key={prod.productId} className="product-search-item-card">
-                                                                        <img src={prod.image} alt={prod.productName} className="product-item-thumb" />
-                                                                        <div className="product-item-details">
-                                                                            <div className="product-item-name">{prod.productName}</div>
-                                                                            <div className="product-item-id">ID: {prod.productId}</div>
-                                                                        </div>
-                                                                        <button type="button" className="btn-select-product" onClick={() => {
-                                                                            setLitePromobannerConfig(prev => ({
-                                                                                ...prev,
-                                                                                destProductId: prod.productId,
-                                                                                destProductName: prod.productName,
-                                                                                destPrice: prod.price,
-                                                                                destDiscount: prod.discount,
-                                                                                destMainCategory: prod.mainCategoryId,
-                                                                                destSubCategory: prod.subCategoryId
-                                                                            }));
-                                                                            setLitePromobannerProductSearch("");
-                                                                        }}>Load</button>
+                                                        <div className="lite-shopbycategory-slot-img-upload-area">
+                                                            {isUploaded ? (
+                                                                <div className="lite-shopbycategory-slot-uploaded-preview">
+                                                                    <img src={imgUrl} alt="Promo" />
+                                                                    <div className="lite-shopbycategory-slot-img-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            className="slot-action-btn upload-btn"
+                                                                            onClick={() => handleReplaceClick(0)}
+                                                                        >
+                                                                            <RefreshCw size={12} /> Replace
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            className="slot-action-btn delete-btn"
+                                                                            onClick={() => handleDeleteClick(0)}
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
                                                                     </div>
-                                                                ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    className="lite-shopbycategory-slot-upload-dropzone"
+                                                                    onClick={() => handleReplaceClick(0)}
+                                                                >
+                                                                    <Upload size={20} style={{ color: '#ec4899', marginBottom: '6px' }} />
+                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>Upload Promo Image</span>
+                                                                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>PNG, JPG, WEBP • 1080×1080 px</span>
+                                                                </div>
+                                                            )}
+                                                            <input
+                                                                type="file"
+                                                                id="file-input-0"
+                                                                style={{ display: "none" }}
+                                                                accept="image/png, image/jpeg, image/webp"
+                                                                onChange={(e) => handleFileChange(e, 0)}
+                                                            />
+                                                        </div>
+                                                        {litePromobannerErrors.bannerImage && (
+                                                            <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                <AlertTriangle size={12} />
+                                                                {litePromobannerErrors.bannerImage}
                                                             </div>
                                                         )}
                                                     </div>
-                                                    {litePromobannerConfig.destProductId && (
-                                                        <div className="selected-info-display-card product-theme animate-scale" style={{ marginTop: '8px' }}>
-                                                            <div className="display-card-title">Selected Product</div>
-                                                            <div className="display-card-body">
-                                                                <div className="display-info-row"><span>Name:</span> <strong>{litePromobannerConfig.destProductName}</strong></div>
-                                                                <div className="display-info-row"><span>ID:</span> <strong className="code-font">{litePromobannerConfig.destProductId}</strong></div>
-                                                            </div>
+
+                                                    {/* Step 2: Content Details */}
+                                                    <div className="lite-shopbycategory-slot-step">
+                                                        <div className="lite-shopbycategory-slot-step-title">
+                                                            <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>2</span>
+                                                            <span>Content Details</span>
                                                         </div>
-                                                    )}
+                                                        <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
+                                                            <label className="form-field-label">Headline / Title *</label>
+                                                            <input
+                                                                type="text"
+                                                                className={`styled-input ${litePromobannerErrors.title ? 'has-error' : ''}`}
+                                                                value={litePromobannerConfig.title}
+                                                                onChange={e => {
+                                                                    setLitePromobannerConfig(p => ({ ...p, title: e.target.value }));
+                                                                    setLitePromobannerErrors(prev => {
+                                                                        const next = { ...prev };
+                                                                        delete next.title;
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                            />
+                                                            {litePromobannerErrors.title && (
+                                                                <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                    <AlertTriangle size={12} />
+                                                                    {litePromobannerErrors.title}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="form-group-wrap" style={{ marginBottom: '12px' }}>
+                                                            <label className="form-field-label">Subtitle / Description</label>
+                                                            <textarea
+                                                                className="styled-input"
+                                                                style={{ minHeight: '60px', fontFamily: 'inherit', padding: '8px' }}
+                                                                value={litePromobannerConfig.description}
+                                                                onChange={e => setLitePromobannerConfig(p => ({ ...p, description: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                        <div className="form-group-wrap">
+                                                            <label className="form-field-label">Button CTA Text</label>
+                                                            <input
+                                                                type="text"
+                                                                className="styled-input"
+                                                                value={litePromobannerConfig.ctaText}
+                                                                onChange={e => setLitePromobannerConfig(p => ({ ...p, ctaText: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Step 3: Redirect Destination */}
+                                                    <div className="lite-shopbycategory-slot-step">
+                                                        <div className="lite-shopbycategory-slot-step-title">
+                                                            <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>3</span>
+                                                            <span>Redirect Destination</span>
+                                                        </div>
+
+                                                        {/* Redirect Type Toggle */}
+                                                        <div className="modern-segmented-control" style={{ marginBottom: '12px' }}>
+                                                            <button
+                                                                type="button"
+                                                                className={`segment-btn ${litePromobannerConfig.redirectType === 'CATEGORY' ? 'active' : ''}`}
+                                                                onClick={() => {
+                                                                    setLitePromobannerConfig(p => ({
+                                                                        ...p,
+                                                                        redirectType: "CATEGORY",
+                                                                        categoryId: "",
+                                                                        categoryName: "",
+                                                                        destProductId: "",
+                                                                        destProductName: "",
+                                                                        destPrice: "",
+                                                                        destDiscount: "",
+                                                                        destMainCategory: "",
+                                                                        destSubCategory: ""
+                                                                    }));
+                                                                    setLitePromobannerErrors(prev => {
+                                                                        const next = { ...prev };
+                                                                        delete next.destination;
+                                                                        delete next.destProductId;
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                Category Page
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`segment-btn ${litePromobannerConfig.redirectType === 'PRODUCT' ? 'active' : ''}`}
+                                                                onClick={() => {
+                                                                    setLitePromobannerConfig(p => ({
+                                                                        ...p,
+                                                                        redirectType: "PRODUCT",
+                                                                        categoryId: "",
+                                                                        categoryName: "",
+                                                                        destProductId: "",
+                                                                        destProductName: "",
+                                                                        destPrice: "",
+                                                                        destDiscount: "",
+                                                                        destMainCategory: "",
+                                                                        destSubCategory: ""
+                                                                    }));
+                                                                    setLitePromobannerErrors(prev => {
+                                                                        const next = { ...prev };
+                                                                        delete next.destination;
+                                                                        delete next.destProductId;
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                Product Page
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Category Redirect */}
+                                                        {litePromobannerConfig.redirectType === 'CATEGORY' && (
+                                                            <div className="form-group-wrap animate-fade">
+                                                                <label className="form-field-label">Select Category</label>
+                                                                <SearchableSelect
+                                                                    placeholder="Search category..."
+                                                                    options={(categoriesList.length > 0 ? categoriesList : MOCK_CATEGORIES).map(cat => ({ value: cat.categoryId, label: cat.categoryName }))}
+                                                                    value={litePromobannerConfig.categoryId}
+                                                                    onChange={(val, option) => {
+                                                                        setLitePromobannerConfig(p => ({ ...p, categoryId: val, categoryName: option ? option.label : "" }));
+                                                                        setLitePromobannerErrors(prev => {
+                                                                            const next = { ...prev };
+                                                                            delete next.destination;
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                    displayKey="label"
+                                                                    valueKey="value"
+                                                                    searchKey="label"
+                                                                />
+                                                                {litePromobannerErrors.destination && (
+                                                                    <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <AlertTriangle size={12} />
+                                                                        {litePromobannerErrors.destination}
+                                                                    </div>
+                                                                )}
+                                                                {litePromobannerConfig.categoryId && (
+                                                                    <div className="selected-info-display-card category-theme animate-scale" style={{ marginTop: '8px' }}>
+                                                                        <div className="display-card-title">Selected Category</div>
+                                                                        <div className="display-card-body">
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">Name:</span>
+                                                                                <strong className="info-val">{litePromobannerConfig.categoryName}</strong>
+                                                                            </div>
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">ID:</span>
+                                                                                <strong className="info-val code-font">{litePromobannerConfig.categoryId}</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Product Redirect */}
+                                                        {litePromobannerConfig.redirectType === 'PRODUCT' && (
+                                                            <div className="form-group-wrap animate-fade">
+                                                                <label className="form-field-label">Search Product</label>
+                                                                <div className="product-search-box-wrapper">
+                                                                    <div className="product-search-input-container">
+                                                                        <Search size={14} className="search-icon" />
+                                                                        <input
+                                                                            type="text"
+                                                                            className="styled-select search-input"
+                                                                            placeholder="Search products..."
+                                                                            value={litePromobannerProductSearch}
+                                                                            onChange={(e) => setLitePromobannerProductSearch(e.target.value)}
+                                                                        />
+                                                                        {litePromobannerProductSearch && (
+                                                                            <button
+                                                                                type="button"
+                                                                                className="btn-clear-selection"
+                                                                                onClick={() => setLitePromobannerProductSearch("")}
+                                                                            >
+                                                                                <X size={14} />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    {litePromobannerErrors.destProductId && (
+                                                                        <div className="error-message-inline" style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                            <AlertTriangle size={12} />
+                                                                            {litePromobannerErrors.destProductId}
+                                                                        </div>
+                                                                    )}
+                                                                    {litePromobannerProductSearch && (
+                                                                        <div className="product-search-results-list">
+                                                                            {productsMasterList
+                                                                                .filter(p => p.productName.toLowerCase().includes(litePromobannerProductSearch.toLowerCase()) || p.productId.toLowerCase().includes(litePromobannerProductSearch.toLowerCase()))
+                                                                                .map(prod => (
+                                                                                    <div key={prod.productId} className="product-search-item-card">
+                                                                                        <img src={prod.image} alt={prod.productName} className="product-item-thumb" />
+                                                                                        <div className="product-item-details">
+                                                                                            <div className="product-item-name">{prod.productName}</div>
+                                                                                            <div className="product-item-id">ID: {prod.productId}</div>
+                                                                                        </div>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            className="btn-select-product"
+                                                                                            onClick={() => {
+                                                                                                setLitePromobannerConfig(prev => ({
+                                                                                                    ...prev,
+                                                                                                    destProductId: prod.productId,
+                                                                                                    destProductName: prod.productName,
+                                                                                                    destPrice: prod.price,
+                                                                                                    destDiscount: prod.discount,
+                                                                                                    destMainCategory: prod.mainCategoryId,
+                                                                                                    destSubCategory: prod.subCategoryId
+                                                                                                }));
+                                                                                                setLitePromobannerProductSearch("");
+                                                                                                setLitePromobannerErrors(prev => {
+                                                                                                    const next = { ...prev };
+                                                                                                    delete next.destProductId;
+                                                                                                    return next;
+                                                                                                });
+                                                                                            }}
+                                                                                        >
+                                                                                            Load
+                                                                                        </button>
+                                                                                    </div>
+                                                                                ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {litePromobannerConfig.destProductId && (
+                                                                    <div className="selected-info-display-card product-theme animate-scale" style={{ marginTop: '8px' }}>
+                                                                        <div className="display-card-title">Selected Product</div>
+                                                                        <div className="display-card-body">
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">Name:</span>
+                                                                                <strong className="info-val">{litePromobannerConfig.destProductName}</strong>
+                                                                            </div>
+                                                                            <div className="display-info-row">
+                                                                                <span className="info-label">ID:</span>
+                                                                                <strong className="info-val code-font">{litePromobannerConfig.destProductId}</strong>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Configuration Summary */}
+                                    <div className="cms-step-card summary-card" style={{ marginTop: '16px' }}>
+                                        <div className="cms-step-header">
+                                            <span className="step-num">✓</span>
+                                            <h4>Configuration Summary</h4>
+                                        </div>
+                                        <div className="cms-step-content">
+                                            <div className="summary-display-box">
+                                                <div className="summary-row">
+                                                    <span className="summary-label">Widget:</span>
+                                                    <strong className="summary-value">Lite Promobanner</strong>
+                                                </div>
+                                                <div className="summary-row">
+                                                    <span className="summary-label">Image:</span>
+                                                    <strong className="summary-value text-ellipsis" title={imageMetadata[0]?.name || "Not selected"}>
+                                                        {imageMetadata[0]?.name || "Not selected"}
+                                                    </strong>
+                                                </div>
+                                                <div className="summary-row">
+                                                    <span className="summary-label">Redirect:</span>
+                                                    <strong className="summary-value">{litePromobannerConfig.redirectType === "CATEGORY" ? "Category Page" : "Product Page"}</strong>
+                                                </div>
+                                                <div className="summary-row">
+                                                    <span className="summary-label">Destination:</span>
+                                                    <strong className="summary-value text-ellipsis" title={litePromobannerConfig.redirectType === "CATEGORY" ? (litePromobannerConfig.categoryName || "Not selected") : (litePromobannerConfig.destProductName || "Not selected")}>
+                                                        {litePromobannerConfig.redirectType === "CATEGORY" ? (litePromobannerConfig.categoryName || "Not selected") : (litePromobannerConfig.destProductName || "Not selected")}
+                                                    </strong>
+                                                </div>
+                                                <div className="summary-row status-row">
+                                                    <span className="summary-label">Status:</span>
+                                                    {(() => {
+                                                        const hasImage = widgetImages[0] !== null && widgetImages[0] !== undefined && widgetImages[0] !== "";
+                                                        const hasErrors = Object.keys(validateLitePromobannerForm()).length > 0;
+                                                        const isReady = hasImage && !hasErrors;
+                                                        return (
+                                                            <span className={`summary-status-badge ${isReady ? "ready" : "incomplete"}`}>
+                                                                {isReady ? "Ready To Publish" : "Incomplete"}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {selectedWidgetId === "roomgrid" && (
                             <div className="lite-shopbycategory-config-section animate-fade">
@@ -5183,25 +6234,37 @@ function ManagePreviewPage() {
                         {selectedWidgetId === "kidsSection" && (
                             <div className="lite-shopbycategory-config-section animate-fade">
                                 <div className="config-section-header">
-                                    <h3>Kids Zone Configuration</h3>
-                                    <span className="cms-badge">Kids Active Zone</span>
+                                    <h3>Kids Section Configuration</h3>
+                                    <span className="cms-badge" style={{ background: 'linear-gradient(135deg, #f9a8d4, #ec4899)', color: '#fff' }}>3 Slots</span>
                                 </div>
 
-                                <div className="form-group-wrap" style={{ marginBottom: '16px' }}>
-                                    <label className="form-field-label">Section Title *</label>
-                                    <input 
-                                        type="text" 
-                                        className="styled-input" 
-                                        value={kidsConfig.title} 
-                                        onChange={(e) => setKidsConfig(p => ({ ...p, title: e.target.value }))}
-                                    />
+                                <div className="cms-form-grid-2col" style={{ marginBottom: '16px' }}>
+                                    <div className="form-group-wrap">
+                                        <label className="form-field-label">Section Title *</label>
+                                        <input 
+                                            type="text" 
+                                            className="styled-input" 
+                                            value={kidsConfig.title} 
+                                            onChange={(e) => setKidsConfig(p => ({ ...p, title: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="form-group-wrap">
+                                        <label className="form-field-label">Section Subtitle</label>
+                                        <input 
+                                            type="text" 
+                                            className="styled-input" 
+                                            value={kidsConfig.subtitle || ""} 
+                                            onChange={(e) => setKidsConfig(p => ({ ...p, subtitle: e.target.value }))}
+                                            placeholder="Comfort for kids..."
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* Step 1: Background Image */}
+                                {/* Background Image upload (Optional step) */}
                                 <div className="cms-step-card" style={{ marginBottom: '16px' }}>
                                     <div className="cms-step-header">
-                                        <span className="step-num">1</span>
-                                        <h4>Background Image</h4>
+                                        <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>★</span>
+                                        <h4>Background Image (Optional)</h4>
                                     </div>
                                     <div className="cms-step-content">
                                         <div className="banner-upload-dropzone-wrapper">
@@ -5216,21 +6279,22 @@ function ManagePreviewPage() {
                                                             className="btn-preview-action replace" 
                                                             onClick={() => document.getElementById('kids-bg-file-input').click()}
                                                         >
-                                                            Replace
+                                                            <RefreshCw size={12} style={{ marginRight: '4px' }} /> Replace
                                                         </button>
                                                         <button 
                                                             type="button" 
                                                             className="btn-preview-action delete" 
                                                             onClick={() => setKidsConfig(prev => ({ ...prev, bgImage: "" }))}
                                                         >
-                                                            Delete
+                                                            <Trash2 size={12} style={{ marginRight: '4px' }} /> Delete
                                                         </button>
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div className="banner-upload-placeholder" onClick={() => document.getElementById('kids-bg-file-input').click()}>
-                                                    <div className="upload-icon">📤</div>
-                                                    <div className="upload-text">Upload Section BG Image</div>
+                                                    <Upload size={20} style={{ color: '#ec4899', marginBottom: '6px' }} />
+                                                    <div className="upload-text" style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>Upload Section BG Image</div>
+                                                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>PNG, JPG, WEBP • Max 1.5 MB</span>
                                                 </div>
                                             )}
                                             <input 
@@ -5272,7 +6336,14 @@ function ManagePreviewPage() {
                                                         <span className="lite-shopbycategory-slot-label-name">{slot.label || `Card ${idx + 1}`}</span>
                                                         <div className="lite-shopbycategory-slot-status-row">
                                                             <span className={`lite-shopbycategory-slot-img-badge ${isUploaded ? 'ok' : 'missing'}`}>{isUploaded ? '✓ Image' : '✗ No Image'}</span>
-                                                            <span className={`lite-shopbycategory-slot-link-badge ${hasLink ? 'ok' : 'missing'}`}>{hasLink ? `→ Linked` : '✗ No Link'}</span>
+                                                            <span className={`lite-shopbycategory-slot-link-badge ${hasLink ? 'ok' : 'missing'}`}>
+                                                                {hasLink
+                                                                    ? (slot.redirectType === 'PRODUCT'
+                                                                        ? `→ ${slot.destProductName ? slot.destProductName.substring(0, 18) + '...' : 'Product'}`
+                                                                        : `→ ${slot.categoryName || 'Category'}`)
+                                                                    : '✗ No Link'
+                                                                }
+                                                            </span>
                                                         </div>
                                                     </div>
                                                     <div className="lite-shopbycategory-slot-expand-icon">
@@ -5284,8 +6355,9 @@ function ManagePreviewPage() {
                                                     <div className="lite-shopbycategory-slot-accordion-body animate-fade">
                                                         <div className="lite-shopbycategory-slot-step">
                                                             <div className="lite-shopbycategory-slot-step-title">
-                                                                <span className="step-num">1</span>
+                                                                <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>1</span>
                                                                 <span>Card Title & Image</span>
+                                                                <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: 'auto' }}>300×300 px • max 500 KB</span>
                                                             </div>
                                                             <div className="form-group-wrap" style={{ marginBottom: '8px' }}>
                                                                 <label className="form-field-label">Age Group / Label *</label>
@@ -5305,14 +6377,19 @@ function ManagePreviewPage() {
                                                                     <div className="lite-shopbycategory-slot-uploaded-preview">
                                                                         <img src={imgUrl} alt={slot.label} />
                                                                         <div className="lite-shopbycategory-slot-img-actions">
-                                                                            <button type="button" className="slot-action-btn upload-btn" onClick={() => handleReplaceClick(idx)}>Replace</button>
-                                                                            <button type="button" className="slot-action-btn delete-btn" onClick={() => handleDeleteClick(idx)}>Delete</button>
+                                                                            <button type="button" className="slot-action-btn upload-btn" onClick={() => handleReplaceClick(idx)}>
+                                                                                <RefreshCw size={12} /> Replace
+                                                                            </button>
+                                                                            <button type="button" className="slot-action-btn delete-btn" onClick={() => handleDeleteClick(idx)}>
+                                                                                <Trash2 size={12} />
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
                                                                     <div className="lite-shopbycategory-slot-upload-dropzone" onClick={() => handleReplaceClick(idx)}>
                                                                         <Upload size={20} style={{ color: '#ec4899', marginBottom: '6px' }} />
-                                                                        <span>Upload Card Image</span>
+                                                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>Upload Card Image</span>
+                                                                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>PNG, JPG, WEBP • 300×300 px</span>
                                                                     </div>
                                                                 )}
                                                                 <input type="file" id={`file-input-${idx}`} style={{ display: 'none' }} accept="image/*" onChange={(e) => handleFileChange(e, idx)} />
@@ -5321,7 +6398,7 @@ function ManagePreviewPage() {
 
                                                         <div className="lite-shopbycategory-slot-step">
                                                             <div className="lite-shopbycategory-slot-step-title">
-                                                                <span className="step-num">2</span>
+                                                                <span className="step-num" style={{ width: '20px', height: '20px', fontSize: '11px' }}>2</span>
                                                                 <span>Redirect Destination</span>
                                                             </div>
                                                             <div className="modern-segmented-control" style={{ marginBottom: '8px' }}>
@@ -5367,6 +6444,7 @@ function ManagePreviewPage() {
                                                                                     <img src={prod.image} alt={prod.productName} className="product-item-thumb" />
                                                                                     <div className="product-item-details">
                                                                                         <div className="product-item-name">{prod.productName}</div>
+                                                                                        <div className="product-item-meta">{prod.price}</div>
                                                                                     </div>
                                                                                     <button type="button" className="btn-select-product" onClick={() => {
                                                                                         const updated = { ...kidsConfig };
@@ -5609,6 +6687,15 @@ function ManagePreviewPage() {
                                         />
                                     </div>
                                     <div className="form-group-wrap">
+                                        <label className="form-field-label">Section Subtitle</label>
+                                        <input 
+                                            type="text" 
+                                            className="styled-input" 
+                                            value={matsConfig.subtitle || ""} 
+                                            onChange={(e) => setMatsConfig(p => ({ ...p, subtitle: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="form-group-wrap" style={{ gridColumn: 'span 2' }}>
                                         <label className="form-field-label">See All CTA Link Text</label>
                                         <input 
                                             type="text" 
@@ -5719,46 +6806,99 @@ function ManagePreviewPage() {
                                                                 <span>Card Custom Attributes</span>
                                                             </div>
                                                             <div className="cms-form-grid-2col">
-                                                                <div className="form-group-wrap">
-                                                                    <label className="form-field-label">Display Name *</label>
-                                                                    <input 
-                                                                        type="text" 
-                                                                        className="styled-input" 
-                                                                        value={slot.productName} 
-                                                                        onChange={(e) => {
-                                                                            const updated = { ...matsConfig };
-                                                                            updated.items[idx].productName = e.target.value;
-                                                                            setMatsConfig(updated);
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <div className="form-group-wrap">
-                                                                    <label className="form-field-label">Price *</label>
-                                                                    <input 
-                                                                        type="text" 
-                                                                        className="styled-input" 
-                                                                        value={slot.price} 
-                                                                        onChange={(e) => {
-                                                                            const updated = { ...matsConfig };
-                                                                            updated.items[idx].price = e.target.value;
-                                                                            setMatsConfig(updated);
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                <div className="form-group-wrap" style={{ gridColumn: 'span 2' }}>
-                                                                    <label className="form-field-label">Offer Tag Label (e.g. 10% Off)</label>
-                                                                    <input 
-                                                                        type="text" 
-                                                                        className="styled-input" 
-                                                                        value={slot.offer} 
-                                                                        onChange={(e) => {
-                                                                            const updated = { ...matsConfig };
-                                                                            updated.items[idx].offer = e.target.value;
-                                                                            setMatsConfig(updated);
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Display Name *</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.productName} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].productName = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Brand Name</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.brand || ""} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].brand = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Price *</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.price} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].price = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Original Price (Strikeout)</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.oldPrice || ""} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].oldPrice = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Discount Badge (e.g. 65% OFF)</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.discount || ""} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].discount = e.target.value;
+                                                                             updated.items[idx].offer = e.target.value; // Sync offer tag
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap">
+                                                                     <label className="form-field-label">Quantity (e.g. 1 pc)</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.quantity || ""} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].quantity = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                                 <div className="form-group-wrap" style={{ gridColumn: 'span 2' }}>
+                                                                     <label className="form-field-label">Delivery Time (e.g. 8 mins)</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         className="styled-input" 
+                                                                         value={slot.delivery || ""} 
+                                                                         onChange={(e) => {
+                                                                             const updated = { ...matsConfig };
+                                                                             updated.items[idx].delivery = e.target.value;
+                                                                             setMatsConfig(updated);
+                                                                         }}
+                                                                     />
+                                                                 </div>
+                                                             </div>
                                                         </div>
                                                     </div>
                                                 )}

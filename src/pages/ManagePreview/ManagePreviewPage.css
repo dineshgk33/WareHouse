@@ -1365,8 +1365,8 @@
 
 /* Phone Scrollable Body / Simulator Scroll Content */
 .simulator-scroll-content {
-    height: 100%;
-    flex-grow: 1;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
@@ -1382,17 +1382,17 @@
 }
 
 .simulator-scroll-content::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f1f5f9;
+    border-radius: 3px;
 }
 
 .simulator-scroll-content::-webkit-scrollbar-thumb {
-    background: var(--border-color, #cbd5e1);
+    background: #cbd5e1;
     border-radius: 3px;
-    transition: background 0.2s;
 }
 
 .simulator-scroll-content::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted, #94a3b8);
+    background: #94a3b8;
 }
 
 .mock-context-category-header {
@@ -1551,12 +1551,14 @@
     width: 100%;
     aspect-ratio: 2 / 1;
     overflow: hidden;
+    border-radius: 24px;
 }
 
 .mock-widget-lite-banner img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
 }
 
 .banner-overlay-gradient {
@@ -1617,20 +1619,23 @@
 /* 2. Lite Promobanner */
 .mock-widget-lite-promobanner {
     padding: 0 12px;
+    margin-bottom: 12px;
 }
 
 .promo-container {
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: var(--radius-md);
+    aspect-ratio: 2.2 / 1;
+    border-radius: 20px;
     overflow: hidden;
     position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .promo-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
 }
 
 .promo-text-wrap {
@@ -1639,46 +1644,71 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0) 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     color: #ffffff;
-    padding: 20px;
-    text-align: center;
-}
-
-.promo-subtitle {
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    color: var(--color-warning);
+    padding: 16px 24px;
+    text-align: left;
 }
 
 .promo-headline {
-    font-size: 16px;
-    font-weight: 800;
-    margin: 6px 0;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #ffffff;
+    letter-spacing: -0.2px;
 }
 
 .promo-desc {
-    font-size: 10px;
-    opacity: 0.9;
-    line-height: 1.4;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
     margin: 0 0 12px 0;
-    max-width: 200px;
+    max-width: 150px;
+    line-height: 1.3;
 }
 
 .promo-cta-btn {
-    background-color: var(--primary);
-    color: #ffffff;
+    background-color: #ffffff;
+    color: #1e293b;
     border: none;
-    padding: 6px 16px;
+    padding: 7px 14px;
     border-radius: 99px;
     font-size: 10px;
     font-weight: 700;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.promo-cta-btn:hover {
+    background-color: #f1f5f9;
+    transform: translateY(-1px);
+}
+
+.promo-pagination-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.promo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    transition: all 0.2s ease;
+}
+
+.promo-dot.active {
+    width: 18px;
+    border-radius: 3px;
+    background-color: #f97316;
 }
 
 /* 3. Shop by Category */
@@ -1740,44 +1770,57 @@
 .mock-widget-lite-bannercarousel {
     position: relative;
     width: 100%;
-    aspect-ratio: 2 / 1;
+    margin-bottom: 12px;
+    overflow: hidden;
+    padding: 8px 0;
 }
 
 .carousel-slide-view {
     position: relative;
     width: 100%;
-    height: 100%;
+    aspect-ratio: 2 / 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #f1f5f9;
 }
 
 .carousel-slide-view img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .carousel-overlay-shadow {
     position: absolute;
-    top:0; left:0; right:0; bottom:0;
-    background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 50%);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
 }
 
 .carousel-tag-row {
     position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    pointer-events: none;
 }
 
 .carousel-tag-row .tag-pill {
-    background-color: var(--primary);
-    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
     font-size: 8px;
     font-weight: 800;
-    padding: 2px 6px;
+    padding: 2.5px 6px;
     border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .carousel-tag-row .page-indicator-text {
@@ -1785,45 +1828,139 @@
     color: #ffffff;
     font-size: 8px;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 99px;
+    padding: 2.5px 6px;
+    border-radius: 4px;
 }
 
 .carousel-captions {
     position: absolute;
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
     color: #ffffff;
+    pointer-events: none;
+    text-align: left;
 }
 
 .carousel-captions h4 {
-    font-size: 11px;
-    font-weight: 800;
     margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #ffffff;
 }
 
 .carousel-captions p {
-    font-size: 8px;
-    opacity: 0.85;
-    margin: 2px 0 0 0;
+    margin: 3px 0 0 0;
+    font-size: 9.5px;
+    opacity: 0.9;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #f1f5f9;
+}
+
+.carousel-peeking-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+.carousel-peeking-track {
+    position: relative;
+    left: 50%;
+    display: flex;
+    gap: 12px;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.carousel-peeking-card {
+    flex: 0 0 240px;
+    width: 240px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    opacity: 0.5;
+    transform: scale(0.92);
+}
+
+.carousel-peeking-card.active {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-image-wrap {
+    width: 100%;
+    aspect-ratio: 1.8 / 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none; /* Prevent standard browser dragging on images */
+}
+
+.card-footer-banner {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: #ffffff;
+    text-align: center;
+    border-radius: 0 0 16px 16px;
+    min-height: 54px;
+}
+
+.card-banner-title {
+    font-size: 13px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.card-banner-subtitle {
+    font-size: 9.5px;
+    opacity: 0.9;
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+.card-ad-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 6px;
+    font-weight: 700;
+    padding: 1.5px 3.5px;
+    border-radius: 3px;
+    border: 0.5px solid rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
 }
 
 .carousel-dots-row {
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     gap: 4px;
-    z-index: 10;
+    margin-top: 8px;
 }
 
 .carousel-dot {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: #cbd5e1;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -5449,18 +5586,41 @@
 
 .room-grid-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 100px);
+    grid-auto-flow: column;
+    grid-auto-columns: 100px;
     gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding-bottom: 6px;
+    width: 100%;
+}
+
+.room-grid-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.room-grid-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.room-grid-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.room-grid-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .room-grid-card {
     position: relative;
-    height: 115px;
-    border-top-left-radius: 50%;
-    border-top-right-radius: 50%;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
+    height: 100px;
+    border-top-left-radius: 60px;
+    border-top-right-radius: 60px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     transition: all .3s ease;
@@ -5500,4 +5660,286 @@
     height: 60%;
     box-sizing: border-box;
     pointer-events: none;
+}
+
+/* ─── FRESH MARKET WIDGET PREMIUM STYLES ─── */
+.mock-widget-freshmarket {
+    background: #9eed79 !important; /* Exact lime green background */
+    padding: 6px 10px !important; /* Extremely tight padding to reduce length */
+    border-radius: 0px !important;
+    margin-bottom: 14px;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.fresh-market-header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px; /* Shrunk spacing */
+    position: relative;
+}
+
+.fresh-market-title-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.fresh-market-main-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #15803d; /* Forest green */
+    margin: 0;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+}
+
+.fresh-market-subtitle-text {
+    font-size: 10.5px;
+    color: #ca8a04; /* Gold/yellow matching badge */
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.fresh-market-header-badge {
+    display: flex;
+    align-items: center;
+    background: #fbb03b; /* Solid bright gold/yellow */
+    padding: 5px 12px;
+    border-radius: 99px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: none;
+}
+
+.promo-badge-price-val-clean {
+    font-size: 11px;
+    font-weight: 900;
+    color: #000000;
+    font-family: 'Outfit', sans-serif;
+}
+
+.freshmarket-horizontal-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 0px; /* Shrunk to 0px since scrollbars are hidden */
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.freshmarket-horizontal-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Translucent outer container, no card shape */
+.freshmarket-item-card {
+    flex: 0 0 130px;
+    width: 130px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+}
+
+.freshmarket-item-card:hover {
+    transform: translateY(-2px);
+}
+
+/* White card containing image and weight/ADD */
+.freshmarket-image-card-box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 4px; /* Shrunk padding to make card shorter */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.freshmarket-card-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.55 / 1; /* Extremely compact height for cards */
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.freshmarket-card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.freshmarket-wishlist-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent !important;
+    border: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #ffffff !important;
+    transition: color 0.2s ease;
+    padding: 0;
+    box-shadow: none !important;
+}
+
+.freshmarket-wishlist-btn:hover {
+    color: #ef4444 !important;
+}
+
+.freshmarket-card-badge-season {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #faf9f6;
+    border: 0.5px solid #dcd6cd;
+    color: #78350f;
+    font-size: 6.5px;
+    font-weight: 800;
+    padding: 1px 3px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.freshmarket-weight-add-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 4px; /* Reduced vertical padding inside card box */
+    background: #ffffff;
+}
+
+.freshmarket-item-weight {
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.freshmarket-item-add-btn {
+    background: #ffffff;
+    border: 1.5px solid #10b981;
+    color: #10b981;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.freshmarket-item-add-btn:hover {
+    background: #10b981;
+    color: #ffffff;
+}
+
+/* Text details styled on green background */
+.freshmarket-card-details {
+    display: flex;
+    flex-direction: column;
+    padding: 0 4px;
+    margin-top: 3px; /* Reduced top margin to shrink length */
+    text-align: left;
+}
+
+.freshmarket-price-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.freshmarket-current-price {
+    font-size: 12px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.freshmarket-old-price {
+    font-size: 9px;
+    font-weight: 600;
+    text-decoration: line-through;
+    color: #64748b;
+    opacity: 0.85;
+}
+
+.freshmarket-item-title-text {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-top: 1px;
+    min-height: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.freshmarket-delivery-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 1px; /* Shrunk spacing */
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.freshmarket-delivery-row svg {
+    color: #334155;
+    opacity: 0.85;
+}
+
+.freshmarket-recipes-chip {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid #16a34a;
+    color: #15803d;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 6px; /* Tightened chip padding */
+    border-radius: 99px;
+    margin-top: 2px; /* Shrunk spacing */
+    width: fit-content;
+}
+
+/* Full Width White Pill Button Footer */
+.freshmarket-see-all-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: #ffffff;
+    border: none;
+    border-radius: 99px; /* Pill */
+    padding: 6px; /* Reduced padding from 8px */
+    margin-top: 4px; /* Shrunk margin from 8px */
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.freshmarket-see-all-bar:hover {
+    background: #f8fafc;
+    transform: translateY(1px);
+}
+
+.freshmarket-see-all-text {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #1e293b;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
