@@ -172,6 +172,9 @@
     box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
+    /* Fixed height so panel-body can scroll — clips content inside rounded border */
+    max-height: calc(100vh - 150px);
+    overflow: hidden;
 }
 
 .live-preview-panel-card {
@@ -183,7 +186,7 @@
     flex-direction: column;
     position: sticky;
     top: 12px;
-    height: calc(100vh - 50px) !important;
+    height: calc(100vh - 160px);
     overflow: hidden;
     z-index: 10;
 }
@@ -218,6 +221,40 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+.configuration-panel-card .panel-body {
+    /* flex: 1 + min-height: 0 is the correct pattern for scrollable flex children */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+/* Custom premium scrollbar for configuration panel body */
+.configuration-panel-card .panel-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.configuration-panel-card .panel-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.configuration-panel-card .panel-body::-webkit-scrollbar-thumb {
+    background: var(--border-color, #cbd5e1);
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.configuration-panel-card .panel-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted, #94a3b8);
+}
+
+/* Firefox scrollbar */
+.configuration-panel-card .panel-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color, #cbd5e1) transparent;
 }
 
 /* Form Grouping */
@@ -626,9 +663,8 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 8px;
-    overflow-y: auto;
+    /* Removed max-height + overflow-y — panel-body is the scroll container */
     padding-right: 6px;
-    max-height: 500px;
 }
 
 .simple-slot-card {
@@ -1327,18 +1363,36 @@
     background-color: #111827;
 }
 
-/* Phone Scrollable Body */
-.phone-scrollable-body {
+/* Phone Scrollable Body / Simulator Scroll Content */
+.simulator-scroll-content {
+    height: 100%;
     flex-grow: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
     display: flex;
     flex-direction: column;
     position: relative;
     background-color: #ffffff;
 }
 
-.phone-scrollable-body::-webkit-scrollbar {
-    display: none; /* Hide scrollbar for extreme device realism */
+/* Custom premium scrollbar for simulator scroll content */
+.simulator-scroll-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.simulator-scroll-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.simulator-scroll-content::-webkit-scrollbar-thumb {
+    background: var(--border-color, #cbd5e1);
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+
+.simulator-scroll-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted, #94a3b8);
 }
 
 .mock-context-category-header {
@@ -1561,7 +1615,7 @@
 }
 
 /* 2. Lite Promobanner */
-.mock-widget-promobanner {
+.mock-widget-lite-promobanner {
     padding: 0 12px;
 }
 
@@ -1683,7 +1737,7 @@
 }
 
 /* 4. Banner Carousel */
-.mock-widget-banner-carousel {
+.mock-widget-lite-bannercarousel {
     position: relative;
     width: 100%;
     aspect-ratio: 2 / 1;
@@ -4647,20 +4701,803 @@
 /* Fix dropdown clipping and z-index stacking context issues inside step cards */
 .cms-step-card,
 .form-group-wrap,
-.lite-banner-config-section,
-.panel-body {
+.lite-banner-config-section {
     overflow: visible !important;
 }
 
 .cms-step-card:has(.searchable-select-root.open),
 .form-group-wrap:has(.searchable-select-root.open),
-.lite-banner-config-section:has(.searchable-select-root.open),
-.panel-body:has(.searchable-select-root.open) {
+.lite-banner-config-section:has(.searchable-select-root.open) {
     position: relative;
     z-index: 100 !important;
     overflow: visible !important;
 }
 
+/* ─── Widget Selector Section ─── */
+.widget-selector-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: linear-gradient(135deg, #f8faff 0%, #eff6ff 100%);
+    border: 1px solid #dbeafe;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
 
+.widget-selector-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
 
+/* Widget Info Strip */
+.widget-info-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed #bfdbfe;
+}
 
+.widget-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    text-align: center;
+}
+
+.widget-info-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.widget-info-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+/* ─── Generic Widget Config Section ─── */
+.generic-widget-config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Slot Stats Row */
+.widget-slot-stats-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.slot-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.slot-stat-chip.uploaded {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    color: #065f46;
+}
+
+.slot-stat-chip.pending {
+    background: #fffbeb;
+    border-color: #fcd34d;
+    color: #92400e;
+}
+
+.slot-stat-chip.total {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1e40af;
+}
+
+.slot-stat-chip.invalid {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.chip-num {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.chip-label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Generic Slots List */
+.generic-slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Removed max-height + overflow-y — panel-body is the scroll container */
+    padding-right: 4px;
+}
+
+.generic-slot-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    position: relative;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.generic-slot-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.08);
+    transform: translateY(-1px);
+}
+
+.generic-slot-card.slot-filled {
+    border-left: 3px solid #10b981;
+}
+
+.generic-slot-card.slot-empty {
+    border-left: 3px solid #e2e8f0;
+    background: var(--bg-hover);
+}
+
+.generic-slot-card.slot-has-error {
+    border-left: 3px solid #ef4444;
+    background: #fff8f8;
+}
+
+.slot-badge-num {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.slot-image-area {
+    width: 68px;
+    height: 68px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+    margin-top: 10px;
+}
+
+.slot-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.slot-thumb-img:hover {
+    transform: scale(1.08);
+}
+
+.slot-upload-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    font-size: 9px;
+    text-align: center;
+    padding: 4px;
+}
+
+.slot-upload-placeholder:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.upload-placeholder-icon {
+    color: #94a3b8;
+}
+
+.slot-req-hint {
+    font-size: 7.5px;
+    color: #94a3b8;
+    line-height: 1.2;
+}
+
+/* Slot Meta Info */
+.slot-meta-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin-top: 10px;
+}
+
+.slot-file-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slot-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slot-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.slot-status-badge.published {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.slot-status-badge.draft {
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.slot-status-badge.missing {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.slot-file-size {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.slot-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #ef4444;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Slot Action Buttons */
+.slot-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-top: 10px;
+}
+
+.slot-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.slot-action-btn.upload-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.slot-action-btn.upload-btn:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.slot-action-btn.preview-btn {
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+.slot-action-btn.preview-btn:hover {
+    border-color: #94a3b8;
+    color: var(--primary);
+}
+
+.slot-action-btn.delete-btn {
+    background: #fff5f5;
+    color: #ef4444;
+    border-color: #fecaca;
+    padding: 5px 7px;
+}
+
+.slot-action-btn.delete-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+/* ─── Beauty Category Widget ─── */
+.mock-widget-lite-shopbycategory {
+    background-color: #faf9f7;
+    padding: 12px 12px 14px;
+    border-bottom: 1px solid #f0ede8;
+}
+
+.lite-shopbycategory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 11px;
+}
+
+.lite-shopbycategory-menu-icon {
+    color: #8e8e93;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.lite-shopbycategory-menu-icon:hover {
+    color: #1a1a1a;
+}
+
+.lite-shopbycategory-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 0;
+    letter-spacing: -0.2px;
+}
+
+/* 4×2 grid */
+.lite-shopbycategory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 6px;
+}
+
+.lite-shopbycategory-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: transform 0.15s ease;
+}
+
+.lite-shopbycategory-item:hover {
+    transform: translateY(-2px);
+}
+
+.lite-shopbycategory-img-box {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    overflow: hidden;
+    background-color: #ffeceb;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lite-shopbycategory-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.lite-shopbycategory-item:hover .lite-shopbycategory-img-box img {
+    transform: scale(1.07);
+}
+
+.lite-shopbycategory-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ffeceb 0%, #ffdcd8 100%);
+}
+
+.lite-shopbycategory-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 58px;
+    word-break: break-word;
+}
+
+/* ─── Beauty Category CMS Configuration Panel ─────────────────────────────── */
+.lite-shopbycategory-config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.lite-shopbycategory-slots-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* No max-height here — panel-body is the scroll container.
+       Letting accordion grow naturally so all content (incl. Redirect Destination) is reachable. */
+    padding-right: 4px;
+}
+
+.lite-shopbycategory-slots-accordion::-webkit-scrollbar {
+    width: 4px;
+}
+
+.lite-shopbycategory-slots-accordion::-webkit-scrollbar-thumb {
+    background: #f9a8d4;
+    border-radius: 99px;
+}
+
+/* Accordion Card */
+.lite-shopbycategory-slot-accordion-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.lite-shopbycategory-slot-accordion-card:hover {
+    border-color: #f9a8d4;
+    box-shadow: 0 2px 10px rgba(236, 72, 153, 0.07);
+}
+
+.lite-shopbycategory-slot-accordion-card.expanded {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.08);
+}
+
+.lite-shopbycategory-slot-accordion-card.has-image {
+    border-left: 3px solid #10b981;
+}
+
+.lite-shopbycategory-slot-accordion-card.has-image.has-link {
+    border-left: 3px solid #ec4899;
+}
+
+.lite-shopbycategory-slot-accordion-card.expanded.has-image.has-link {
+    border-left: 3px solid #ec4899;
+    border-color: #ec4899;
+}
+
+/* Accordion Header */
+.lite-shopbycategory-slot-accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+
+.lite-shopbycategory-slot-accordion-header:hover {
+    background: #fdf2f8;
+}
+
+.lite-shopbycategory-slot-thumb-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid #f3e8ff;
+    background: #fdf4ff;
+}
+
+.lite-shopbycategory-slot-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lite-shopbycategory-slot-thumb-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+    background: #f9fafb;
+}
+
+.lite-shopbycategory-slot-header-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lite-shopbycategory-slot-label-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lite-shopbycategory-slot-status-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.lite-shopbycategory-slot-img-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+.lite-shopbycategory-slot-img-badge.ok {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.lite-shopbycategory-slot-img-badge.missing {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.lite-shopbycategory-slot-link-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lite-shopbycategory-slot-link-badge.ok {
+    background: #fdf4ff;
+    color: #9333ea;
+}
+
+.lite-shopbycategory-slot-link-badge.missing {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.lite-shopbycategory-slot-expand-icon {
+    flex-shrink: 0;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+}
+
+/* Accordion Body */
+.lite-shopbycategory-slot-accordion-body {
+    padding: 0 14px 14px 14px;
+    border-top: 1px solid #fce7f3;
+    background: #fef9fb;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Step within accordion */
+.lite-shopbycategory-slot-step {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+}
+
+.lite-shopbycategory-slot-step-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+}
+
+/* Image upload area */
+.lite-shopbycategory-slot-img-upload-area {
+    position: relative;
+}
+
+.lite-shopbycategory-slot-upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px;
+    border: 2px dashed #f9a8d4;
+    border-radius: 10px;
+    background: #fff5f8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.lite-shopbycategory-slot-upload-dropzone:hover {
+    border-color: #ec4899;
+    background: #fdf2f8;
+}
+
+/* Uploaded image preview */
+.lite-shopbycategory-slot-uploaded-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: #f9fafb;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.lite-shopbycategory-slot-uploaded-preview img {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid #e2e8f0;
+}
+
+.lite-shopbycategory-slot-img-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+/* Product-theme card for beauty config */
+.selected-info-display-card.product-theme {
+    border-color: #c4b5fd;
+}
+
+.selected-info-display-card.product-theme .display-card-title {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+}
+
+/* Accordion Error Styling */
+.lite-shopbycategory-slot-accordion-card.has-errors {
+    border-color: #ef4444 !important;
+    border-left: 3px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.lite-shopbycategory-slot-accordion-card.has-errors:hover {
+    border-color: #dc2626 !important;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.15) !important;
+}
+
+.lite-shopbycategory-slot-accordion-card.has-errors.expanded {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+}
+
+.lite-shopbycategory-slot-accordion-card.has-errors .lite-shopbycategory-slot-accordion-header:hover {
+    background: #fee2e2 !important;
+}
+
+.error-message-inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #ef4444;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* ========================================== */
+/* Room Grid Widget Premium CMS Theme Styles */
+/* ========================================== */
+
+.room-grid-widget {
+    padding: 12px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    margin-bottom: 12px;
+}
+
+.room-grid-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-top: 0;
+    margin-bottom: 10px;
+    letter-spacing: -0.2px;
+}
+
+.room-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.room-grid-card {
+    position: relative;
+    height: 115px;
+    border-top-left-radius: 50%;
+    border-top-right-radius: 50%;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.room-grid-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.room-grid-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all .3s ease;
+}
+
+.room-grid-card:hover .room-grid-image {
+    transform: scale(1.08);
+}
+
+.room-grid-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0) 100%);
+    padding: 8px 6px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    height: 60%;
+    box-sizing: border-box;
+    pointer-events: none;
+}

@@ -42,7 +42,8 @@ function SettingsPage() {
     // Dynamic states for interactive controls
     const [name, setName] = useState(() => user ? `${user.firstName} ${user.lastName}` : "");
     const [phone, setPhone] = useState(() => user?.phone || "");
-    const [email, setEmail] = useState(() => user?.email || "");
+    const [email,
+        setEmail] = useState(() => user?.email || "");
     const [googleConnected, setGoogleConnected] = useState(true);
     const [activeIntegrationDropdownOpen, setActiveIntegrationDropdownOpen] = useState(false);
     const [twoFAEnabled, setTwoFAEnabled] = useState(false);
