@@ -15,7 +15,9 @@ function MainLayout() {
 
     // Close mobile sidebar automatically after navigation
     useEffect(() => {
-        setMobileOpen(false);
+        setTimeout(() => {
+            setMobileOpen(false);
+        }, 0);
     }, [location.pathname, location.search]);
 
     // Handle screen resize to apply default state rules

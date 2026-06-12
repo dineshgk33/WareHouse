@@ -30,7 +30,6 @@ import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
 import { getOrderStatusClass } from "../../utils/statusUtils";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
-import { generateQRCodeSVG } from "../../utils/qrcode";
 import { Barcode128Svg } from "../../utils/barcode";
 import "./Orders.css";
 
@@ -202,22 +201,26 @@ function OrdersPage() {
     // Handle instant print trigger
     useEffect(() => {
         if (triggerImmediatePrint && isPrintPreviewOpen && previewLabels.length > 0) {
-            setTriggerImmediatePrint(false);
-            triggerPrint();
+            setTimeout(() => {
+                setTriggerImmediatePrint(false);
+                triggerPrint();
+            }, 0);
         }
     }, [triggerImmediatePrint, isPrintPreviewOpen, previewLabels]);
 
     // Reset pagination when tab changes
     useEffect(() => {
-        setOrdPage(1);
-        setPickPage(1);
-        setPackPage(1);
-        setDlvPage(1);
-        setHistPage(1);
-        setPendingPage(1);
-        setPendingSearch("");
-        setActiveRowMenuId(null);
-        setSelectedOrderIds([]); // Clear selection when switching tabs
+        setTimeout(() => {
+            setOrdPage(1);
+            setPickPage(1);
+            setPackPage(1);
+            setDlvPage(1);
+            setHistPage(1);
+            setPendingPage(1);
+            setPendingSearch("");
+            setActiveRowMenuId(null);
+            setSelectedOrderIds([]); // Clear selection when switching tabs
+        }, 0);
     }, [activeTab]);
 
 

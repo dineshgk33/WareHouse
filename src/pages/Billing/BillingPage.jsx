@@ -433,9 +433,7 @@ function methodIcon(method) {
 }
 
 function methodBadge(method) {
-    let emoji = "💳";
-    let bg = "#F1F5F9";
-    let color = "#334155";
+    let emoji, bg, color;
     switch (method) {
         case "Card":
             emoji = "💳";
@@ -529,12 +527,10 @@ function BillingPage() {
 
     // Refresh animation simulation
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [currentDate, setCurrentDate] = useState("");
-
-    useEffect(() => {
+    const [currentDate, setCurrentDate] = useState(() => {
         const options = { month: "short", day: "numeric", year: "numeric" };
-        setCurrentDate(new Date().toLocaleDateString("en-US", options));
-    }, []);
+        return new Date().toLocaleDateString("en-US", options);
+    });
 
     const handleRefresh = () => {
         setIsRefreshing(true);
@@ -778,27 +774,6 @@ function BillingPage() {
         );
     };
 
-    const CustomChartTooltip = ({ active, payload }) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            return (
-                <div style={{
-                    backgroundColor: "#0f172a",
-                    color: "#ffffff",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                    fontSize: "12px",
-                    fontWeight: "600"
-                }}>
-                    <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: data.color || payload[0].color, marginRight: "8px" }}></span>
-                    {data.name}: <span style={{ color: "#38bdf8", marginLeft: "4px" }}>{data.value}%</span>
-                </div>
-            );
-        }
-        return null;
-    };
 
     return (
         <div className="billing-view fade-in">
@@ -2264,5 +2239,27 @@ function BillingPage() {
         </div>
     );
 }
+
+const CustomChartTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div style={{
+                backgroundColor: "#0f172a",
+                color: "#ffffff",
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                fontSize: "12px",
+                fontWeight: "600"
+            }}>
+                <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: data.color || payload[0].color, marginRight: "8px" }}></span>
+                {data.name}: <span style={{ color: "#38bdf8", marginLeft: "4px" }}>{data.value}%</span>
+            </div>
+        );
+    }
+    return null;
+};
 
 export default BillingPage;

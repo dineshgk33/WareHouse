@@ -44,21 +44,27 @@ function MemberRoleEditModal({
             const initialWhId = empWhRoles.length > 0 ? empWhRoles[0].warehouseId : (sessionWarehouseId || "");
             const initialRoleIds = empWhRoles.map(r => r.roleId || r.id).filter(Boolean);
             
-            setSelectedWarehouseId(initialWhId);
-            setSelectedRoleIds(initialRoleIds);
-            setRoleSearchQuery("");
+            setTimeout(() => {
+                setSelectedWarehouseId(initialWhId);
+                setSelectedRoleIds(initialRoleIds);
+                setRoleSearchQuery("");
+            }, 0);
         }
     }, [isOpen, employee, sessionWarehouseId]);
 
     // Fetch roles dynamically when the selected warehouse changes
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setFetchedRoles([]);
+            setTimeout(() => {
+                setFetchedRoles([]);
+            }, 0);
             return;
         }
 
         let isMounted = true;
-        setRolesLoading(true);
+        setTimeout(() => {
+            setRolesLoading(true);
+        }, 0);
 
         authService.getWarehouseRoles(selectedWarehouseId)
             .then((res) => {

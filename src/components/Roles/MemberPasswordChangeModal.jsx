@@ -19,11 +19,13 @@ function MemberPasswordChangeModal({
     // Initialize/Reset state
     useEffect(() => {
         if (isOpen) {
-            setNewPassword("");
-            setConfirmPassword("");
-            setSendEmail(false);
-            setShowPassword(false);
-            setError("");
+            setTimeout(() => {
+                setNewPassword("");
+                setConfirmPassword("");
+                setSendEmail(false);
+                setShowPassword(false);
+                setError("");
+            }, 0);
         }
     }, [isOpen]);
 

@@ -30,13 +30,17 @@ function UserRolesSection({ showToast }) {
 
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setEmployees([]);
+            setTimeout(() => {
+                setEmployees([]);
+            }, 0);
             return;
         }
 
         let isMounted = true;
-        setLoading(true);
-        setError("");
+        setTimeout(() => {
+            setLoading(true);
+            setError("");
+        }, 0);
 
         authService.getWarehouseEmployees(selectedWarehouseId)
             .then((res) => {

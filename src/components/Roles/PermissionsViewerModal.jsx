@@ -37,13 +37,17 @@ function PermissionsViewerModal({
 
     // Sync isEditing with initialIsEditing when isOpen or initialIsEditing changes
     useEffect(() => {
-        setIsEditing(initialIsEditing);
+        setTimeout(() => {
+            setIsEditing(initialIsEditing);
+        }, 0);
     }, [initialIsEditing, isOpen]);
 
     // Initialize editedPermissions with role permissions when modal opens or role changes
     useEffect(() => {
         if (isOpen && role) {
-            setEditedPermissions([...role.permissions]);
+            setTimeout(() => {
+                setEditedPermissions([...role.permissions]);
+            }, 0);
         }
     }, [isOpen, role]);
 

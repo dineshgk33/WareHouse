@@ -16,8 +16,10 @@ function EditRoleModal({
 
     useEffect(() => {
         if (!isOpen) return;
-        setName(role?.name || "");
-        setDescription(role?.description || "");
+        setTimeout(() => {
+            setName(role?.name || "");
+            setDescription(role?.description || "");
+        }, 0);
     }, [isOpen, role]);
 
     if (!isOpen) return null;

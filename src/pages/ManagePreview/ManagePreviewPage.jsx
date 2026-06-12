@@ -965,21 +965,24 @@ function ManagePreviewPage() {
 
     // Auto-switch simulator tab when CMS selectedCat changes
     useEffect(() => {
-        if (selectedCat === "home") {
-            setSimulatorTab("home");
-        } else if (selectedCat === "category") {
-            setSimulatorTab("category");
-        } else if (selectedCat === "listing") {
-            setSimulatorTab("listing");
-        } else if (selectedCat === "details") {
-            setSimulatorTab("details");
-            const bannerProd = productsMasterList.find(p => p.productId === (liteBannerConfig?.destProductId || ""));
-            if (bannerProd) {
-                setSelectedProductInSim(bannerProd);
+        const timer = setTimeout(() => {
+            if (selectedCat === "home") {
+                setSimulatorTab("home");
+            } else if (selectedCat === "category") {
+                setSimulatorTab("category");
+            } else if (selectedCat === "listing") {
+                setSimulatorTab("listing");
+            } else if (selectedCat === "details") {
+                setSimulatorTab("details");
+                const bannerProd = productsMasterList.find(p => p.productId === (liteBannerConfig?.destProductId || ""));
+                if (bannerProd) {
+                    setSelectedProductInSim(bannerProd);
+                }
+            } else if (selectedCat === "promotions") {
+                setSimulatorTab("promotions");
             }
-        } else if (selectedCat === "promotions") {
-            setSimulatorTab("promotions");
-        }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [selectedCat, liteBannerConfig, productsMasterList]);
 
     const phoneBodyRef = useRef(null);
@@ -1022,226 +1025,229 @@ function ManagePreviewPage() {
 
     // Load presets or drafts on widget change
     useEffect(() => {
-        const draftKey = `haatza_draft_${selectedWidgetId}`;
-        const savedDraft = localStorage.getItem(draftKey);
-        const metadataKey = `haatza_draft_metadata_${selectedWidgetId}`;
-        const savedMetadata = localStorage.getItem(metadataKey);
-        
-        let initialImages = [];
-        if (savedDraft) {
-            try {
-                initialImages = JSON.parse(savedDraft);
-            } catch (e) {
-                initialImages = [...activeMeta.defaultImages];
-            }
-        } else {
-            initialImages = [...activeMeta.defaultImages];
-        }
-
-        // Fill remaining slots up to requiredCount
-        while (initialImages.length < activeMeta.requiredCount) {
-            initialImages.push(null);
-        }
-        // Slice to correct length if exceeded
-        initialImages = initialImages.slice(0, activeMeta.requiredCount);
-
-        setWidgetImages(initialImages);
-        setBeforeImages([...activeMeta.defaultImages]); // Baseline comparison is default image set
-        setValidationErrors({});
-
-        // Initialize Metadata
-        let initialMeta = {};
-        if (savedMetadata) {
-            try {
-                initialMeta = JSON.parse(savedMetadata);
-            } catch (e) {
-                initialMeta = {};
-            }
-        }
-
-        const format = activeMeta.formats[0]?.split('/')[1]?.toUpperCase() || "JPG";
-        const ext = format.toLowerCase();
-        const finalMeta = {};
-
-        for (let i = 0; i < activeMeta.requiredCount; i++) {
-            const img = initialImages[i];
-            if (initialMeta[i]) {
-                finalMeta[i] = initialMeta[i];
-                if (!img) {
-                    finalMeta[i].status = "Missing";
+        const timer = setTimeout(() => {
+            const draftKey = `haatza_draft_${selectedWidgetId}`;
+            const savedDraft = localStorage.getItem(draftKey);
+            const metadataKey = `haatza_draft_metadata_${selectedWidgetId}`;
+            const savedMetadata = localStorage.getItem(metadataKey);
+            
+            let initialImages;
+            if (savedDraft) {
+                try {
+                    initialImages = JSON.parse(savedDraft);
+                } catch (e) {
+                    initialImages = [...activeMeta.defaultImages];
                 }
             } else {
-                if (img) {
-                    const bytes = Math.round(activeMeta.maxSize * 0.45 + (i * 123456) % (activeMeta.maxSize * 0.3));
-                    finalMeta[i] = {
-                        name: `${selectedWidgetId.toLowerCase()}-preset-${i + 1}.${ext}`,
-                        size: formatSize(bytes),
-                        uploadDate: "Jun 8, 2026",
-                        status: "Published",
-                        resolution: `${activeMeta.resolution.width} × ${activeMeta.resolution.height}`
-                    };
-                } else {
-                    finalMeta[i] = {
-                        name: "Empty Slot",
-                        size: "-",
-                        uploadDate: "-",
-                        status: "Missing",
-                        resolution: `${activeMeta.resolution.width} × ${activeMeta.resolution.height}`
-                    };
-                }
+                initialImages = [...activeMeta.defaultImages];
             }
-        }
-        setImageMetadata(finalMeta);
-        setSelectedIndices([]);
-        setSearchQuery("");
-        setDebouncedSearchQuery("");
-        setActiveFilters(["All"]);
-        setRecentUpdates(new Set());
 
-        if (selectedWidgetId === "Lite_Banner") {
-            const saved = localStorage.getItem("haatza_lite_banner_config");
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                        setLiteBannerConfig(parsed);
-                    }
-                } catch (e) {}
+            // Fill remaining slots up to requiredCount
+            while (initialImages.length < activeMeta.requiredCount) {
+                initialImages.push(null);
             }
-            setLiteBannerErrors({});
-            setLiteBannerExpandedSlot(null);
-        }
+            // Slice to correct length if exceeded
+            initialImages = initialImages.slice(0, activeMeta.requiredCount);
 
-        if (selectedWidgetId === "Lite_Shopbycategory") {
-            const saved = localStorage.getItem("haatza_lite_shopbycategory_config");
-            if (saved) {
+            setWidgetImages(initialImages);
+            setBeforeImages([...activeMeta.defaultImages]); // Baseline comparison is default image set
+            setValidationErrors({});
+
+            // Initialize Metadata
+            let initialMeta = {};
+            if (savedMetadata) {
                 try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length === 8) {
-                        setLiteShopbycategoryConfig(parsed);
-                    }
+                    initialMeta = JSON.parse(savedMetadata);
                 } catch (e) {
-                    console.error("Error parsing beauty category config", e);
+                    initialMeta = {};
                 }
             }
-            setLiteShopbyerrors({});
-            setLiteShopbycategoryProductSearch({});
-            setLiteShopbycategoryExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "Lite_Promobanner") {
-            const saved = localStorage.getItem("haatza_lite_promobanner_config");
-            if (saved) {
-                try {
-                    setLitePromobannerConfig(JSON.parse(saved));
-                } catch (e) {}
-            }
-            setLitePromobannerErrors({});
-            setLitePromobannerProductSearch("");
-            setLitePromobannerExpandedSlot(null);
-        }
+            const format = activeMeta.formats[0]?.split('/')[1]?.toUpperCase() || "JPG";
+            const ext = format.toLowerCase();
+            const finalMeta = {};
 
-        if (selectedWidgetId === "roomgrid") {
-            const saved = localStorage.getItem("haatza_roomgrid_config");
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length === 4) {
-                        setRoomgridConfig(parsed);
+            for (let i = 0; i < activeMeta.requiredCount; i++) {
+                const img = initialImages[i];
+                if (initialMeta[i]) {
+                    finalMeta[i] = initialMeta[i];
+                    if (!img) {
+                        finalMeta[i].status = "Missing";
                     }
-                } catch (e) {}
-            }
-            setRoomgridErrors({});
-            setRoomgridProductSearch({});
-            setRoomgridExpandedSlot(null);
-        }
-
-        if (selectedWidgetId === "Lite_bannercarousel") {
-            const saved = localStorage.getItem("haatza_lite_bannercarousel_config");
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length === 3) {
-                        setLiteBannercarouselConfig(parsed);
+                } else {
+                    if (img) {
+                        const bytes = Math.round(activeMeta.maxSize * 0.45 + (i * 123456) % (activeMeta.maxSize * 0.3));
+                        finalMeta[i] = {
+                            name: `${selectedWidgetId.toLowerCase()}-preset-${i + 1}.${ext}`,
+                            size: formatSize(bytes),
+                            uploadDate: "Jun 8, 2026",
+                            status: "Published",
+                            resolution: `${activeMeta.resolution.width} × ${activeMeta.resolution.height}`
+                        };
+                    } else {
+                        finalMeta[i] = {
+                            name: "Empty Slot",
+                            size: "-",
+                            uploadDate: "-",
+                            status: "Missing",
+                            resolution: `${activeMeta.resolution.width} × ${activeMeta.resolution.height}`
+                        };
                     }
-                } catch (e) {}
+                }
             }
-            setLiteBannercarouselErrors({});
-            setLiteBannercarouselProductSearch({});
-            setLiteBannercarouselExpandedSlot(null);
-        }
+            setImageMetadata(finalMeta);
+            setSelectedIndices([]);
+            setSearchQuery("");
+            setDebouncedSearchQuery("");
+            setActiveFilters(["All"]);
+            setRecentUpdates(new Set());
 
-        if (selectedWidgetId === "freshmarketSection") {
-            const saved = localStorage.getItem("haatza_freshmarket_config");
-            if (saved) {
-                try {
-                    setFreshmarketConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "Lite_Banner") {
+                const saved = localStorage.getItem("haatza_lite_banner_config");
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                            setLiteBannerConfig(parsed);
+                        }
+                    } catch (e) {}
+                }
+                setLiteBannerErrors({});
+                setLiteBannerExpandedSlot(null);
             }
-            setFreshmarketErrors({});
-            setFreshmarketProductSearch({});
-            setFreshmarketExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "matsSection") {
-            const saved = localStorage.getItem("haatza_mats_config");
-            if (saved) {
-                try {
-                    setMatsConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "Lite_Shopbycategory") {
+                const saved = localStorage.getItem("haatza_lite_shopbycategory_config");
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed) && parsed.length === 8) {
+                            setLiteShopbycategoryConfig(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing beauty category config", e);
+                    }
+                }
+                setLiteShopbyerrors({});
+                setLiteShopbycategoryProductSearch({});
+                setLiteShopbycategoryExpandedSlot(null);
             }
-            setMatsErrors({});
-            setMatsProductSearch({});
-            setMatsExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "trendingSection") {
-            const saved = localStorage.getItem("haatza_trending_config");
-            if (saved) {
-                try {
-                    setTrendingConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "Lite_Promobanner") {
+                const saved = localStorage.getItem("haatza_lite_promobanner_config");
+                if (saved) {
+                    try {
+                        setLitePromobannerConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setLitePromobannerErrors({});
+                setLitePromobannerProductSearch("");
+                setLitePromobannerExpandedSlot(null);
             }
-            setTrendingErrors({});
-            setTrendingProductSearch({});
-            setTrendingExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "productSection") {
-            const saved = localStorage.getItem("haatza_product_config");
-            if (saved) {
-                try {
-                    setProductConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "roomgrid") {
+                const saved = localStorage.getItem("haatza_roomgrid_config");
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed) && parsed.length === 4) {
+                            setRoomgridConfig(parsed);
+                        }
+                    } catch (e) {}
+                }
+                setRoomgridErrors({});
+                setRoomgridProductSearch({});
+                setRoomgridExpandedSlot(null);
             }
-            setProductErrors({});
-            setProductProductSearch({});
-            setProductExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "perfumeSection") {
-            const saved = localStorage.getItem("haatza_perfume_config");
-            if (saved) {
-                try {
-                    setPerfumeConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "Lite_bannercarousel") {
+                const saved = localStorage.getItem("haatza_lite_bannercarousel_config");
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed) && parsed.length === 3) {
+                            setLiteBannercarouselConfig(parsed);
+                        }
+                    } catch (e) {}
+                }
+                setLiteBannercarouselErrors({});
+                setLiteBannercarouselProductSearch({});
+                setLiteBannercarouselExpandedSlot(null);
             }
-            setPerfumeErrors({});
-            setPerfumeProductSearch({});
-            setPerfumeExpandedSlot(null);
-        }
 
-        if (selectedWidgetId === "kidsSection") {
-            const saved = localStorage.getItem("haatza_kids_config");
-            if (saved) {
-                try {
-                    setKidsConfig(JSON.parse(saved));
-                } catch (e) {}
+            if (selectedWidgetId === "freshmarketSection") {
+                const saved = localStorage.getItem("haatza_freshmarket_config");
+                if (saved) {
+                    try {
+                        setFreshmarketConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setFreshmarketErrors({});
+                setFreshmarketProductSearch({});
+                setFreshmarketExpandedSlot(null);
             }
-            setKidsErrors({});
-            setKidsProductSearch({});
-            setKidsExpandedSlot(null);
-        }
+
+            if (selectedWidgetId === "matsSection") {
+                const saved = localStorage.getItem("haatza_mats_config");
+                if (saved) {
+                    try {
+                        setMatsConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setMatsErrors({});
+                setMatsProductSearch({});
+                setMatsExpandedSlot(null);
+            }
+
+            if (selectedWidgetId === "trendingSection") {
+                const saved = localStorage.getItem("haatza_trending_config");
+                if (saved) {
+                    try {
+                        setTrendingConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setTrendingErrors({});
+                setTrendingProductSearch({});
+                setTrendingExpandedSlot(null);
+            }
+
+            if (selectedWidgetId === "productSection") {
+                const saved = localStorage.getItem("haatza_product_config");
+                if (saved) {
+                    try {
+                        setProductConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setProductErrors({});
+                setProductProductSearch({});
+                setProductExpandedSlot(null);
+            }
+
+            if (selectedWidgetId === "perfumeSection") {
+                const saved = localStorage.getItem("haatza_perfume_config");
+                if (saved) {
+                    try {
+                        setPerfumeConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setPerfumeErrors({});
+                setPerfumeProductSearch({});
+                setPerfumeExpandedSlot(null);
+            }
+
+            if (selectedWidgetId === "kidsSection") {
+                const saved = localStorage.getItem("haatza_kids_config");
+                if (saved) {
+                    try {
+                        setKidsConfig(JSON.parse(saved));
+                    } catch (e) {}
+                }
+                setKidsErrors({});
+                setKidsProductSearch({});
+                setKidsExpandedSlot(null);
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [selectedWidgetId, activeMeta]);
 
     // Handle toast fade
@@ -1254,7 +1260,9 @@ function ManagePreviewPage() {
 
     // ─── category loader helper effect ───
     useEffect(() => {
-        setIsLoadingCategories(true);
+        setTimeout(() => {
+            setIsLoadingCategories(true);
+        }, 0);
         const timer = setTimeout(() => {
             setCategoriesList(MOCK_CATEGORIES);
             setIsLoadingCategories(false);
@@ -1267,7 +1275,9 @@ function ManagePreviewPage() {
         if (selectedWidgetId === "Lite_Promobanner" && widgetImages.length > 0) {
             const currentImg = widgetImages[0];
             if (currentImg !== litePromobannerConfig.imageUrl) {
-                setLitePromobannerConfig(prev => ({ ...prev, imageUrl: currentImg || "" }));
+                setTimeout(() => {
+                    setLitePromobannerConfig(prev => ({ ...prev, imageUrl: currentImg || "" }));
+                }, 0);
             }
         }
     }, [widgetImages, selectedWidgetId, litePromobannerConfig.imageUrl]);
@@ -1277,7 +1287,9 @@ function ManagePreviewPage() {
         if (selectedWidgetId === "Lite_Banner" && widgetImages.length > 0) {
             const currentImg = widgetImages[0];
             if (currentImg !== liteBannerConfig.imageUrl) {
-                setLiteBannerConfig(prev => ({ ...prev, imageUrl: currentImg || "" }));
+                setTimeout(() => {
+                    setLiteBannerConfig(prev => ({ ...prev, imageUrl: currentImg || "" }));
+                }, 0);
             }
         }
     }, [widgetImages, selectedWidgetId, liteBannerConfig.imageUrl]);
@@ -3882,7 +3894,7 @@ function ManagePreviewPage() {
     }, [selectedWidgetId, liteBannerConfig, litePromobannerConfig, roomgridConfig, liteBannercarouselConfig, trendingConfig, productConfig, perfumeConfig, kidsConfig, freshmarketConfig, matsConfig, handleLiteBannerClick, handleRoomgridClick, handleLitePromobannerClick, handleLiteBannercarouselClick, handleTrendingItemClick, handleProductSectionItemClick, handlePerfumeItemClick, handleKidsItemClick, handleFreshmarketItemClick, handleMatsItemClick, liteShopbycategoryConfig, productsMasterList, widgetImages]);
 
     const renderStaticFiller = useCallback(() => {
-        let fillerWidgetId = "productSection";
+        let fillerWidgetId;
         if (selectedWidgetId === "productSection") {
             fillerWidgetId = "trendingSection";
         } else if (selectedWidgetId === "trendingSection") {

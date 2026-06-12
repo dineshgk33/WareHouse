@@ -665,7 +665,7 @@ function AnalyticsDashboard() {
                     <div className="ai-rec-grid" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <Warehouse size={16} />
                                 </div>
                                 <div>
@@ -680,7 +680,7 @@ function AnalyticsDashboard() {
 
                         <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <TrendingDown size={16} />
                                 </div>
                                 <div>
@@ -695,7 +695,7 @@ function AnalyticsDashboard() {
 
                         <div className="ai-rec-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", border: "1px solid var(--border-color)", borderRadius: "12px", backgroundColor: "var(--bg-card)", transition: "all 0.2s ease" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-success-light)", color: "var(--color-success)", display: "flex", alignItems: "center", justifyCenter: "center", display: "flex", justifyContent: "center" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--color-success-light)", color: "var(--color-success)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <PlusCircle size={16} />
                                 </div>
                                 <div>

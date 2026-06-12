@@ -83,11 +83,13 @@ function SettingsPage() {
         showToast("Changes reset to default!");
     };
 
-    const handleSaveChanges = async (onlyPassword = false) => {
+    const handleSaveChanges = async (onlyPasswordParam = false) => {
         if (isSaving) return;
 
-        // 1. Password validation (if onlyPassword is true OR if any password field is filled)
-        const isPasswordChangeAttempted = onlyPassword || currentPassword || newPassword || confirmPassword;
+        const onlyPassword = onlyPasswordParam === true;
+
+        // 1. Password validation (only if onlyPassword is true)
+        const isPasswordChangeAttempted = onlyPassword;
         if (isPasswordChangeAttempted) {
             if (!currentPassword) {
                 showToast("Current Password is required.");
@@ -124,7 +126,7 @@ function SettingsPage() {
                 showToast("Phone number is required.");
                 return;
             }
-            cleanPhone = String(phone).replace(/[\s\-\+\(\)]/g, "");
+            cleanPhone = String(phone).replace(/[\s\-+()]/g, "");
             if (!/^[0-9]+$/.test(cleanPhone)) {
                 showToast("Phone number must contain numbers only.");
                 return;

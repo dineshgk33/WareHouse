@@ -72,10 +72,12 @@ function FindProductToSell({ darkhouseStock, setDarkhouseStock, currentDhSelect,
         const local = MOCK_GLOBAL_PRODUCTS.filter(p => localSkus.has(p.sku));
         const global = MOCK_GLOBAL_PRODUCTS.filter(p => !localSkus.has(p.sku));
 
-        setTempLocalProducts(local);
-        setTempGlobalProducts(global);
-        setGlobalSelectedSkus(new Set());
-        setLocalSelectedSkus(new Set());
+        setTimeout(() => {
+            setTempLocalProducts(local);
+            setTempGlobalProducts(global);
+            setGlobalSelectedSkus(new Set());
+            setLocalSelectedSkus(new Set());
+        }, 0);
     }, [selectedDh]);
 
     const handleMoveRight = () => {
@@ -209,19 +211,7 @@ function FindProductToSell({ darkhouseStock, setDarkhouseStock, currentDhSelect,
         });
     };
 
-    const EmptyState = ({ message, type }) => (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
-                {type === "global" ? <Package size={28} /> : <Store size={28} />}
-            </div>
-            <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
-            <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
-                {type === "global"
-                    ? "All global items are already added or search filters returned no matches."
-                    : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
-            </p>
-        </div>
-    );
+
 
     return (
         <div className="p-1 sm:p-4 bg-slate-50/50 rounded-2xl">
@@ -542,9 +532,11 @@ function InventoryPage() {
 
     // Reset pagination when changing tab
     useEffect(() => {
-        setWhPage(1);
-        setDhPage(1);
-        setTrPage(1);
+        setTimeout(() => {
+            setWhPage(1);
+            setDhPage(1);
+            setTrPage(1);
+        }, 0);
     }, [activeTab]);
 
     // Derived Unique Options
@@ -763,9 +755,7 @@ function InventoryPage() {
     const getStatusClass = getInventoryStatusClass;
 
     const handleExportCSV = () => {
-        let headers = [];
-        let rows = [];
-        let filename = "haatza_inventory.csv";
+        let headers, rows, filename;
 
         if (activeTab === "warehouse") {
             headers = ["SKU", "Product Name", "Category", "Warehouse Location", "Stock", "Reorder Point", "Status", "Last Updated"];
@@ -1730,5 +1720,19 @@ function InventoryPage() {
         </div>
     );
 }
+
+const EmptyState = ({ message, type }) => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
+            {type === "global" ? <Package size={28} /> : <Store size={28} />}
+        </div>
+        <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
+        <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
+            {type === "global"
+                ? "All global items are already added or search filters returned no matches."
+                : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
+        </p>
+    </div>
+);
 
 export default InventoryPage;

@@ -16,8 +16,10 @@ function AdminVerificationModal({
 
     useEffect(() => {
         if (isOpen) {
-            setPassword("");
-            setError("");
+            setTimeout(() => {
+                setPassword("");
+                setError("");
+            }, 0);
         }
     }, [isOpen]);
 

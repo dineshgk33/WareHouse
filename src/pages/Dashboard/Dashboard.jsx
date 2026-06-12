@@ -225,7 +225,10 @@ function Dashboard() {
     const [chartPeriod, setChartPeriod] = useState("30D"); // "7D", "30D", "90D", "1Y"
     const [selectedMetric, setSelectedMetric] = useState("revenue"); // "revenue", "orders", "profit"
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [currentDate, setCurrentDate] = useState("");
+    const [currentDate, setCurrentDate] = useState(() => {
+        const options = { month: "short", day: "numeric", year: "numeric" };
+        return new Date().toLocaleDateString("en-US", options);
+    });
 
     // Live Simulated Metrics States
     const [totalOrders, setTotalOrders] = useState(1742);
@@ -247,12 +250,6 @@ function Dashboard() {
         { id: "act-3", title: "Payment Received", desc: "Payment of ₹1,299.99 received from David Walker.", time: "13 mins ago", icon: CreditCard, bgClass: "bg-info", iconClass: "icon-info", unread: false },
         { id: "act-4", title: "Refund Requested", desc: "Refund request of ₹120.00 submitted for Order #R92839.", time: "15 mins ago", icon: RotateCcw, bgClass: "bg-danger", iconClass: "icon-danger", unread: false }
     ]);
-
-    // Initial Date Formatting
-    useEffect(() => {
-        const options = { month: "short", day: "numeric", year: "numeric" };
-        setCurrentDate(new Date().toLocaleDateString("en-US", options));
-    }, []);
 
     // Metric tick — used by both manual button and the auto-interval
     // Uses functional setState form to avoid stale closures.
@@ -319,7 +316,7 @@ function Dashboard() {
         try {
             const saved = localStorage.getItem("haatza_dashboard_analyses");
             return saved ? JSON.parse(saved) : [];
-        } catch (e) {
+        } catch {
             return [];
         }
     });
@@ -330,7 +327,9 @@ function Dashboard() {
                 const list = JSON.parse(saved);
                 return list.length > 0 ? list[0] : null;
             }
-        } catch (e) {}
+        } catch {
+            // ignore
+        }
         return null;
     });
     const [aiLoading, setAiLoading] = useState(false);

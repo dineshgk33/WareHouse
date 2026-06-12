@@ -25,6 +25,7 @@ import { useToast } from "../../hooks/useToast";
 import PermissionsViewerModal from "../../components/Roles/PermissionsViewerModal";
 import MemberRoleEditModal from "../../components/Roles/MemberRoleEditModal";
 import MemberPasswordChangeModal from "../../components/Roles/MemberPasswordChangeModal";
+import UserRolesSection from "../../components/Roles/UserRolesSection";
 import { DEFAULT_ROLES } from "../../constants/rolePermissions";
 import Modal from "../../components/Roles/Modal";
 import Accordion from "../../components/Roles/Accordion";
@@ -92,7 +93,9 @@ function AdminPage() {
     useEffect(() => {
         const pathParts = location.pathname.split('/');
         const currentTab = pathParts[pathParts.length - 1] === "roles" ? "roles" : "members";
-        setActiveTab(currentTab);
+        setTimeout(() => {
+            setActiveTab(currentTab);
+        }, 0);
     }, [location.pathname]);
 
     // Close dropdowns when clicking outside
@@ -189,10 +192,7 @@ function AdminPage() {
         
         try {
             const payload = {
-                email: selectedEmployee.email,
                 employeeId: selectedEmployee.employeeId || selectedEmployee.id,
-                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
-                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
                 photo: selectedEmployee.avatar || "",
                 permissions: updatedPermissions
             };
@@ -251,10 +251,7 @@ function AdminPage() {
         
         try {
             const payload = {
-                email: selectedEmployee.email,
                 employeeId: selectedEmployee.employeeId || selectedEmployee.id,
-                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
-                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
                 photo: selectedEmployee.avatar || "",
                 password: newPassword
             };
@@ -296,10 +293,7 @@ function AdminPage() {
         
         try {
             const payload = {
-                email: selectedEmployee.email,
                 employeeId: selectedEmployee.employeeId || selectedEmployee.id,
-                employeeCode: selectedEmployee.employeeId || selectedEmployee.id,
-                phone: selectedEmployee.phone ? Number(String(selectedEmployee.phone).replace(/\D/g, '')) : "",
                 photo: selectedEmployee.avatar || "",
                 warehouseRoles: updatedWarehouseRoles
             };
@@ -466,33 +460,41 @@ function AdminPage() {
 
     useEffect(() => {
         if (selectedRoleIds.length > 0) {
-            setExpandedCategories(
-                VIEW_PERMISSION_CATEGORIES.reduce((acc, cat) => {
-                    acc[cat] = true;
-                    return acc;
-                }, {})
-            );
+            setTimeout(() => {
+                setExpandedCategories(
+                    VIEW_PERMISSION_CATEGORIES.reduce((acc, cat) => {
+                        acc[cat] = true;
+                        return acc;
+                    }, {})
+                );
+            }, 0);
         }
     }, [selectedRoleIdsStr]);
 
     // Email validation effect (500ms debounce)
     useEffect(() => {
         if (!newMemberEmail.trim()) {
-            setEmailCheckStatus(null);
-            setEmailMessage('');
+            setTimeout(() => {
+                setEmailCheckStatus(null);
+                setEmailMessage('');
+            }, 0);
             return;
         }
 
         // Basic validation check before querying the API
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newMemberEmail.trim())) {
-            setEmailCheckStatus('invalid');
-            setEmailMessage('Please enter a valid email address');
+            setTimeout(() => {
+                setEmailCheckStatus('invalid');
+                setEmailMessage('Please enter a valid email address');
+            }, 0);
             return;
         }
 
-        setEmailCheckStatus('checking');
-        setEmailMessage('Checking email availability...');
+        setTimeout(() => {
+            setEmailCheckStatus('checking');
+            setEmailMessage('Checking email availability...');
+        }, 0);
 
         const handler = setTimeout(async () => {
             try {
@@ -560,13 +562,17 @@ function AdminPage() {
     // Fetch warehouse employees dynamically from backend when the active warehouse changes
     useEffect(() => {
         if (!sessionWarehouseId) {
-            setMembers([]);
+            setTimeout(() => {
+                setMembers([]);
+            }, 0);
             return;
         }
 
         let isMounted = true;
-        setIsMembersLoading(true);
-        setMembersError("");
+        setTimeout(() => {
+            setIsMembersLoading(true);
+            setMembersError("");
+        }, 0);
 
         authService.getWarehouseEmployees(sessionWarehouseId)
             .then((res) => {
@@ -627,7 +633,9 @@ function AdminPage() {
                     if (emp._createdDate) {
                         try {
                             joinedDate = new Date(emp._createdDate).toISOString().split('T')[0];
-                        } catch (e) {}
+                        } catch (e) {
+                            // ignore parsing error, use default date
+                        }
                     } else if (emp.joinedDate) {
                         joinedDate = emp.joinedDate;
                     }
@@ -693,22 +701,26 @@ function AdminPage() {
     // Fetch roles dynamically when a warehouse is selected
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setFetchedRoles([]);
-            setSelectedRoleIds([]);
-            setRoleErrorText("");
-            setRolePermissionsMap({});
+            setTimeout(() => {
+                setFetchedRoles([]);
+                setSelectedRoleIds([]);
+                setRoleErrorText("");
+                setRolePermissionsMap({});
+            }, 0);
             return;
         }
         
-        setRolesLoading(true);
-        setSelectedRoleIds([]);
-        setFetchedRoles([]);
-        setRoleErrorText("");
-        setRolePermissionsMap({});
+        setTimeout(() => {
+            setRolesLoading(true);
+            setSelectedRoleIds([]);
+            setFetchedRoles([]);
+            setRoleErrorText("");
+            setRolePermissionsMap({});
+        }, 0);
         
         authService.getWarehouseRoles(selectedWarehouseId)
             .then(async (res) => {
-                let rolesList = [];
+                let rolesList;
                 if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
                     rolesList = res.message.roles;
                 } else {
@@ -727,7 +739,7 @@ function AdminPage() {
                     try {
                         await Promise.all(filtered.map(async (role) => {
                             try {
-                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId);
+                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId, role.roleName);
                                 if (permRes.status === "success" && permRes.message && Array.isArray(permRes.message.accessiblePages)) {
                                     map[role.roleId] = permRes.message.accessiblePages;
                                 }
@@ -759,7 +771,7 @@ function AdminPage() {
                     try {
                         await Promise.all(fallback.map(async (role) => {
                             try {
-                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId);
+                                const permRes = await authService.getRolePermissions(selectedWarehouseId, role.roleId, role.roleName);
                                 if (permRes.status === "success" && permRes.message && Array.isArray(permRes.message.accessiblePages)) {
                                     map[role.roleId] = permRes.message.accessiblePages;
                                 }
@@ -787,17 +799,24 @@ function AdminPage() {
     // Fetch permissions dynamically when a role is selected
     useEffect(() => {
         if (!selectedWarehouseId || selectedRoleIds.length === 0 || fetchedRoles.length === 0) {
-            setPermissionsList([]);
-            setCustomAccessiblePages([]);
+            setTimeout(() => {
+                setPermissionsList([]);
+                setCustomAccessiblePages([]);
+            }, 0);
             return;
         }
         
-        setPermissionsLoading(true);
-        setPermissionsList([]);
-        setCustomAccessiblePages([]);
+        setTimeout(() => {
+            setPermissionsLoading(true);
+            setPermissionsList([]);
+            setCustomAccessiblePages([]);
+        }, 0);
         
         Promise.all(
-            selectedRoleIds.map(roleId => authService.getRolePermissions(selectedWarehouseId, roleId))
+            selectedRoleIds.map(roleId => {
+                const r = fetchedRoles.find(x => x.roleId === roleId);
+                return authService.getRolePermissions(selectedWarehouseId, roleId, r ? r.roleName : roleId);
+            })
         )
             .then(results => {
                 const mergedPagesMap = {};
@@ -937,7 +956,9 @@ function AdminPage() {
         if (isFormData && roleIds.length === 0) {
             try {
                 roleIds = JSON.parse(payload.get("roleIdsStr") || "[]");
-            } catch (e) {}
+            } catch (e) {
+                // ignore parsing error
+            }
         }
 
         const selectedWh = uniqueWarehouses.find(wh => wh.warehouseId === warehouseId) || {
@@ -992,7 +1013,7 @@ function AdminPage() {
 
     const handleCreateMember = async (e) => {
         e.preventDefault();
-        const isPhoneValid = /^\+?[0-9\s\-]+$/.test(newMemberPhone.trim()) && newMemberPhone.trim().length >= 8;
+        const isPhoneValid = /^\+?[0-9\s-]+$/.test(newMemberPhone.trim()) && newMemberPhone.trim().length >= 8;
         if (!newMemberFirstName.trim() || !newMemberLastName.trim() || !newMemberEmail.trim() || !newMemberPhone.trim() || !isPhoneValid || !selectedWarehouseId || selectedRoleIds.length === 0) {
             return;
         }
@@ -2861,7 +2882,7 @@ function AdminPage() {
                                 type="submit"
                                 form="add-member-form"
                                 className="role-btn role-btn--primary"
-                                disabled={!newMemberFirstName.trim() || !newMemberLastName.trim() || !newMemberEmail.trim() || !newMemberPhone.trim() || !/^\+?[0-9\s\-]+$/.test(newMemberPhone.trim()) || newMemberPhone.trim().length < 8 || !selectedWarehouseId || selectedRoleIds.length === 0 || isCreatingMember || fetchedRoles.length === 0 || !!roleErrorText || emailCheckStatus !== 'available' || isPhotoConverting}
+                                disabled={!newMemberFirstName.trim() || !newMemberLastName.trim() || !newMemberEmail.trim() || !newMemberPhone.trim() || !/^\+?[0-9\s-]+$/.test(newMemberPhone.trim()) || newMemberPhone.trim().length < 8 || !selectedWarehouseId || selectedRoleIds.length === 0 || isCreatingMember || fetchedRoles.length === 0 || !!roleErrorText || emailCheckStatus !== 'available' || isPhotoConverting}
                             >
                                 {isCreatingMember ? "Creating..." : "Create Employee"}
                             </button>

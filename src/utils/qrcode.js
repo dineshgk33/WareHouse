@@ -67,10 +67,10 @@ function createFallbackSVG(text, size) {
 // QR Code Generator implementation
 // ---------------------------------------------------------------------
 
-function qrcode(typeNumber, errorCorrectLevel) {
-    const PAD0 = 0xEC;
-    const PAD1 = 0x11;
+const PAD0 = 0xEC;
+const PAD1 = 0x11;
 
+function qrcode(typeNumber, errorCorrectLevel) {
     let _typeNumber = typeNumber;
     const _errorCorrectLevel = QRErrorCorrectLevel[errorCorrectLevel];
     let _modules = null;
@@ -99,7 +99,7 @@ function qrcode(typeNumber, errorCorrectLevel) {
 
     qr.make = function() {
         if (_typeNumber < 1) {
-            let minTypeNumber = 1;
+            let minTypeNumber;
             for (minTypeNumber = 1; minTypeNumber < 40; minTypeNumber++) {
                 const rsBlocks = QRRSBlock.getRSBlocks(minTypeNumber, _errorCorrectLevel);
                 let buffer = qrBitBuffer();
