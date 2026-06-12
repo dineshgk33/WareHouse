@@ -1,0 +1,18 @@
+﻿[
+  {
+    "file": "src\\pages\\Orders\\OrdersPage.jsx",
+    "line": 171,
+    "type": "Console Log",
+    "severity": "Info",
+    "reason": "Active console.log found. Good for debugging, but should be removed or cleaned up in production.",
+    "safeToRemove": "Yes"
+  },
+  {
+    "file": "src\\pages\\Orders\\OrdersPage.jsx",
+    "line": 198,
+    "type": "Console Log",
+    "severity": "Info",
+    "reason": "Active console.log found. Good for debugging, but should be removed or cleaned up in production.",
+    "safeToRemove": "Yes"
+  }
+]

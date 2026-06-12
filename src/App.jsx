@@ -15,6 +15,8 @@ const OPERATION_HEAD_ONLY = [ROLES.OPERATION_HEAD];
 const MainLayout              = lazy(() => import("./layouts/MainLayout"));
 const Dashboard               = lazy(() => import("./pages/dashboard/Dashboard.jsx"));
 const Orders                  = lazy(() => import("./pages/orders/OrdersPage.jsx"));
+const InvoiceDownloadPage     = lazy(() => import("./pages/orders/InvoiceDownloadPage.jsx"));
+const PlaceholderPage         = lazy(() => import("./pages/PlaceholderPage.jsx"));
 const WarehouseCatalogue      = lazy(() => import("./pages/catalogue/warehouse/WarehouseCataloguePage.jsx"));
 const DarkhouseProducts       = lazy(() => import("./pages/catalogue/darkhouse/ProductsPage.jsx"));
 const DarkhouseInventory      = lazy(() => import("./pages/catalogue/darkhouse/InventoryPage.jsx"));
@@ -24,7 +26,6 @@ const Analytics               = lazy(() => import("./pages/analytics/AnalyticsPa
 const Customers               = lazy(() => import("./pages/customers/CustomersPage.jsx"));
 const Billing                 = lazy(() => import("./pages/billing/BillingPage.jsx"));
 const Settings                = lazy(() => import("./pages/settings/SettingsPage.jsx"));
-const Darkhouses              = lazy(() => import("./pages/darkhouses/DarkhousesPage.jsx"));
 const ManagePreview           = lazy(() => import("./pages/managepreview/ManagePreviewPage.jsx"));
 
 // Dynamic Role Pages
@@ -161,6 +162,7 @@ function App() {
                         <Route path="/connect" element={<OrgRoleSelectionPage />} />
                         <Route path="/403" element={<AccessDeniedPage />} />
                         <Route path="/unauthorized" element={<AccessDeniedPage />} />
+                        <Route path="/orders/download-pdf/:orderId" element={<InvoiceDownloadPage />} />
 
                         {/* Protected Enterprise Routes */}
                         <Route element={<ProtectedRoute allowedRoles={ALL_ENTERPRISE_ROLES} />}>
@@ -172,6 +174,157 @@ function App() {
                                 <Route element={<ProtectedRoute pageId="DASHBOARD" />}>
                                     <Route index element={<Dashboard />} />
                                     <Route path="dashboard" element={<Dashboard />} />
+                                </Route>
+
+                                {/* Module 3: Admin Sub-Pages */}
+                                <Route element={<ProtectedRoute pageId="ADMIN_USERS" />}>
+                                    <Route path="admin/users" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMIN_PERMISSIONS" />}>
+                                    <Route path="admin/permissions" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMIN_ROLE_MASTER" />}>
+                                    <Route path="admin/role-master" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMIN_FACILITIES" />}>
+                                    <Route path="admin/facilities" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMIN_CATEGORIES" />}>
+                                    <Route path="admin/categories" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMIN_PRODUCTS" />}>
+                                    <Route path="admin/products" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 5: Inventory Management */}
+                                <Route element={<ProtectedRoute pageId="INV_WH_LIST" />}>
+                                    <Route path="inventory/warehouse-list" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INV_ADJUSTMENT" />}>
+                                    <Route path="inventory/adjustment" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INV_HISTORY" />}>
+                                    <Route path="inventory/history" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INV_DH_ADJUSTMENT" />}>
+                                    <Route path="inventory/darkhouse-adjustment" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INV_DH_HISTORY" />}>
+                                    <Route path="inventory/darkhouse-history" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 6: GRN */}
+                                <Route element={<ProtectedRoute pageId="GRN_LIST" />}>
+                                    <Route path="grn/list" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="GRN_CREATE" />}>
+                                    <Route path="grn/create" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="GRN_DETAILS" />}>
+                                    <Route path="grn/details" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 7: Indent Management */}
+                                <Route element={<ProtectedRoute pageId="INDENT_LIST" />}>
+                                    <Route path="indent/list" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INDENT_CREATE" />}>
+                                    <Route path="indent/create" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INDENT_DETAILS" />}>
+                                    <Route path="indent/details" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INDENT_PENDING" />}>
+                                    <Route path="indent/status/pending" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INDENT_APPROVED" />}>
+                                    <Route path="indent/status/approved" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INDENT_REJECTED" />}>
+                                    <Route path="indent/status/rejected" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 8: Dispatch Management */}
+                                <Route element={<ProtectedRoute pageId="DISPATCH_LIST" />}>
+                                    <Route path="dispatch/list" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="DISPATCH_CREATE" />}>
+                                    <Route path="dispatch/create" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="DISPATCH_DETAILS" />}>
+                                    <Route path="dispatch/details" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="DISPATCH_TRACKING" />}>
+                                    <Route path="dispatch/tracking" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 9: Receiving Management */}
+                                <Route element={<ProtectedRoute pageId="RECEIVING_PENDING" />}>
+                                    <Route path="receiving/pending" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="RECEIVING_PROCESS" />}>
+                                    <Route path="receiving/process" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="RECEIVING_HISTORY" />}>
+                                    <Route path="receiving/history" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 10: Reports Sub-Pages */}
+                                <Route element={<ProtectedRoute pageId="REP_INV_SUMMARY" />}>
+                                    <Route path="reports/inventory-summary" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_LOW_STOCK" />}>
+                                    <Route path="reports/low-stock" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_INV_MOVEMENT" />}>
+                                    <Route path="reports/inventory-movement" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_INDENT" />}>
+                                    <Route path="reports/indent" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_DISPATCH" />}>
+                                    <Route path="reports/dispatch" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_RECEIVING" />}>
+                                    <Route path="reports/receiving" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_ORDER_SUMMARY" />}>
+                                    <Route path="reports/order-summary" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_ORDERS_BY_DH" />}>
+                                    <Route path="reports/orders-by-darkhouse" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_TOP_SELLING" />}>
+                                    <Route path="reports/top-selling" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REP_ORDER_STATUS" />}>
+                                    <Route path="reports/order-status" element={<PlaceholderPage />} />
+                                </Route>
+
+                                {/* Module 11: Orders Sub-Pages */}
+                                <Route element={<ProtectedRoute pageId="ORD_MANAGEMENT" />}>
+                                    <Route path="orders/management" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_LIST" />}>
+                                    <Route path="orders/list" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_DETAILS" />}>
+                                    <Route path="orders/details" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_QUERY" />}>
+                                    <Route path="orders/query" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_PICKING" />}>
+                                    <Route path="orders/picking" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_PACKING" />}>
+                                    <Route path="orders/packing" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_DELIVERY" />}>
+                                    <Route path="orders/delivery" element={<PlaceholderPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ORD_CANCELLED" />}>
+                                    <Route path="orders/cancelled" element={<PlaceholderPage />} />
                                 </Route>
 
                                 {/* Manage Preview */}
@@ -194,10 +347,6 @@ function App() {
                                     <Route path="catalogue/transfers" element={<StockTransfers />} />
                                 </Route>
 
-                                {/* Darkhouses */}
-                                <Route element={<ProtectedRoute pageId="DARKHOUSES" />}>
-                                    <Route path="darkhouses" element={<Darkhouses />} />
-                                </Route>
 
                                 {/* Catalog Module Routes */}
                                 <Route element={<ProtectedRoute allowedRoles={MANAGER_ROLES} pageId="CATALOG" />}>

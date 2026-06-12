@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,9 @@ import {
     PhoneCall,
     MapPin,
     AlertCircle,
-    Store
+    Store,
+    FileText,
+    Download
 } from "lucide-react";
 import { MOCK_ORDERS, MOCK_PICKING, MOCK_PACKING, MOCK_DELIVERY } from "../../data/ordersData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
@@ -31,6 +33,7 @@ import { getOrderStatusClass } from "../../utils/statusUtils";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 import { Barcode128Svg } from "../../utils/barcode";
+import { generateInvoiceBlobUrl, downloadInvoicePDF, printInvoicePDF } from "../../utils/invoiceGenerator";
 import "./Orders.css";
 
 const chunkArray = (array, size) => {
@@ -221,10 +224,112 @@ function OrdersPage() {
             setActiveRowMenuId(null);
             setSelectedOrderIds([]); // Clear selection when switching tabs
         }, 0);
-    }, [activeTab]);
+    }, [activeTab]);    // Invoice Modal States
+    const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
+    const [invoiceBlobUrl, setInvoiceBlobUrl] = useState(null);
 
+    const handleViewInvoice = useCallback((order) => {
+        if (invoiceBlobUrl) {
+            URL.revokeObjectURL(invoiceBlobUrl);
+        }
+        const url = generateInvoiceBlobUrl(order);
+        setInvoiceBlobUrl(url);
+        setSelectedInvoiceOrder(order);
+        setActiveRowMenuId(null);
+    }, [invoiceBlobUrl]);
 
+    const handleCloseInvoiceModal = () => {
+        setSelectedInvoiceOrder(null);
+        if (invoiceBlobUrl) {
+            URL.revokeObjectURL(invoiceBlobUrl);
+            setInvoiceBlobUrl(null);
+        }
+    };
 
+    const handleDownloadInvoice = (order) => {
+        downloadInvoicePDF(order);
+        setActiveRowMenuId(null);
+    };
+
+    // Keep references for event listener to avoid re-binding
+    const handleViewInvoiceRef = React.useRef(handleViewInvoice);
+    const ordersRef = React.useRef(orders);
+
+    useEffect(() => {
+        handleViewInvoiceRef.current = handleViewInvoice;
+    }, [handleViewInvoice]);
+
+    useEffect(() => {
+        ordersRef.current = orders;
+    }, [orders]);
+
+    // Scanner Keyboard Emulation Event Listener
+    useEffect(() => {
+        let buffer = "";
+        let lastKeyTime = 0;
+
+        const handleKeyDown = (e) => {
+            const key = e.key;
+            const now = Date.now();
+
+            if (key === "Enter") {
+                if (buffer.length >= 3 && now - lastKeyTime < 100) {
+                    const scannedCode = buffer.trim();
+                    let orderIdCandidate = scannedCode;
+
+                    if (/-\d+$/.test(orderIdCandidate)) {
+                        orderIdCandidate = orderIdCandidate.replace(/-\d+$/, "");
+                    }
+
+                    if (!orderIdCandidate.startsWith("#") && (orderIdCandidate.toUpperCase().startsWith("ORD") || orderIdCandidate.toUpperCase().startsWith("TEST"))) {
+                        orderIdCandidate = "#" + orderIdCandidate;
+                    }
+
+                    const foundOrder = ordersRef.current.find(o => 
+                        o.id.toLowerCase() === orderIdCandidate.toLowerCase() ||
+                        o.id.toLowerCase().replace("#", "") === orderIdCandidate.toLowerCase().replace("#", "")
+                    );
+
+                    if (foundOrder) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleViewInvoiceRef.current(foundOrder);
+                        showToast(`Scanner: Order ${foundOrder.id} identified.`);
+                    }
+                    buffer = "";
+                } else {
+                    buffer = "";
+                }
+                return;
+            }
+
+            if (!key || key.length !== 1) {
+                return;
+            }
+
+            const timeDiff = now - lastKeyTime;
+            if (buffer.length > 0 && timeDiff > 50) {
+                buffer = key;
+            } else {
+                buffer += key;
+            }
+            lastKeyTime = now;
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    // Clean up blob URL on unmount
+    useEffect(() => {
+        return () => {
+            if (invoiceBlobUrl) {
+                URL.revokeObjectURL(invoiceBlobUrl);
+            }
+        };
+    }, [invoiceBlobUrl]);
 
     // Derived filtering pools
     const pickers = useMemo(() => ["All", ...new Set(picks.map(p => p.picker).filter(p => p !== "Unassigned"))], [picks]);
@@ -1286,7 +1391,19 @@ function OrdersPage() {
                                                         onChange={() => toggleSelectOrder(order.id)}
                                                     />
                                                 </td>
-                                                <td className="odt-id">{order.id}</td>
+                                                <td className="odt-id">
+                                                    {order.id}
+                                                    <button 
+                                                        className="invoice-icon-btn" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleViewInvoice(order);
+                                                        }}
+                                                        title="View Tax Invoice"
+                                                    >
+                                                        <FileText size={12} />
+                                                    </button>
+                                                </td>
                                                 <td>
                                                     <div className="odt-customer">
                                                         <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
@@ -1318,6 +1435,14 @@ function OrdersPage() {
                                                                 <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
                                                                     <Edit2 size={13} />
                                                                     <span>Edit Order</span>
+                                                                </button>
+                                                                <button className="global-dropdown-item" onClick={() => handleViewInvoice(order)}>
+                                                                    <FileText size={13} />
+                                                                    <span>View Invoice</span>
+                                                                </button>
+                                                                <button className="global-dropdown-item" onClick={() => handleDownloadInvoice(order)}>
+                                                                    <Download size={13} />
+                                                                    <span>Download Invoice</span>
                                                                 </button>
                                                                 <div className="global-dropdown-divider"></div>
                                                                 <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
@@ -1380,7 +1505,19 @@ function OrdersPage() {
                                                         title={order.status !== "Pending" && order.status !== "Label Generated" ? "Only Pending or Label Generated orders can be selected" : ""}
                                                     />
                                                 </td>
-                                                <td className="odt-id">{order.id}</td>
+                                                <td className="odt-id">
+                                                    {order.id}
+                                                    <button 
+                                                        className="invoice-icon-btn" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleViewInvoice(order);
+                                                        }}
+                                                        title="View Tax Invoice"
+                                                    >
+                                                        <FileText size={12} />
+                                                    </button>
+                                                </td>
                                                 <td>
                                                     <div className="odt-customer">
                                                         <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
@@ -1412,6 +1549,14 @@ function OrdersPage() {
                                                                 <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
                                                                     <Edit2 size={13} />
                                                                     <span>Edit Order</span>
+                                                                </button>
+                                                                <button className="global-dropdown-item" onClick={() => handleViewInvoice(order)}>
+                                                                    <FileText size={13} />
+                                                                    <span>View Invoice</span>
+                                                                </button>
+                                                                <button className="global-dropdown-item" onClick={() => handleDownloadInvoice(order)}>
+                                                                    <Download size={13} />
+                                                                    <span>Download Invoice</span>
                                                                 </button>
                                                                 <div className="global-dropdown-divider"></div>
                                                                 <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
@@ -1788,6 +1933,71 @@ function OrdersPage() {
                     </div>
                 )}
             </div>
+
+            {/* ─── INVOICE PREVIEW MODAL ─────────────────────────────────────────── */}
+            {selectedInvoiceOrder && (
+                <div className="invoice-modal-backdrop fade-in" onClick={handleCloseInvoiceModal}>
+                    <div className="invoice-modal-container scale-up" onClick={(e) => e.stopPropagation()}>
+                        
+                        {/* Modal Header */}
+                        <div className="invoice-modal-header">
+                            <div className="invoice-modal-header-left">
+                                <div className="orders-modal-header__icon-wrap" style={{ color: "var(--primary)", backgroundColor: "var(--primary-light)" }}>
+                                    <FileText size={18} />
+                                </div>
+                                <div className="orders-modal-header__text-block">
+                                    <h3 className="orders-modal-title">GST Tax Invoice</h3>
+                                    <span className="orders-modal-subtitle">
+                                        {selectedInvoiceOrder.id}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="invoice-modal-header-actions">
+                                <button 
+                                    className="bulk-action-btn success" 
+                                    onClick={() => printInvoicePDF(selectedInvoiceOrder)}
+                                    title="Print Invoice"
+                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "36px", padding: "0 14px" }}
+                                >
+                                    <Printer size={13} />
+                                    <span>Print</span>
+                                </button>
+                                <button 
+                                    className="bulk-action-btn primary" 
+                                    onClick={() => downloadInvoicePDF(selectedInvoiceOrder)}
+                                    title="Download PDF"
+                                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "36px", padding: "0 14px" }}
+                                >
+                                    <Download size={13} />
+                                    <span>Download</span>
+                                </button>
+                                <button 
+                                    className="orders-modal-cancel-btn" 
+                                    onClick={handleCloseInvoiceModal}
+                                    style={{ margin: 0, padding: "8px 16px", height: "36px", display: "inline-flex", alignItems: "center" }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="invoice-modal-body">
+                            {invoiceBlobUrl ? (
+                                <iframe 
+                                    id="invoice-preview-iframe"
+                                    className="invoice-iframe" 
+                                    src={invoiceBlobUrl} 
+                                    title={`Invoice Preview for ${selectedInvoiceOrder.id}`}
+                                />
+                            ) : (
+                                <div className="odt-empty">Generating PDF Preview...</div>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
             {/* ─── MODAL GLASSMORPHIC BACKDROP ─────────────────────────────────────────── */}
             {isModalOpen && (

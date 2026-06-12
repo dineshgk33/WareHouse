@@ -19,6 +19,28 @@ export function generateQRCodeSVG(text, options = {}) {
     }
 }
 
+export function getQRCodeMatrix(text, eccLevel = 'L') {
+    try {
+        const qr = qrcode(0, eccLevel);
+        qr.addData(text);
+        qr.make();
+        
+        const count = qr.getModuleCount();
+        const matrix = [];
+        for (let r = 0; r < count; r++) {
+            const row = [];
+            for (let c = 0; c < count; c++) {
+                row.push(qr.isDark(r, c));
+            }
+            matrix.push(row);
+        }
+        return matrix;
+    } catch (e) {
+        console.error("Failed to generate QR matrix, returning empty fallback grid", e);
+        return [];
+    }
+}
+
 // Fallback visual QR Code representation if encoding fails
 function createFallbackSVG(text, size) {
     // Generates a mock but high-density QR-like pattern that scales perfectly

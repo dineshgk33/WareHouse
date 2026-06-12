@@ -19,7 +19,8 @@ import {
     Activity,
     Shield,
     Users,
-    Eye
+    Eye,
+    Truck
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -94,6 +95,114 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Managers") return "/darkhouses?tab=managers";
             if (pageName === "Assign Products") return "/darkhouses?tab=assign";
             return "/darkhouses";
+            
+
+        // ─── Module 3: Admin ───
+        case "ADMIN_USERS":
+            return "/admin/users";
+        case "ADMIN_PERMISSIONS":
+            return "/admin/permissions";
+        case "ADMIN_ROLE_MASTER":
+            return "/admin/role-master";
+        case "ADMIN_FACILITIES":
+            return "/admin/facilities";
+        case "ADMIN_CATEGORIES":
+            return "/admin/categories";
+        case "ADMIN_PRODUCTS":
+            return "/admin/products";
+            
+        // ─── Module 5: Inventory Management ───
+        case "INV_WH_LIST":
+            return "/inventory/warehouse-list";
+        case "INV_ADJUSTMENT":
+            return "/inventory/adjustment";
+        case "INV_HISTORY":
+            return "/inventory/history";
+        case "INV_DH_ADJUSTMENT":
+            return "/inventory/darkhouse-adjustment";
+        case "INV_DH_HISTORY":
+            return "/inventory/darkhouse-history";
+            
+        // ─── Module 6: GRN ───
+        case "GRN_LIST":
+            return "/grn/list";
+        case "GRN_CREATE":
+            return "/grn/create";
+        case "GRN_DETAILS":
+            return "/grn/details";
+            
+        // ─── Module 7: Indent Management ───
+        case "INDENT_LIST":
+            return "/indent/list";
+        case "INDENT_CREATE":
+            return "/indent/create";
+        case "INDENT_DETAILS":
+            return "/indent/details";
+        case "INDENT_PENDING":
+            return "/indent/status/pending";
+        case "INDENT_APPROVED":
+            return "/indent/status/approved";
+        case "INDENT_REJECTED":
+            return "/indent/status/rejected";
+            
+        // ─── Module 8: Dispatch Management ───
+        case "DISPATCH_LIST":
+            return "/dispatch/list";
+        case "DISPATCH_CREATE":
+            return "/dispatch/create";
+        case "DISPATCH_DETAILS":
+            return "/dispatch/details";
+        case "DISPATCH_TRACKING":
+            return "/dispatch/tracking";
+            
+        // ─── Module 9: Receiving Management ───
+        case "RECEIVING_PENDING":
+            return "/receiving/pending";
+        case "RECEIVING_PROCESS":
+            return "/receiving/process";
+        case "RECEIVING_HISTORY":
+            return "/receiving/history";
+            
+        // ─── Module 10: Reports ───
+        case "REP_INV_SUMMARY":
+            return "/reports/inventory-summary";
+        case "REP_LOW_STOCK":
+            return "/reports/low-stock";
+        case "REP_INV_MOVEMENT":
+            return "/reports/inventory-movement";
+        case "REP_INDENT":
+            return "/reports/indent";
+        case "REP_DISPATCH":
+            return "/reports/dispatch";
+        case "REP_RECEIVING":
+            return "/reports/receiving";
+        case "REP_ORDER_SUMMARY":
+            return "/reports/order-summary";
+        case "REP_ORDERS_BY_DH":
+            return "/reports/orders-by-darkhouse";
+        case "REP_TOP_SELLING":
+            return "/reports/top-selling";
+        case "REP_ORDER_STATUS":
+            return "/reports/order-status";
+            
+        // ─── Module 11: Orders ───
+        case "ORD_MANAGEMENT":
+            return "/orders/management";
+        case "ORD_LIST":
+            return "/orders/list";
+        case "ORD_DETAILS":
+            return "/orders/details";
+        case "ORD_QUERY":
+            return "/orders/query";
+        case "ORD_PICKING":
+            return "/orders/picking";
+        case "ORD_PACKING":
+            return "/orders/packing";
+        case "ORD_DELIVERY":
+            return "/orders/delivery";
+        case "ORD_CANCELLED":
+            return "/orders/cancelled";
+            
         default:
             return `/${id.toLowerCase().replace(/_/g, "-")}`;
     }
@@ -105,6 +214,11 @@ const getIconForModule = (moduleName) => {
         "Manage Preview": Eye,
         "Orders": ShoppingBag,
         "Inventory": Database,
+        "Inventory Management": Database,
+        "GRN (Goods Receipt Note)": FileText,
+        "Indent Management": BookOpen,
+        "Dispatch Management": Truck,
+        "Receiving Management": Package,
         "Catalogue": Database,
         "Catalog": BookOpen,
         "Darkhouses": Warehouse,
@@ -129,6 +243,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const [hoveredMenu, setHoveredMenu] = useState(null);
     const [flyoutPosition, setFlyoutPosition] = useState(null);
     const leaveTimeoutRef = useRef(null);
+    const sidebarRef = useRef(null);
 
     // Responsive states
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -156,7 +271,11 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             return p.canView && 
                    p.pageName !== "User Roles" &&
                    pageIdUpper !== "CATALOG" &&
-                   pageIdUpper !== "DARKHOUSES";
+                   pageIdUpper !== "DARKHOUSES" &&
+                   p.moduleName !== "Login" &&
+                   pageIdUpper !== "DASHBOARD_SUPER_ADMIN" &&
+                   pageIdUpper !== "DASHBOARD_WAREHOUSE" &&
+                   pageIdUpper !== "DASHBOARD_DARKHOUSE";
         });
 
         const groups = {};
@@ -188,6 +307,11 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             "Catalog",
             "Catalogue",
             "Inventory",
+            "Inventory Management",
+            "GRN (Goods Receipt Note)",
+            "Indent Management",
+            "Dispatch Management",
+            "Receiving Management",
             "Orders",
             "Darkhouses",
             "Customers",
@@ -207,24 +331,14 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         const bottomItems = [];
 
         Object.keys(groups).forEach(moduleName => {
-            // Check if user has permission to view this module
-            let isAuthorized;
-            const upperModule = moduleName.toUpperCase();
-            if (upperModule === "CATALOGUE") {
-                isAuthorized = canView("WAREHOUSE_INVENTORY") || canView("DARKHOUSE_INVENTORY") || canView("STOCK_TRANSFERS");
-            } else if (upperModule === "SETTINGS") {
-                isAuthorized = canView("SETTINGS");
-            } else if (upperModule === "SUPPORT") {
-                isAuthorized = canView("SUPPORT");
-            } else {
-                isAuthorized = canView(moduleName);
-            }
+            // Check if user has permission to view this module (has at least one visible subpage)
+            const modulePages = groups[moduleName] || [];
+            const isAuthorized = modulePages.some(p => p.canView);
 
             if (!isAuthorized) {
                 return;
             }
 
-            const modulePages = groups[moduleName];
             const id = moduleName.toLowerCase().replace(/\s+/g, "-");
 
             const item = {
@@ -296,6 +410,77 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
     const { main: activeSidebarMenu, bottom: activeBottomMenu } = buildDynamicMenu(accessiblePages || []);
 
+    const [hoveredElement, setHoveredElement] = useState(null);
+    const navRef = useRef(null);
+
+    const updatePosition = (element, item) => {
+        if (!element || !item || !sidebarRef.current) return;
+        
+        const navEl = navRef.current;
+        if (navEl) {
+            const navRect = navEl.getBoundingClientRect();
+            const rect = element.getBoundingClientRect();
+            // If the item scrolls out of the visible bounds of the navigation list, hide it immediately
+            if (rect.bottom < navRect.top || rect.top > navRect.bottom) {
+                setHoveredMenu(null);
+                setHoveredElement(null);
+                return;
+            }
+        }
+
+        const sidebarRect = sidebarRef.current.getBoundingClientRect();
+        const sidebarHeight = sidebarRect.height;
+        const isBottomItem = activeBottomMenu.some(b => b.id === item.id);
+        
+        const rect = element.getBoundingClientRect();
+        // Calculate offset relative to the sidebar container top to be independent of viewport shift
+        const computedTopOffset = rect.top - sidebarRect.top;
+        
+        if (isBottomItem) {
+            const bottomOffset = sidebarHeight - computedTopOffset - rect.height;
+            setFlyoutPosition({ bottom: bottomOffset, isBottom: true });
+        } else {
+            const estimatedHeight = 70 + (item.submenu.length * 39);
+            let computedTop = computedTopOffset;
+            
+            if (computedTop + estimatedHeight > sidebarHeight) {
+                computedTop = sidebarHeight - estimatedHeight - 16;
+            }
+            if (computedTop < 10) {
+                computedTop = 10;
+            }
+            setFlyoutPosition({ top: computedTop, isBottom: false });
+        }
+    };
+
+    useEffect(() => {
+        const handleScrollOrResize = () => {
+            if (hoveredMenu && hoveredElement) {
+                if (leaveTimeoutRef.current) {
+                    clearTimeout(leaveTimeoutRef.current);
+                    leaveTimeoutRef.current = setTimeout(() => {
+                        setHoveredMenu(null);
+                        setHoveredElement(null);
+                    }, 400); // 400ms scroll buffer to allow scrolling to settle
+                }
+                updatePosition(hoveredElement, hoveredMenu);
+            }
+        };
+        
+        const navEl = navRef.current;
+        if (navEl) {
+            navEl.addEventListener('scroll', handleScrollOrResize, { passive: true });
+        }
+        window.addEventListener('resize', handleScrollOrResize);
+        
+        return () => {
+            if (navEl) {
+                navEl.removeEventListener('scroll', handleScrollOrResize);
+            }
+            window.removeEventListener('resize', handleScrollOrResize);
+        };
+    }, [hoveredMenu, hoveredElement]);
+
 
 
     // Helper to check active highlighting on parents
@@ -331,24 +516,18 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
         if (item.submenu) {
             setHoveredMenu(item);
-            
-            // Detect if item is at the bottom (e.g. settings) to align from the bottom upward
-            const isBottomItem = activeBottomMenu.some(b => b.id === item.id);
-            if (isBottomItem && e.currentTarget.offsetParent) {
-                const sidebarHeight = e.currentTarget.offsetParent.offsetHeight;
-                const bottomOffset = sidebarHeight - e.currentTarget.offsetTop - e.currentTarget.offsetHeight;
-                setFlyoutPosition({ bottom: bottomOffset, isBottom: true });
-            } else {
-                setFlyoutPosition({ top: e.currentTarget.offsetTop, isBottom: false });
-            }
+            setHoveredElement(e.currentTarget);
+            updatePosition(e.currentTarget, item);
         } else {
             setHoveredMenu(null);
+            setHoveredElement(null);
         }
     };
 
     const handleParentMouseLeave = () => {
         leaveTimeoutRef.current = setTimeout(() => {
             setHoveredMenu(null);
+            setHoveredElement(null);
         }, 180);
     };
 
@@ -361,10 +540,11 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
     const handleFlyoutMouseLeave = () => {
         setHoveredMenu(null);
+        setHoveredElement(null);
     };
 
     const handleSubmenuItemClick = () => {
-        handleItemClick();
+        setMobileOpen?.(false);
     };
 
     const handleParentClick = (item, e) => {
@@ -476,7 +656,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     };
 
     return (
-        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+        <aside ref={sidebarRef} className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
             {isCollapsed && (
                 <button 
                     className="sidebar-expand-floating-btn" 
@@ -526,7 +706,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             </div>
 
             {/* Navigation links */}
-            <nav className="sidebar-nav">
+            <nav ref={navRef} className="sidebar-nav">
                 <ul className="nav-list">
                     {activeSidebarMenu.map(renderMenuItem)}
                 </ul>

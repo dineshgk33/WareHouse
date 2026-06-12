@@ -45,8 +45,32 @@ function FindProductToSellPage() {
 
     const [selectedDh, setSelectedDh] = useState("HAATZA Koramangala Hub");
 
-    const [tempLocalProducts, setTempLocalProducts] = useState([]);
-    const [tempGlobalProducts, setTempGlobalProducts] = useState([]);
+    const [prevSelectedDh, setPrevSelectedDh] = useState(selectedDh);
+    const [prevDarkhouseStock, setPrevDarkhouseStock] = useState(darkhouseStock);
+
+    const [tempLocalProducts, setTempLocalProducts] = useState(() => {
+        const initialStock = localStorage.getItem("haatza_darkhouse_stock") 
+            ? JSON.parse(localStorage.getItem("haatza_darkhouse_stock")) 
+            : MOCK_DARKHOUSE_STOCK;
+        const localSkus = new Set(
+            initialStock
+                .filter(item => item.darkhouse === "HAATZA Koramangala Hub")
+                .map(item => item.sku)
+        );
+        return MOCK_GLOBAL_PRODUCTS.filter(p => localSkus.has(p.sku));
+    });
+
+    const [tempGlobalProducts, setTempGlobalProducts] = useState(() => {
+        const initialStock = localStorage.getItem("haatza_darkhouse_stock") 
+            ? JSON.parse(localStorage.getItem("haatza_darkhouse_stock")) 
+            : MOCK_DARKHOUSE_STOCK;
+        const localSkus = new Set(
+            initialStock
+                .filter(item => item.darkhouse === "HAATZA Koramangala Hub")
+                .map(item => item.sku)
+        );
+        return MOCK_GLOBAL_PRODUCTS.filter(p => !localSkus.has(p.sku));
+    });
 
     const [globalSearch, setGlobalSearch] = useState("");
     const [localSearch, setLocalSearch] = useState("");
@@ -66,8 +90,11 @@ function FindProductToSellPage() {
 
     const [toast, setToast] = useState({ show: false, message: "" });
 
-    // Re-initialize lists when selected darkhouse changes
-    useEffect(() => {
+    // Render-time state adjustment (re-initialize lists when selected darkhouse changes)
+    if (selectedDh !== prevSelectedDh || darkhouseStock !== prevDarkhouseStock) {
+        setPrevSelectedDh(selectedDh);
+        setPrevDarkhouseStock(darkhouseStock);
+
         const localSkus = new Set(
             darkhouseStock
                 .filter(item => item.darkhouse === selectedDh)
@@ -81,7 +108,7 @@ function FindProductToSellPage() {
         setTempGlobalProducts(global);
         setGlobalSelectedSkus(new Set());
         setLocalSelectedSkus(new Set());
-    }, [selectedDh, darkhouseStock]);
+    }
 
     const handleMoveRight = () => {
         const selectedItems = tempGlobalProducts.filter(p => globalSelectedSkus.has(p.sku));
@@ -235,20 +262,6 @@ function FindProductToSellPage() {
             return next;
         });
     };
-
-    const EmptyState = ({ message, type }) => (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
-                {type === "global" ? <Package size={28} /> : <Store size={28} />}
-            </div>
-            <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
-            <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
-                {type === "global"
-                    ? "All global items are already added or search filters returned no matches."
-                    : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
-            </p>
-        </div>
-    );
 
     return (
         <div className="inv-root fade-in">
@@ -513,5 +526,19 @@ function FindProductToSellPage() {
         </div>
     );
 }
+
+const EmptyState = ({ message, type }) => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
+            {type === "global" ? <Package size={28} /> : <Store size={28} />}
+        </div>
+        <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
+        <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
+            {type === "global"
+                ? "All global items are already added or search filters returned no matches."
+                : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
+        </p>
+    </div>
+);
 
 export default FindProductToSellPage;

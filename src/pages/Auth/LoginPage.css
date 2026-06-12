@@ -99,6 +99,7 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 64px 72px; /* Large internal padding */
+  overflow: hidden; /* Prevent content bleeding out of the viewport */
 }
 
 /* Header Spacing */
@@ -165,8 +166,24 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 28px; /* High-end breathing room */
+  gap: 20px; /* Reduced from 28px to prevent overflow */
   margin: auto 0;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 4px;
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+.login-form-container::-webkit-scrollbar {
+  width: 6px;
+}
+.login-form-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.login-form-container::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 99px;
 }
 
 /* Welcome Typography */
@@ -175,12 +192,12 @@
 }
 
 .login-form-welcome h1 {
-  font-size: 56px; /* Font size exactly 56px */
-  font-weight: 700; /* Font weight 700 */
-  color: #0F172A; /* Color #0F172A */
+  font-size: 36px; /* Reduced from 56px to prevent vertical overflow */
+  font-weight: 700;
+  color: #0F172A;
   letter-spacing: -0.04em;
-  margin: 0 0 24px 0; /* Spacing: 24px below heading */
-  line-height: 1.1; /* Line height 1.1 */
+  margin: 0 0 12px 0; /* Reduced from 24px */
+  line-height: 1.1;
 }
 
 .login-form-welcome p {
@@ -202,10 +219,22 @@
   animation: shake 0.4s ease;
 }
 
+.login-success-alert {
+  background-color: #ECFDF5;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #059669;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px; /* Reduced from 20px to prevent overflow */
 }
 
 /* Inputs Spacing (Height 60px, Radius 16px) */
@@ -240,16 +269,16 @@
 
 .login-input-wrapper input {
   width: 100%;
-  height: 60px; /* Height exactly 60px */
+  height: 52px; /* Reduced from 60px to prevent vertical overflow */
   padding: 0 18px 0 50px;
-  background: #FFFFFF; /* Clean white fill */
-  border: 1px solid #E2E8F0; /* Subtle border */
-  border-radius: 16px; /* Border radius exactly 16px */
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
   font-family: inherit;
   font-size: 15px;
   color: #0F172A;
   outline: none;
-  transition: all 0.25s ease; /* Hover animation */
+  transition: all 0.25s ease;
 }
 
 .login-input-wrapper input::placeholder {
@@ -345,9 +374,9 @@
 /* Login submit button (Height 60px, Radius 16px, Premium Gradient & Hover Lift) */
 .login-submit-btn {
   width: 100%;
-  height: 60px; /* Height exactly 60px */
-  border-radius: 16px; /* Border radius exactly 16px */
-  background: linear-gradient(90deg, #2563EB, #1D4ED8); /* Gradient */
+  height: 52px; /* Reduced from 60px to prevent vertical overflow */
+  border-radius: 16px;
+  background: linear-gradient(90deg, #2563EB, #1D4ED8);
   color: #ffffff;
   border: none;
   font-family: inherit;
@@ -358,8 +387,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  /* Strong premium shadow exactly matching specs */
-  box-shadow: 0 10px 30px rgba(37,99,235,.35); 
+  box-shadow: 0 10px 30px rgba(37,99,235,.35);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 8px;
 }
@@ -480,5 +508,47 @@
 
   .login-form-welcome h1 {
     font-size: 36px;
+  }
+}
+
+/* Height-based adjustments for short viewport screens */
+@media (max-height: 800px) {
+  .login-form-pane {
+    padding: 36px 48px;
+  }
+  .login-form-pane::before {
+    top: 16px;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    border-radius: 24px;
+  }
+  .login-form-welcome h1 {
+    font-size: 36px !important;
+    margin-bottom: 12px;
+  }
+  .login-form-welcome p {
+    font-size: 14.5px;
+  }
+  .login-form-container {
+    gap: 16px;
+    max-height: calc(100vh - 180px);
+  }
+  .login-input-wrapper input {
+    height: 50px;
+  }
+  .login-field-icon {
+    left: 16px;
+  }
+  .login-input-wrapper input {
+    padding-left: 44px;
+  }
+  .login-submit-btn {
+    height: 50px;
+    margin-top: 4px;
+  }
+  .login-footer-security {
+    padding-top: 16px;
+    margin-top: 16px;
   }
 }
