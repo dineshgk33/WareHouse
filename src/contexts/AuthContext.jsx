@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { getFallbackAccessiblePages } from "../utils/rbacFallback";
 
 const AuthContext = createContext(null);
 
@@ -10,7 +11,7 @@ export function AuthProvider({ children }) {
         try {
             const saved = localStorage.getItem("authUser");
             return saved ? JSON.parse(saved) : null;
-        } catch (e) {
+        } catch {
             return null;
         }
     });
@@ -18,7 +19,7 @@ export function AuthProvider({ children }) {
         try {
             const saved = localStorage.getItem("warehouseRoles");
             return saved ? JSON.parse(saved) : [];
-        } catch (e) {
+        } catch {
             return [];
         }
     });
@@ -46,7 +47,7 @@ export function AuthProvider({ children }) {
 
             const saved = localStorage.getItem("accessiblePages");
             return saved ? JSON.parse(saved) : [];
-        } catch (e) {
+        } catch {
             return [];
         }
     });
@@ -71,7 +72,7 @@ export function AuthProvider({ children }) {
         try {
             const saved = localStorage.getItem("selectedWarehouse");
             return saved ? JSON.parse(saved) : null;
-        } catch (e) {
+        } catch {
             return null;
         }
     });
@@ -79,7 +80,7 @@ export function AuthProvider({ children }) {
         try {
             const saved = localStorage.getItem("selectedRole");
             return saved ? JSON.parse(saved) : null;
-        } catch (e) {
+        } catch {
             return null;
         }
     });
@@ -159,19 +160,24 @@ export function AuthProvider({ children }) {
 
     const completeSetup = useCallback(async (warehouse, role) => {
         setPermissionsLoading(true);
-        let pages = [];
+        let pages;
         try {
-            const { authService } = await import("../services/authService");
+            const { authService, GET_USER_PERMISSIONS_API } = await import("../services/authService");
+            if (!GET_USER_PERMISSIONS_API) {
+                throw new Error("No API endpoint configured.");
+            }
             const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId);
             if (res.status === "success") {
                 pages = res.message.accessiblePages || [];
                 setAccessiblePages(pages);
             } else {
-                setAccessiblePages([]);
+                pages = getFallbackAccessiblePages(role.roleName);
+                setAccessiblePages(pages);
             }
         } catch (error) {
-            console.error("Failed to fetch permissions", error);
-            setAccessiblePages([]);
+            console.warn("Failed to fetch permissions, falling back to default matrix:", error);
+            pages = getFallbackAccessiblePages(role.roleName);
+            setAccessiblePages(pages);
         } finally {
             setPermissionsLoading(false);
         }

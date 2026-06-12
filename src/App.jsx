@@ -97,7 +97,7 @@ function ProtectedRoute({ allowedRoles, pageId }) {
             ? pageId.some(id => canView(id))
             : canView(pageId);
         if (!hasAccess) {
-            return <Navigate to="/403" replace />;
+            return <Navigate to="/unauthorized" replace />;
         }
     } else {
         if (!userRole || !ALL_ENTERPRISE_ROLES.includes(userRole)) {
@@ -160,6 +160,7 @@ function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/connect" element={<OrgRoleSelectionPage />} />
                         <Route path="/403" element={<AccessDeniedPage />} />
+                        <Route path="/unauthorized" element={<AccessDeniedPage />} />
 
                         {/* Protected Enterprise Routes */}
                         <Route element={<ProtectedRoute allowedRoles={ALL_ENTERPRISE_ROLES} />}>
@@ -174,7 +175,7 @@ function App() {
                                 </Route>
 
                                 {/* Manage Preview */}
-                                <Route element={<ProtectedRoute />}>
+                                <Route element={<ProtectedRoute pageId="MANAGE_PREVIEW" />}>
                                     <Route path="manage-preview" element={<ManagePreview />} />
                                 </Route>
 
@@ -191,6 +192,11 @@ function App() {
                                     <Route path="catalogue/darkhouse/inventory" element={<DarkhouseInventory />} />
                                     <Route path="catalogue/darkhouse/find-product-to-sell" element={<FindProductToSell />} />
                                     <Route path="catalogue/transfers" element={<StockTransfers />} />
+                                </Route>
+
+                                {/* Darkhouses */}
+                                <Route element={<ProtectedRoute pageId="DARKHOUSES" />}>
+                                    <Route path="darkhouses" element={<Darkhouses />} />
                                 </Route>
 
                                 {/* Catalog Module Routes */}
@@ -248,7 +254,7 @@ function App() {
                                 </Route>
 
                                 {/* Settings */}
-                                <Route element={<ProtectedRoute />}>
+                                <Route element={<ProtectedRoute pageId="SETTINGS" />}>
                                     <Route path="settings" element={<Settings />} />
                                 </Route>
                             </Route>

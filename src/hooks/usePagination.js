@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useEffect } from "react";
 
 /**
  * usePagination — Reusable pagination hook
@@ -10,29 +9,35 @@ import { useEffect } from "react";
  * @param {Array} items - The full filtered array to paginate
  * @param {number} rowsPerPage - Number of items per page
  * @param {any} [resetTrigger] - When this value changes, page resets to 1
- * @returns {{ page, setPage, paginated, totalPages }}
+ * @returns {{ page, setPage, goToPage, paginated, totalPages }}
  */
 export function usePagination(items, rowsPerPage, resetTrigger) {
     const [page, setPage] = useState(1);
+    const [prevResetTrigger, setPrevResetTrigger] = useState(resetTrigger);
 
-    // Reset to page 1 whenever the filter set or tab changes
-    useEffect(() => {
+    let currentPage = page;
+
+    // Reset to page 1 during render whenever the filter set or tab changes
+    if (resetTrigger !== prevResetTrigger) {
+        setPrevResetTrigger(resetTrigger);
         setPage(1);
-    }, [resetTrigger]);
+        currentPage = 1;
+    }
 
     const totalPages = Math.max(1, Math.ceil(items.length / rowsPerPage));
 
-    // Clamp page if filtered results shrink
-    useEffect(() => {
-        if (page > totalPages) setPage(totalPages);
-    }, [totalPages, page]);
+    // Clamp page during render if filtered results shrink
+    if (currentPage > totalPages) {
+        setPage(totalPages);
+        currentPage = totalPages;
+    }
 
-    const start = (page - 1) * rowsPerPage;
+    const start = (currentPage - 1) * rowsPerPage;
     const paginated = items.slice(start, start + rowsPerPage);
 
     const goToPage = useCallback((n) => {
         setPage(Math.max(1, Math.min(n, totalPages)));
     }, [totalPages]);
 
-    return { page, setPage, goToPage, paginated, totalPages };
+    return { page: currentPage, setPage, goToPage, paginated, totalPages };
 }

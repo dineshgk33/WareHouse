@@ -1,0 +1,286 @@
+﻿Total Errors: 93
+Total Warnings: 155
+
+--- Files with Errors ---
+analyze_css.js: 4 errors, 1 warnings
+  Line 2: [warning] [no-unused-vars] 'path' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 9: [error] [no-useless-escape] Unnecessary escape character: \{
+  Line 29: [error] [no-useless-escape] Unnecessary escape character: \$
+  Line 29: [error] [no-useless-escape] Unnecessary escape character: \{
+  Line 29: [error] [no-useless-escape] Unnecessary escape character: \}
+scratch\probe_update.js: 1 errors, 0 warnings
+  Line 1: [error] [no-undef] 'require' is not defined
+src\components\Roles\AdminVerificationModal.jsx: 1 errors, 0 warnings
+  Line 19: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\DeleteRoleModal.jsx: 1 errors, 0 warnings
+  Line 16: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\EditRoleModal.jsx: 1 errors, 0 warnings
+  Line 19: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\MemberPasswordChangeModal.jsx: 1 errors, 0 warnings
+  Line 22: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\MemberRoleEditModal.jsx: 2 errors, 0 warnings
+  Line 47: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 56: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\PermissionsViewerModal.jsx: 2 errors, 0 warnings
+  Line 40: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 46: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Roles\UserRolesSection.jsx: 1 errors, 0 warnings
+  Line 33: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\Sidebar\InventoryFlyout.jsx: 0 errors, 1 warnings
+  Line 10: [warning] [no-unused-vars] 'canView' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+src\components\Sidebar\Sidebar.jsx: 0 errors, 2 warnings
+  Line 122: [warning] [no-unused-vars] 'mobileOpen' is defined but never used. Allowed unused args must match /^_/u
+  Line 124: [warning] [no-unused-vars] 'canView' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+src\components\Topbar\SwitchWorkspaceModal.jsx: 3 errors, 1 warnings
+  Line 30: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 68: [warning] [react-hooks/exhaustive-deps] React Hook useEffect has a missing dependency: 'warehouseRoles'. Either include it or remove the dependency array
+  Line 95: [error] [react-hooks/rules-of-hooks] React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render
+  Line 99: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\components\common\SearchableSelect.jsx: 0 errors, 1 warnings
+  Line 7: [warning] [no-unused-vars] 'label' is defined but never used. Allowed unused args must match /^_/u
+src\constants\rolePermissions.js: 0 errors, 1 warnings
+  Line 212: [warning] [no-unused-vars] 'permissions' is assigned a value but never used. Allowed unused args must match /^_/u
+src\context\AuthContext.jsx: 0 errors, 6 warnings
+  Line 13: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 21: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 49: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 74: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 82: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 289: [warning] [react-refresh/only-export-components] Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components
+src\hooks\usePagination.js: 2 errors, 0 warnings
+  Line 20: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 27: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\layouts\MainLayout.jsx: 1 errors, 0 warnings
+  Line 18: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\pages\Admin\AdminPage.jsx: 12 errors, 29 warnings
+  Line 23: [warning] [no-unused-vars] 'avatarImg' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 32: [warning] [no-unused-vars] 'buildPermissionMap' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 33: [warning] [no-unused-vars] 'getEnabledInCategory' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 41: [warning] [no-unused-vars] 'resolveUrl' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 51: [warning] [no-unused-vars] 'selectedRole' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 82: [warning] [no-unused-vars] 'adminVerifyOpen' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 95: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 113: [warning] [no-unused-vars] 'name' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 114: [warning] [no-unused-vars] 'email' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 159: [warning] [react-hooks/exhaustive-deps] React Hook useMemo has an unnecessary dependency: 'customPermissions'. Either exclude it or remove the dependency array
+  Line 162: [warning] [no-unused-vars] 'verifyPassword' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 176: [warning] [no-unused-vars] 'requestVerification' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 181: [warning] [no-unused-vars] 'handleAdminVerified' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 369: [warning] [no-unused-vars] 'newMemberAccessLevel' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 370: [warning] [no-unused-vars] 'newMemberManager' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 387: [warning] [no-unused-vars] 'permissionsList' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 388: [warning] [no-unused-vars] 'permissionsLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 390: [warning] [no-unused-vars] 'isEditingPermissions' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 391: [warning] [no-unused-vars] 'customAccessiblePages' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 392: [warning] [no-unused-vars] 'expandedCategories' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 394: [warning] [no-unused-vars] 'loadingMap' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 396: [warning] [no-unused-vars] 'getRoleDescription' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 412: [warning] [no-unused-vars] 'getPermissionsFromAccessiblePages' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 469: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 476: [warning] [react-hooks/exhaustive-deps] React Hook useEffect has a missing dependency: 'selectedRoleIds.length'. Either include it or remove the dependency array
+  Line 481: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 529: [warning] [no-unused-vars] 'getPermissionCountForRole' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 563: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 630: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 630: [error] [no-empty] Empty block statement
+  Line 696: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 711: [error] [no-useless-assignment] The value assigned to 'rolesList' is not used in subsequent statements
+  Line 790: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 838: [warning] [react-hooks/exhaustive-deps] React Hook useEffect has a missing dependency: 'selectedRoleIds'. Either include it or remove the dependency array
+  Line 940: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 940: [error] [no-empty] Empty block statement
+  Line 995: [error] [no-useless-escape] Unnecessary escape character: \-
+  Line 1553: [error] [no-undef] 'UserRolesSection' is not defined
+  Line 1563: [warning] [no-unused-vars] 'displayWarehouseName' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 1564: [warning] [no-unused-vars] 'displayRoleName' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2864: [error] [no-useless-escape] Unnecessary escape character: \-
+src\pages\Analytics\AnalyticsPage.jsx: 4 errors, 5 warnings
+  Line 171: [warning] [no-unused-vars] 'darkhousePerformanceData' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 257: [warning] [no-unused-vars] 'err' is defined but never used
+  Line 342: [warning] [no-unused-vars] 'searchParams' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 357: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 368: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 368: [error] [no-empty] Empty block statement
+  Line 668: [error] [no-dupe-keys] Duplicate key 'display'
+  Line 683: [error] [no-dupe-keys] Duplicate key 'display'
+  Line 698: [error] [no-dupe-keys] Duplicate key 'display'
+src\pages\Auth\LoginPage.jsx: 0 errors, 2 warnings
+  Line 5: [warning] [no-unused-vars] 'logoImg' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 38: [warning] [no-unused-vars] 'err' is defined but never used
+src\pages\Auth\OrgRoleSelectionPage.jsx: 3 errors, 2 warnings
+  Line 5: [warning] [no-unused-vars] 'logoImg' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 73: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 122: [warning] [react-hooks/exhaustive-deps] The 'userRoleIds' conditional could make the dependencies of useMemo Hook (at line 142) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'userRoleIds' in its own useMemo() Hook
+  Line 124: [error] [react-hooks/rules-of-hooks] React Hook "React.useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?
+  Line 172: [error] [no-useless-assignment] The value assigned to 'targetPath' is not used in subsequent statements
+src\pages\Billing\BillingPage.jsx: 6 errors, 3 warnings
+  Line 424: [warning] [no-unused-vars] 'methodIcon' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 436: [error] [no-useless-assignment] The value assigned to 'emoji' is not used in subsequent statements
+  Line 437: [error] [no-useless-assignment] The value assigned to 'bg' is not used in subsequent statements
+  Line 438: [error] [no-useless-assignment] The value assigned to 'color' is not used in subsequent statements
+  Line 524: [warning] [no-unused-vars] 'refundActiveDropdownId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 524: [warning] [no-unused-vars] 'setRefundActiveDropdownId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 536: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1248: [error] [render] Error: Cannot create components during
+  Line 1302: [error] [render] Error: Cannot create components during
+src\pages\Customers\CustomersPage.jsx: 0 errors, 1 warnings
+  Line 1: [warning] [no-unused-vars] 'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+src\pages\Darkhouses\DarkhousesPage.jsx: 1 errors, 0 warnings
+  Line 106: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\pages\Dashboard\Dashboard.jsx: 2 errors, 2 warnings
+  Line 254: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 322: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 333: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 333: [error] [no-empty] Empty block statement
+src\pages\Inventory\InventoryPage.jsx: 7 errors, 2 warnings
+  Line 75: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 79: [warning] [react-hooks/exhaustive-deps] React Hook useEffect has a missing dependency: 'darkhouseStock'. Either include it or remove the dependency array
+  Line 280: [error] [render] Error: Cannot create components during
+  Line 392: [error] [render] Error: Cannot create components during
+  Line 531: [warning] [no-unused-vars] 'formSku' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 545: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 766: [error] [no-useless-assignment] The value assigned to 'headers' is not used in subsequent statements
+  Line 767: [error] [no-useless-assignment] The value assigned to 'rows' is not used in subsequent statements
+  Line 768: [error] [no-useless-assignment] The value assigned to 'filename' is not used in subsequent statements
+src\pages\ManagePreview\ManagePreviewPage.jsx: 29 errors, 77 warnings
+  Line 33: [warning] [no-unused-vars] 'podiumCategoryItem' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 512: [warning] [no-unused-vars] 'widgetsList' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 522: [warning] [no-unused-vars] 'beforeImages' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 531: [warning] [no-unused-vars] 'jumpToSlotVal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 531: [warning] [no-unused-vars] 'setJumpToSlotVal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 535: [warning] [no-unused-vars] 'showFilterDropdown' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 535: [warning] [no-unused-vars] 'setShowFilterDropdown' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 539: [warning] [no-unused-vars] 'dragOverIndex' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 548: [warning] [no-unused-vars] 'isCompareMode' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 548: [warning] [no-unused-vars] 'setIsCompareMode' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 555: [warning] [no-unused-vars] 'isDragging' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 589: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 589: [error] [no-empty] Empty block statement
+  Line 624: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 624: [error] [no-empty] Empty block statement
+  Line 665: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 665: [error] [no-empty] Empty block statement
+  Line 704: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 704: [error] [no-empty] Empty block statement
+  Line 727: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 727: [error] [no-empty] Empty block statement
+  Line 739: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 739: [error] [no-empty] Empty block statement
+  Line 772: [warning] [no-unused-vars] 'shopbycategoryConfig' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 772: [warning] [no-unused-vars] 'setShopbycategoryConfig' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 776: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 776: [error] [no-empty] Empty block statement
+  Line 779: [warning] [no-unused-vars] 'shopbycategoryErrors' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 779: [warning] [no-unused-vars] 'setShopbycategoryErrors' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 780: [warning] [no-unused-vars] 'shopbycategoryProductSearch' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 780: [warning] [no-unused-vars] 'setShopbycategoryProductSearch' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 781: [warning] [no-unused-vars] 'shopbycategoryExpandedSlot' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 781: [warning] [no-unused-vars] 'setShopbycategoryExpandedSlot' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 801: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 801: [error] [no-empty] Empty block statement
+  Line 832: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 832: [error] [no-empty] Empty block statement
+  Line 866: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 866: [error] [no-empty] Empty block statement
+  Line 896: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 896: [error] [no-empty] Empty block statement
+  Line 934: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 934: [error] [no-empty] Empty block statement
+  Line 946: [warning] [no-unused-vars] 'setDestProductSearchQuery' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 948: [warning] [no-unused-vars] 'isLoadingCategories' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 949: [warning] [no-unused-vars] 'setProductsMasterList' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 969: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1030: [error] [no-useless-assignment] The value assigned to 'initialImages' is not used in subsequent statements
+  Line 1034: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1048: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1057: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1109: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1109: [error] [no-empty] Empty block statement
+  Line 1137: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1137: [error] [no-empty] Empty block statement
+  Line 1152: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1152: [error] [no-empty] Empty block statement
+  Line 1167: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1167: [error] [no-empty] Empty block statement
+  Line 1179: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1179: [error] [no-empty] Empty block statement
+  Line 1191: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1191: [error] [no-empty] Empty block statement
+  Line 1203: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1203: [error] [no-empty] Empty block statement
+  Line 1215: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1215: [error] [no-empty] Empty block statement
+  Line 1227: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1227: [error] [no-empty] Empty block statement
+  Line 1239: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 1239: [error] [no-empty] Empty block statement
+  Line 1257: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1270: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1280: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 1435: [warning] [no-unused-vars] 'handleDragStart' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 1441: [warning] [no-unused-vars] 'handleDragOver' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 1447: [warning] [no-unused-vars] 'handleDrop' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 1498: [warning] [no-unused-vars] 'handleDragEnd' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2268: [warning] [no-unused-vars] 'handleToggleFilter' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2289: [warning] [no-unused-vars] 'handleSelectCard' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2299: [warning] [no-unused-vars] 'handleSelectAll' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2308: [warning] [no-unused-vars] 'handleBulkDelete' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2353: [warning] [no-unused-vars] 'handleBulkDownload' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2380: [warning] [no-unused-vars] 'handleBulkReplaceTrigger' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2386: [warning] [no-unused-vars] 'handleBulkFileChange' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2405: [warning] [no-unused-vars] 'handleUploadNewImageClick' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2415: [warning] [no-unused-vars] 'handleThumbnailMouseEnter' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2420: [warning] [no-unused-vars] 'handleThumbnailMouseMove' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2424: [warning] [no-unused-vars] 'handleThumbnailMouseLeave' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2494: [warning] [no-unused-vars] 'handleScroll' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2504: [warning] [no-unused-vars] 'visibleSlots' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2517: [warning] [no-unused-vars] 'filteredDestSearchProducts' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 2819: [warning] [no-unused-vars] 'isBeforeLabel' is assigned a value but never used. Allowed unused args must match /^_/u
+  Line 2832: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 2944: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3042: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3160: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3261: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3410: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3745: [warning] [no-unused-vars] 'e' is defined but never used. Allowed unused args must match /^_/u
+  Line 3882: [warning] [react-hooks/exhaustive-deps] React Hook useCallback has a missing dependency: 'handleDragScroll'. Either include it or remove the dependency array
+  Line 3885: [error] [no-useless-assignment] The value assigned to 'fillerWidgetId' is not used in subsequent statements
+  Line 4448: [warning] [react-hooks/exhaustive-deps] React Hook useCallback has a missing dependency: 'selectedSubCategoryInSim'. Either include it or remove the dependency array
+  Line 7730: [warning] [no-unused-vars] 'isSelected' is defined but never used. Allowed unused args must match /^_/u
+  Line 7731: [warning] [no-unused-vars] 'onSelect' is defined but never used. Allowed unused args must match /^_/u
+  Line 7732: [warning] [no-unused-vars] 'onPreview' is defined but never used. Allowed unused args must match /^_/u
+src\pages\Orders\OrdersPage.jsx: 2 errors, 4 warnings
+  Line 33: [warning] [no-unused-vars] 'generateQRCodeSVG' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 79: [warning] [no-unused-vars] 'setSearchParams' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 127: [warning] [no-unused-vars] 'e' is defined but never used
+  Line 205: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+  Line 208: [warning] [react-hooks/exhaustive-deps] React Hook useEffect has a missing dependency: 'triggerPrint'. Either include it or remove the dependency array
+  Line 212: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\pages\Products\ProductsPage.jsx: 0 errors, 1 warnings
+  Line 208: [warning] [react-hooks/exhaustive-deps] React Hook useMemo has a missing dependency: 'productsList'. Either include it or remove the dependency array
+src\pages\Reports\ReportsPage.jsx: 1 errors, 0 warnings
+  Line 58: [error] [renders] Error: Calling setState synchronously within an effect can trigger cascading
+src\pages\Settings\SettingsPage.jsx: 3 errors, 8 warnings
+  Line 1: [warning] [no-unused-vars] 'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 40: [warning] [no-unused-vars] 'theme' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 40: [warning] [no-unused-vars] 'setTheme' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 49: [warning] [no-unused-vars] 'twoFAEnabled' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 49: [warning] [no-unused-vars] 'setTwoFAEnabled' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 50: [warning] [no-unused-vars] 'hasChanges' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 60: [warning] [no-unused-vars] 'isUploading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 60: [warning] [no-unused-vars] 'setIsUploading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u
+  Line 127: [error] [no-useless-escape] Unnecessary escape character: \+
+  Line 127: [error] [no-useless-escape] Unnecessary escape character: \(
+  Line 127: [error] [no-useless-escape] Unnecessary escape character: \)
+src\pages\catalog\BulkUpload\BulkUploadPage.jsx: 0 errors, 1 warnings
+  Line 105: [warning] [no-unused-vars] 'i' is defined but never used. Allowed unused args must match /^_/u
+src\services\authService.js: 0 errors, 5 warnings
+  Line 142: [warning] [no-unused-vars] 'error' is defined but never used
+  Line 169: [warning] [no-unused-vars] 'error' is defined but never used
+  Line 206: [warning] [no-unused-vars] 'error' is defined but never used
+  Line 253: [warning] [no-unused-vars] 'error' is defined but never used
+  Line 267: [warning] [no-unused-vars] 'error' is defined but never used
+src\utils\qrcode.js: 3 errors, 0 warnings
+  Line 102: [error] [no-useless-assignment] The value assigned to 'minTypeNumber' is not used in subsequent statements
+  Line 668: [error] [no-undef] 'PAD0' is not defined
+  Line 672: [error] [no-undef] 'PAD1' is not defined

@@ -55,7 +55,9 @@ function ReportsPage() {
     }, []);
 
     useEffect(() => {
-        fetchReports();
+        setTimeout(() => {
+            fetchReports();
+        }, 0);
     }, [fetchReports]);
 
     const handleSync = async () => {

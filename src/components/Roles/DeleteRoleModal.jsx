@@ -13,7 +13,11 @@ function DeleteRoleModal({
     const [confirmName, setConfirmName] = useState("");
 
     useEffect(() => {
-        if (isOpen) setConfirmName("");
+        if (isOpen) {
+            setTimeout(() => {
+                setConfirmName("");
+            }, 0);
+        }
     }, [isOpen]);
 
     if (!role) return null;

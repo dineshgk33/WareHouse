@@ -70,16 +70,20 @@ function OrgRoleSelectionPage() {
 
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setFetchedRoles([]);
-            setSelectedRoleId("");
-            setRoleErrorText("");
+            setTimeout(() => {
+                setFetchedRoles([]);
+                setSelectedRoleId("");
+                setRoleErrorText("");
+            }, 0);
             return;
         }
 
-        setRolesLoading(true);
-        setFetchedRoles([]);
-        setSelectedRoleId("");
-        setRoleErrorText("");
+        setTimeout(() => {
+            setRolesLoading(true);
+            setFetchedRoles([]);
+            setSelectedRoleId("");
+            setRoleErrorText("");
+        }, 0);
 
         authService.getWarehouseRoles(selectedWarehouseId)
             .then(res => {
@@ -110,7 +114,6 @@ function OrgRoleSelectionPage() {
             });
     }, [selectedWarehouseId, uniqueWarehouses]);
 
-    if (!user) return null;
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
         value: wh.warehouseId,
@@ -141,6 +144,8 @@ function OrgRoleSelectionPage() {
         return Array.from(map.values());
     }, [selectedWhObj, fetchedRoles, userRoleIds]);
 
+    if (!user) return null;
+
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,
         label: role.roleName,
@@ -169,7 +174,7 @@ function OrgRoleSelectionPage() {
         
         const pages = await completeSetup(selectedWhObj, selectedRlObj);
         
-        let targetPath = "/403";
+        let targetPath;
         
         if (pages && pages.length > 0) {
             const hasDashboard = pages.some(p => p.pageId && p.pageId.toUpperCase() === "DASHBOARD" && p.canView);

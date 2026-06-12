@@ -27,16 +27,20 @@ function SwitchWorkspaceModal({ onClose }) {
 
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setFetchedRoles([]);
-            setSelectedRoleId("");
-            setRoleErrorText("");
+            setTimeout(() => {
+                setFetchedRoles([]);
+                setSelectedRoleId("");
+                setRoleErrorText("");
+            }, 0);
             return;
         }
 
-        setRolesLoading(true);
-        setFetchedRoles([]);
-        setSelectedRoleId("");
-        setRoleErrorText("");
+        setTimeout(() => {
+            setRolesLoading(true);
+            setFetchedRoles([]);
+            setSelectedRoleId("");
+            setRoleErrorText("");
+        }, 0);
 
         authService.getWarehouseRoles(selectedWarehouseId)
             .then(res => {
@@ -65,9 +69,8 @@ function SwitchWorkspaceModal({ onClose }) {
             .finally(() => {
                 setRolesLoading(false);
             });
-    }, [selectedWarehouseId]);
+    }, [selectedWarehouseId, warehouseRoles]);
 
-    if (!user) return null;
 
     const uniqueWarehouses = [
         ...new Map(warehouseRoles.map(item => [item.warehouseId, item])).values()
@@ -96,10 +99,14 @@ function SwitchWorkspaceModal({ onClose }) {
         if (selectedWarehouseId && selectedRoleId) {
             const roleExists = filteredRoles.some(r => r.roleId === selectedRoleId);
             if (!roleExists) {
-                setSelectedRoleId("");
+                setTimeout(() => {
+                    setSelectedRoleId("");
+                }, 0);
             }
         }
     }, [selectedWarehouseId, filteredRoles, selectedRoleId]);
+
+    if (!user) return null;
 
     const handleWarehouseChange = (val) => {
         setSelectedWarehouseId(val);

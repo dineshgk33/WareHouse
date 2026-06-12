@@ -201,6 +201,23 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         const bottomItems = [];
 
         Object.keys(groups).forEach(moduleName => {
+            // Check if user has permission to view this module
+            let isAuthorized;
+            const upperModule = moduleName.toUpperCase();
+            if (upperModule === "CATALOGUE") {
+                isAuthorized = canView("WAREHOUSE_INVENTORY") || canView("DARKHOUSE_INVENTORY") || canView("STOCK_TRANSFERS");
+            } else if (upperModule === "SETTINGS") {
+                isAuthorized = canView("SETTINGS");
+            } else if (upperModule === "SUPPORT") {
+                isAuthorized = canView("SUPPORT");
+            } else {
+                isAuthorized = canView(moduleName);
+            }
+
+            if (!isAuthorized) {
+                return;
+            }
+
             const modulePages = groups[moduleName];
             const id = moduleName.toLowerCase().replace(/\s+/g, "-");
 
@@ -243,9 +260,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             return rankA - rankB;
         };
 
-        // Ensure Settings is always available in the bottomItems list so all users can access their profile settings
+        // Ensure Settings is available in the bottomItems list if authorized
         const hasSettings = bottomItems.some(item => item.id === "settings");
-        if (!hasSettings) {
+        if (!hasSettings && canView("SETTINGS")) {
             bottomItems.push({
                 id: "settings",
                 label: "Settings",
@@ -254,9 +271,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             });
         }
 
-        // Ensure Manage Preview is always available in the sidebarItems list for now, bypassing roles/permissions
+        // Ensure Manage Preview is available in the sidebarItems list if authorized
         const hasManagePreview = sidebarItems.some(item => item.id === "manage-preview");
-        if (!hasManagePreview) {
+        if (!hasManagePreview && canView("MANAGE_PREVIEW")) {
             sidebarItems.push({
                 id: "manage-preview",
                 label: "Manage Preview",

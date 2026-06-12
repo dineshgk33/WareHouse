@@ -103,10 +103,12 @@ function DarkhousesPage() {
 
     // Reset pagination on tab change
     useEffect(() => {
-        setDhPage(1);
-        setMPage(1);
-        setApPage(1);
-        setActiveRowMenuId(null);
+        setTimeout(() => {
+            setDhPage(1);
+            setMPage(1);
+            setApPage(1);
+            setActiveRowMenuId(null);
+        }, 0);
     }, [activeTab]);
 
     const showToast = (msg) => {
