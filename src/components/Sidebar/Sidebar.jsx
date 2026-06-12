@@ -151,7 +151,13 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     const buildDynamicMenu = (pages) => {
         if (!pages || !Array.isArray(pages)) return { main: [], bottom: [] };
 
-        const allowedPages = pages.filter(p => p.canView && p.pageName !== "User Roles");
+        const allowedPages = pages.filter(p => {
+            const pageIdUpper = (p.pageId || "").toUpperCase();
+            return p.canView && 
+                   p.pageName !== "User Roles" &&
+                   pageIdUpper !== "CATALOG" &&
+                   pageIdUpper !== "DARKHOUSES";
+        });
 
         const groups = {};
         allowedPages.forEach(page => {
