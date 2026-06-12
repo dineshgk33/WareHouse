@@ -19,7 +19,8 @@ import {
     Activity,
     Shield,
     Users,
-    Eye
+    Eye,
+    ClipboardList
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -53,6 +54,8 @@ const getRouteForPage = (pageId, pageName) => {
             return "/catalogue/darkhouse";
         case "STOCK_TRANSFERS":
             return "/catalogue/transfers";
+        case "INDENT":
+            return "/indent";
         case "EMPLOYEES":
             return "/employees";
         case "REPORTS":
@@ -116,7 +119,8 @@ const getIconForModule = (moduleName) => {
         "Reports": FileText,
         "Operations": Activity,
         "Settings": Settings,
-        "Support": HelpCircle
+        "Support": HelpCircle,
+        "Indent / Stock Requests": ClipboardList
     };
     return iconMap[moduleName] || Package;
 };
@@ -168,6 +172,10 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
                 mod = "Catalogue";
             }
+            if (page.pageId === "INDENT") {
+                mod = "Indent / Stock Requests";
+                pName = "Indent / Stock Requests";
+            }
 
             // Map page labels to Catalogue names
             if (page.pageId === "WAREHOUSE_INVENTORY") {
@@ -191,6 +199,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             "Orders",
             "Darkhouses",
             "Customers",
+            "Indent / Stock Requests",
             "Employees",
             "Billing",
             "Analytics",
@@ -212,6 +221,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             const upperModule = moduleName.toUpperCase();
             if (upperModule === "CATALOGUE") {
                 isAuthorized = canView("WAREHOUSE_INVENTORY") || canView("DARKHOUSE_INVENTORY") || canView("STOCK_TRANSFERS");
+            } else if (moduleName === "Indent / Stock Requests") {
+                isAuthorized = canView("INDENT");
             } else if (upperModule === "SETTINGS") {
                 isAuthorized = canView("SETTINGS");
             } else if (upperModule === "SUPPORT") {

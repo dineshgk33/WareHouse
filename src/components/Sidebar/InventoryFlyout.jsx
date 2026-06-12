@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Package, Store, Repeat } from "lucide-react";
+import { Package, Store, Repeat, ClipboardList } from "lucide-react";
 import "./Sidebar.css"; // Reuse sidebar styling structure
 
 function InventoryFlyout({ menu, position, onMouseEnter, onMouseLeave, onItemClick }) {
@@ -31,6 +31,9 @@ function InventoryFlyout({ menu, position, onMouseEnter, onMouseLeave, onItemCli
                 return <Store size={16} className="flyout-item-icon" />;
             case "Find Product to Sell":
                 return <Repeat size={16} className="flyout-item-icon" />;
+            case "Stock Request":
+            case "Stock Requests":
+                return <ClipboardList size={16} className="flyout-item-icon" />;
             default:
                 return <Package size={16} className="flyout-item-icon" />;
         }

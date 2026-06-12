@@ -20,6 +20,7 @@ const DarkhouseProducts       = lazy(() => import("./pages/catalogue/darkhouse/P
 const DarkhouseInventory      = lazy(() => import("./pages/catalogue/darkhouse/InventoryPage.jsx"));
 const FindProductToSell       = lazy(() => import("./pages/catalogue/darkhouse/FindProductToSellPage.jsx"));
 const StockTransfers          = lazy(() => import("./pages/catalogue/transfers/StockTransfersPage.jsx"));
+const IndentPage              = lazy(() => import("./pages/catalogue/indent/IndentPage.jsx"));
 const Analytics               = lazy(() => import("./pages/analytics/AnalyticsPage.jsx"));
 const Customers               = lazy(() => import("./pages/customers/CustomersPage.jsx"));
 const Billing                 = lazy(() => import("./pages/billing/BillingPage.jsx"));
@@ -185,13 +186,17 @@ function App() {
                                     <Route path="orders/pending" element={<Orders />} />
                                 </Route>
 
-                                {/* Warehouse & Darkhouse Catalogue */}
                                 <Route element={<ProtectedRoute pageId={["WAREHOUSE_INVENTORY", "DARKHOUSE_INVENTORY", "STOCK_TRANSFERS"]} />}>
                                     <Route path="catalogue/warehouse" element={<WarehouseCatalogue />} />
                                     <Route path="catalogue/darkhouse/products" element={<DarkhouseProducts />} />
                                     <Route path="catalogue/darkhouse/inventory" element={<DarkhouseInventory />} />
                                     <Route path="catalogue/darkhouse/find-product-to-sell" element={<FindProductToSell />} />
                                     <Route path="catalogue/transfers" element={<StockTransfers />} />
+                                </Route>
+
+                                {/* Stock Requests */}
+                                <Route element={<ProtectedRoute pageId="INDENT" />}>
+                                    <Route path="indent" element={<IndentPage />} />
                                 </Route>
 
                                 {/* Darkhouses */}
