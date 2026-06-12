@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Topbar from "../components/Topbar/Topbar";
+import PageLoader from "../components/common/PageLoader";
 import "./MainLayout.css";
 
 function MainLayout() {
@@ -65,7 +66,9 @@ function MainLayout() {
             <div className="layout-main">
                 <Topbar onOpenMobileSidebar={() => setMobileOpen(true)} />
                 <main className="layout-content fade-in">
-                    <Outlet />
+                    <Suspense fallback={<PageLoader />}>
+                        <Outlet />
+                    </Suspense>
                 </main>
             </div>
         </div>

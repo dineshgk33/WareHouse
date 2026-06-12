@@ -53,28 +53,7 @@ const CatalogBulkUpload       = lazy(() => import("./pages/catalog/BulkUpload/Bu
 const CatalogMediaLibrary     = lazy(() => import("./pages/catalog/MediaLibrary/MediaLibraryPage.jsx"));
 const CatalogProductAudit     = lazy(() => import("./pages/catalog/ProductAudit/ProductAuditPage.jsx"));
 
-// ─── Page Loader ──────────────────────────────────────────────────────────────
-function PageLoader() {
-    return (
-        <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "60vh",
-            width: "100%",
-        }}>
-            <div style={{
-                width: 36,
-                height: 36,
-                border: "3px solid #e5e7eb",
-                borderTopColor: "#1e60ff",
-                borderRadius: "50%",
-                animation: "spin 0.7s linear infinite",
-            }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-    );
-}
+import PageLoader from "./components/common/PageLoader";
 
 // ─── Protected Route Wrapper ──────────────────────────────────────────────────
 function ProtectedRoute({ allowedRoles, pageId }) {

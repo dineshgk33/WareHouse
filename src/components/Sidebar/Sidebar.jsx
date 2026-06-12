@@ -375,7 +375,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
     };
 
     const handleSubmenuItemClick = () => {
-        handleItemClick();
+        if (setMobileOpen) {
+            setMobileOpen(false);
+        }
     };
 
     const handleParentClick = (item, e) => {
