@@ -19,7 +19,7 @@ import {
     Key,
     Mail
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
 import PermissionsViewerModal from "../../components/Roles/PermissionsViewerModal";

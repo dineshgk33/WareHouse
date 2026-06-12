@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { authService } from "../../services/authService";
 import { DEFAULT_ROLES } from "../../constants/rolePermissions";
 import PermissionsViewerModal from "./PermissionsViewerModal";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, X } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import SearchableSelect from "../common/SearchableSelect";
 import { authService } from "../../services/authService";
 import "./SwitchWorkspaceModal.css";

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Check, Search } from "lucide-react";
 import Modal from "./Modal";
 import { authService } from "../../services/authService";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import "./roles.css";
 
 const getRoleDescription = (roleName) => {

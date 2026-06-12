@@ -27,7 +27,7 @@ import FlyoutMenu from "./FlyoutMenu";
 import InventoryFlyout from "./InventoryFlyout";
 import OrdersFlyout from "./OrdersFlyout";
 import DarkhouseFlyout from "./DarkhouseFlyout";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import "./Sidebar.css";
 
 // ─── Dynamic Routing & Menu Configuration Helper Mapping Functions ──────────────────────────────

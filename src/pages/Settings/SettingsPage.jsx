@@ -28,7 +28,7 @@ import {
     CheckCircle,
     X
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
 import { useToast } from "../../hooks/useToast";
 import UserRolesSection from "../../components/Roles/UserRolesSection";

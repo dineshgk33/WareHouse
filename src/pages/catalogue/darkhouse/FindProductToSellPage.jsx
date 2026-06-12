@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { MOCK_DARKHOUSE_STOCK } from "../../../data/inventoryData";
 
-import { useAuth } from "../../../context/AuthContext";
-import "../../Inventory/Inventory.css";
+import { useAuth } from "../../../contexts/AuthContext";
+import "../Catalogue.css";
 
 const MOCK_GLOBAL_PRODUCTS = [
     { id: "GP-01", sku: "FRT-MNG-ALP", name: "Fresh Alphonso Mangoes", category: "Fruits & Vegetables", price: 150, stock: 120 },

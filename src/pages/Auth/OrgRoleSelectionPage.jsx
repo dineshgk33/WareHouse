@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Activity, Building2, Users, Building, ShieldCheck, Clock, Shield, LogOut } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import logoImg from "../../assets/logo.jpeg";
 import SearchableSelect from "../../components/common/SearchableSelect";
 import { authService } from "../../services/authService";

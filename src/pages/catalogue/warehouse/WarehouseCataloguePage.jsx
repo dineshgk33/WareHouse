@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { MOCK_WAREHOUSE_STOCK } from "../../../data/inventoryData";
 import { getInventoryStatusClass } from "../../../utils/statusUtils";
-import { useAuth } from "../../../context/AuthContext";
-import "../../Inventory/Inventory.css";
+import { useAuth } from "../../../contexts/AuthContext";
+import "../Catalogue.css";
 
 const ROWS_PER_PAGE = 6;
 

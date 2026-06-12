@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Globe, Bell, ChevronDown, LogOut, Settings, User, Menu, Building2 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import SwitchWorkspaceModal from "./SwitchWorkspaceModal";
 import avatarImg from "../../assets/dinesh.png";
 import logoImg from "../../assets/logo.jpeg";

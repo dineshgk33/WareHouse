@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Shield, Globe, ChevronDown, ArrowRight } from "lucide-react";
 import loginAssetImg from "../../assets/login.png";
 import logoImg from "../../assets/logo.jpeg";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { authService } from "../../services/authService";
 import "./LoginPage.css";
 

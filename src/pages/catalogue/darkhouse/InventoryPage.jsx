@@ -13,8 +13,8 @@ import {
 import { MOCK_DARKHOUSE_STOCK } from "../../../data/inventoryData";
 import { INITIAL_DARKHOUSES } from "../../../data/darkhouses";
 import { getInventoryStatusClass } from "../../../utils/statusUtils";
-import { useAuth } from "../../../context/AuthContext";
-import "../../Inventory/Inventory.css";
+import { useAuth } from "../../../contexts/AuthContext";
+import "../Catalogue.css";
 
 const ROWS_PER_PAGE = 6;
 
