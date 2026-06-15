@@ -38,6 +38,10 @@ function Topbar({ onOpenMobileSidebar }) {
         if (path.includes('/billing')) return 'Billing';
         if (path.includes('/analytics')) return 'Analytics';
         if (path.includes('/darkhouses')) return 'Darkhouses';
+        if (path.includes('/indent')) return 'Indent Management';
+        if (path.includes('/dispatch')) return 'Dispatch Management';
+        if (path.includes('/receiving')) return 'Receiving Management';
+        if (path.includes('/grn')) return 'GRN (Goods Receipt Note)';
         return 'Dashboard';
     };
 

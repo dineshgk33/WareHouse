@@ -20,7 +20,9 @@ import {
     Shield,
     Users,
     Eye,
-    ClipboardList
+    ClipboardList,
+    ArrowDownToLine,
+    Truck
 } from "lucide-react";
 import logoImg from "../../assets/logo.jpeg";
 import avatarImg from "../../assets/dinesh.png";
@@ -40,12 +42,44 @@ const getRouteForPage = (pageId, pageName) => {
         case "MANAGE_PREVIEW":
             return "/manage-preview";
         case "ORDERS":
+            if (pageName === "Fulfillment Board") return "/orders?tab=board";
+            if (pageName === "Pending Queue") return "/orders?tab=board&step=pending";
+            if (pageName === "Picking Queue") return "/orders?tab=board&step=picking";
+            if (pageName === "Packing Queue") return "/orders?tab=board&step=packing";
+            if (pageName === "Delivery Queue") return "/orders?tab=board&step=delivery";
+            if (pageName === "Order Inspector") return "/orders?tab=details";
+            if (pageName === "Control Center") return "/orders?tab=management";
+            if (pageName === "Order Lookup") return "/orders?tab=new-query";
+            if (pageName === "Cancelled Orders") return "/orders?tab=cancelled";
+            
+            // Legacy fallbacks for compatibility
+            if (pageName === "Order Management") return "/orders?tab=management";
+            if (pageName === "Order List") return "/orders?tab=board";
+            if (pageName === "Order Details") return "/orders?tab=details";
+            if (pageName === "New Order Query") return "/orders?tab=new-query";
+            if (pageName === "Picking") return "/orders?tab=board&step=picking";
+            if (pageName === "Packing") return "/orders?tab=board&step=packing";
+            if (pageName === "Delivery Management") return "/orders?tab=board&step=delivery";
             if (pageName === "Pending Orders") return "/orders/pending";
-            if (pageName === "Picking") return "/orders?tab=picking";
-            if (pageName === "Packing") return "/orders?tab=packing";
-            if (pageName === "Delivery Tracking") return "/orders?tab=tracking";
+            if (pageName === "Delivery Tracking") return "/orders?tab=board&step=delivery";
             if (pageName === "Label History") return "/orders?tab=label-history";
             return "/orders";
+        case "RECEIVING":
+            if (pageName === "Pending Receipts") return "/receiving?tab=pending";
+            if (pageName === "Receive Dispatch") return "/receiving?tab=receive";
+            if (pageName === "Receipt History") return "/receiving?tab=history";
+            return "/receiving";
+        case "DISPATCH":
+            if (pageName === "Dispatch List") return "/dispatch?tab=list";
+            if (pageName === "Create Dispatch") return "/dispatch?tab=create";
+            if (pageName === "Dispatch Details") return "/dispatch?tab=details";
+            if (pageName === "Dispatch Tracking") return "/dispatch?tab=tracking";
+            return "/dispatch";
+        case "GRN":
+            if (pageName === "GRN List") return "/grn?tab=list";
+            if (pageName === "Create GRN") return "/grn?tab=create";
+            if (pageName === "GRN Details") return "/grn?tab=details";
+            return "/grn";
         case "WAREHOUSE_INVENTORY":
         case "WAREHOUSE_CATALOGUE":
             return "/catalogue/warehouse";
@@ -55,10 +89,26 @@ const getRouteForPage = (pageId, pageName) => {
         case "STOCK_TRANSFERS":
             return "/catalogue/transfers";
         case "INDENT":
+            if (pageName === "Indent List") return "/indent?tab=list";
+            if (pageName === "Create Indent") return "/indent?tab=create";
+            if (pageName === "Indent Details") return "/indent?tab=details";
+            if (pageName === "Pending Indents") return "/indent?tab=list&status=Pending";
+            if (pageName === "Approved Indents") return "/indent?tab=list&status=Approved";
+            if (pageName === "Rejected Indents") return "/indent?tab=list&status=Rejected";
             return "/indent";
         case "EMPLOYEES":
             return "/employees";
         case "REPORTS":
+            if (pageName === "Inventory Summary Report") return "/reports/inventory-summary";
+            if (pageName === "Low Stock Report") return "/reports/low-stock";
+            if (pageName === "Inventory Movement Report") return "/reports/inventory-movement";
+            if (pageName === "Indent Report") return "/reports/indent";
+            if (pageName === "Dispatch Report") return "/reports/dispatch";
+            if (pageName === "Receiving Report") return "/reports/receiving";
+            if (pageName === "Order Summary Report") return "/reports/order-summary";
+            if (pageName === "Orders by Dark House") return "/reports/orders-by-darkhouse";
+            if (pageName === "Top Selling Products") return "/reports/top-selling";
+            if (pageName === "Order Status Report") return "/reports/order-status";
             return "/reports";
         case "ANALYTICS":
             return "/analytics";
@@ -89,9 +139,13 @@ const getRouteForPage = (pageId, pageName) => {
         case "OPERATIONS":
             return "/operations";
         case "ADMIN":
-            if (pageName === "Members") return "/admin/members";
-            if (pageName === "User Roles") return "/admin/roles";
-            return "/admin";
+            if (pageName === "Manage Users") return "/admin/users";
+            if (pageName === "Role & Page Permissions") return "/admin/permissions";
+            if (pageName === "Role Master") return "/admin/rolemaster";
+            if (pageName === "Manage Warehouses & Dark Houses") return "/admin/warehouses";
+            if (pageName === "Manage Categories") return "/admin/categories";
+            if (pageName === "Manage Products") return "/admin/products";
+            return "/admin/users";
         case "DARKHOUSES":
             if (pageName === "Darkhouse List") return "/darkhouses";
             if (pageName === "Managers") return "/darkhouses?tab=managers";
@@ -120,7 +174,10 @@ const getIconForModule = (moduleName) => {
         "Operations": Activity,
         "Settings": Settings,
         "Support": HelpCircle,
-        "Indent / Stock Requests": ClipboardList
+        "Indent Management": ClipboardList,
+        "Receiving Management": ArrowDownToLine,
+        "GRN (Goods Receipt Note)": FileText,
+        "Dispatch Management": Truck
     };
     return iconMap[moduleName] || Package;
 };
@@ -173,8 +230,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 mod = "Catalogue";
             }
             if (page.pageId === "INDENT") {
-                mod = "Indent / Stock Requests";
-                pName = "Indent / Stock Requests";
+                mod = "Indent Management";
+                pName = "Indent Management";
             }
 
             // Map page labels to Catalogue names
@@ -199,7 +256,10 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             "Orders",
             "Darkhouses",
             "Customers",
-            "Indent / Stock Requests",
+            "Indent Management",
+            "Receiving Management",
+            "GRN (Goods Receipt Note)",
+            "Dispatch Management",
             "Employees",
             "Billing",
             "Analytics",
@@ -221,7 +281,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             const upperModule = moduleName.toUpperCase();
             if (upperModule === "CATALOGUE") {
                 isAuthorized = canView("WAREHOUSE_INVENTORY") || canView("DARKHOUSE_INVENTORY") || canView("STOCK_TRANSFERS");
-            } else if (moduleName === "Indent / Stock Requests") {
+            } else if (moduleName === "Indent Management") {
                 isAuthorized = canView("INDENT");
             } else if (upperModule === "SETTINGS") {
                 isAuthorized = canView("SETTINGS");
@@ -249,6 +309,61 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Products", path: "/catalogue/darkhouse/products" },
                     { label: "Inventory", path: "/catalogue/darkhouse/inventory" },
                     { label: "Find Product to Sell", path: "/catalogue/darkhouse/find-product-to-sell" }
+                ];
+            } else if (moduleName === "Orders") {
+                item.submenu = [
+                    { label: "Order Management", path: "/orders?tab=management" },
+                    { label: "Order List", path: "/orders?tab=board" },
+                    { label: "Order Details", path: "/orders?tab=details" },
+                    { label: "New Order Query", path: "/orders?tab=new-query" },
+                    { label: "Picking", path: "/orders?tab=board&step=picking" },
+                    { label: "Packing", path: "/orders?tab=board&step=packing" },
+                    { label: "Delivery Management", path: "/orders?tab=board&step=delivery" },
+                    { label: "Cancelled Orders", path: "/orders?tab=cancelled" }
+                ];
+            } else if (moduleName === "Admin") {
+                item.submenu = [
+                    { label: "Manage Users", path: "/admin/users" },
+                    { label: "Role & Page Permissions", path: "/admin/permissions" },
+                    { label: "Role Master", path: "/admin/rolemaster" },
+                    { label: "Manage Warehouses & Dark Houses", path: "/admin/warehouses" },
+                    { label: "Manage Categories", path: "/admin/categories" },
+                    { label: "Manage Products", path: "/admin/products" }
+                ];
+            } else if (moduleName === "Reports") {
+                item.submenu = [
+                    { label: "Inventory Summary Report", path: "/reports/inventory-summary" },
+                    { label: "Low Stock Report", path: "/reports/low-stock" },
+                    { label: "Inventory Movement Report", path: "/reports/inventory-movement" },
+                    { label: "Indent Report", path: "/reports/indent" },
+                    { label: "Dispatch Report", path: "/reports/dispatch" },
+                    { label: "Receiving Report", path: "/reports/receiving" },
+                    { label: "Order Summary Report", path: "/reports/order-summary" },
+                    { label: "Orders by Dark House", path: "/reports/orders-by-darkhouse" },
+                    { label: "Top Selling Products", path: "/reports/top-selling" },
+                    { label: "Order Status Report", path: "/reports/order-status" }
+                ];
+            } else if (moduleName === "Dispatch Management") {
+                item.submenu = [
+                    { label: "Dispatch List", path: "/dispatch?tab=list" },
+                    { label: "Create Dispatch", path: "/dispatch?tab=create" },
+                    { label: "Dispatch Details", path: "/dispatch?tab=details" },
+                    { label: "Dispatch Tracking", path: "/dispatch?tab=tracking" }
+                ];
+            } else if (moduleName === "Indent Management") {
+                item.submenu = [
+                    { label: "Indent List", path: "/indent?tab=list" },
+                    { label: "Create Indent", path: "/indent?tab=create" },
+                    { label: "Indent Details", path: "/indent?tab=details" },
+                    { label: "Pending Indents", path: "/indent?tab=list&status=Pending" },
+                    { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
+                    { label: "Rejected Indents", path: "/indent?tab=list&status=Rejected" }
+                ];
+            } else if (moduleName === "GRN (Goods Receipt Note)") {
+                item.submenu = [
+                    { label: "GRN List", path: "/grn?tab=list" },
+                    { label: "Create GRN", path: "/grn?tab=create" },
+                    { label: "GRN Details", path: "/grn?tab=details" }
                 ];
             } else if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
@@ -299,6 +414,70 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             });
         }
 
+        // Ensure Receiving Management is available in the sidebarItems list if authorized
+        const hasReceiving = sidebarItems.some(item => item.id === "receiving-management");
+        if (!hasReceiving && (canView("ORDERS") || canView("RECEIVING"))) {
+            sidebarItems.push({
+                id: "receiving-management",
+                label: "Receiving Management",
+                icon: getIconForModule("Receiving Management"),
+                submenu: [
+                    { label: "Pending Receipts", path: "/receiving?tab=pending" },
+                    { label: "Receive Dispatch", path: "/receiving?tab=receive" },
+                    { label: "Receipt History", path: "/receiving?tab=history" }
+                ]
+            });
+        }
+
+        // Ensure Dispatch Management is available in the sidebarItems list if authorized
+        const hasDispatch = sidebarItems.some(item => item.id === "dispatch-management");
+        if (!hasDispatch && canView("DISPATCH")) {
+            sidebarItems.push({
+                id: "dispatch-management",
+                label: "Dispatch Management",
+                icon: getIconForModule("Dispatch Management"),
+                submenu: [
+                    { label: "Dispatch List", path: "/dispatch?tab=list" },
+                    { label: "Create Dispatch", path: "/dispatch?tab=create" },
+                    { label: "Dispatch Details", path: "/dispatch?tab=details" },
+                    { label: "Dispatch Tracking", path: "/dispatch?tab=tracking" }
+                ]
+            });
+        }
+
+        // Ensure Indent Management is available in the sidebarItems list if authorized
+        const hasIndent = sidebarItems.some(item => item.id === "indent-management");
+        if (!hasIndent && canView("INDENT")) {
+            sidebarItems.push({
+                id: "indent-management",
+                label: "Indent Management",
+                icon: getIconForModule("Indent Management"),
+                submenu: [
+                    { label: "Indent List", path: "/indent?tab=list" },
+                    { label: "Create Indent", path: "/indent?tab=create" },
+                    { label: "Indent Details", path: "/indent?tab=details" },
+                    { label: "Pending Indents", path: "/indent?tab=list&status=Pending" },
+                    { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
+                    { label: "Rejected Indents", path: "/indent?tab=list&status=Rejected" }
+                ]
+            });
+        }
+
+        // Ensure GRN Management is available in the sidebarItems list if authorized
+        const hasGRN = sidebarItems.some(item => item.id === "grn-management");
+        if (!hasGRN && canView("GRN")) {
+            sidebarItems.push({
+                id: "grn-management",
+                label: "GRN (Goods Receipt Note)",
+                icon: getIconForModule("GRN (Goods Receipt Note)"),
+                submenu: [
+                    { label: "GRN List", path: "/grn?tab=list" },
+                    { label: "Create GRN", path: "/grn?tab=create" },
+                    { label: "GRN Details", path: "/grn?tab=details" }
+                ]
+            });
+        }
+
         sidebarItems.sort(sortFn);
         bottomItems.sort(sortFn);
 
@@ -343,14 +522,29 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         if (item.submenu) {
             setHoveredMenu(item);
             
-            // Detect if item is at the bottom (e.g. settings) to align from the bottom upward
-            const isBottomItem = activeBottomMenu.some(b => b.id === item.id);
-            if (isBottomItem && e.currentTarget.offsetParent) {
-                const sidebarHeight = e.currentTarget.offsetParent.offsetHeight;
-                const bottomOffset = sidebarHeight - e.currentTarget.offsetTop - e.currentTarget.offsetHeight;
-                setFlyoutPosition({ bottom: bottomOffset, isBottom: true });
+            const liElement = e.currentTarget;
+            const sidebarElement = liElement.closest('.sidebar');
+            if (sidebarElement) {
+                const sidebarRect = sidebarElement.getBoundingClientRect();
+                const itemRect = liElement.getBoundingClientRect();
+                const relativeTop = itemRect.top - sidebarRect.top;
+                
+                // Estimate height dynamically based on character lengths of labels to account for wrapping
+                let estimatedHeight = 50; // Base padding/header
+                item.submenu.forEach(sub => {
+                    const labelText = sub.label || "";
+                    // A 220px card width fits approximately 20 characters of 13.5px semibold text per line
+                    const lines = labelText.length > 20 ? Math.ceil(labelText.length / 20) : 1;
+                    estimatedHeight += (lines * 18) + 16; // 18px per line + 16px item spacing/padding
+                });
+                estimatedHeight += 24; // Extra safety buffer
+                
+                // Clamp the top offset so the submenu never overflows the viewport top (16px padding) or bottom (16px padding)
+                const top = Math.max(16, Math.min(relativeTop, sidebarRect.height - estimatedHeight - 16));
+                
+                setFlyoutPosition({ top, isBottom: false });
             } else {
-                setFlyoutPosition({ top: e.currentTarget.offsetTop, isBottom: false });
+                setFlyoutPosition({ top: liElement.offsetTop, isBottom: false });
             }
         } else {
             setHoveredMenu(null);

@@ -10,52 +10,54 @@ for (let i = 32; i < 127; i++) {
     lookup[String.fromCharCode(i)] = [i - 32, data[i - 32]];
 }
 
-export class Barcode128Svg {
-    constructor(input) {
-        this.input = input || "";
-        this.factor = 1.2;
-        this.height = 30;
+export function Barcode128Svg(input) {
+    if (!(this instanceof Barcode128Svg)) {
+        return new Barcode128Svg(input);
     }
-
-    toString() {
-        const h = this.height;
-        const f = this.factor;
-        let svg = "";
-        let x = 0;
-        let sum = 104;
-
-        function draw(d) {
-            if (!d) return;
-            d.split("").forEach((n, i) => {
-                // Alternates bar and space (i % 2 === 0 is bar, i % 2 === 1 is space)
-                // Fill with rect for bars
-                if (i % 2 === 0) {
-                    svg += `<rect x="${x}" y="0" width="${+n * f}" height="${h}" fill="#000000" />\n`;
-                }
-                x += +n * f;
-            });
-        }
-
-        // Draw start code (Start B)
-        draw("211214");
-
-        // Draw data characters
-        this.input.split("").forEach((c, i) => {
-            const l = lookup[c] || [0, ""];
-            sum += l[0] * (i + 1);
-            draw(l[1]);
-        });
-
-        // Draw checksum
-        draw(data[sum % 103]);
-
-        // Draw stop code
-        draw("2331112");
-        
-        // Final bar (always B=2)
-        svg += `<rect x="${x}" y="0" width="${2 * f}" height="${h}" fill="#000000" />\n`;
-        x += 2 * f;
-
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${x}px" height="${h}px" viewBox="0 0 ${x} ${h}">${svg}</svg>`;
-    }
+    this.input = input || "";
+    this.factor = 1.2;
+    this.height = 30;
 }
+
+Barcode128Svg.prototype.toString = function() {
+    const h = this.height;
+    const f = this.factor;
+    let svg = "";
+    let x = 0;
+    let sum = 104;
+
+    const draw = (d) => {
+        if (!d) return;
+        d.split("").forEach((n, i) => {
+            // Alternates bar and space (i % 2 === 0 is bar, i % 2 === 1 is space)
+            // Fill with rect for bars
+            if (i % 2 === 0) {
+                svg += `<rect x="${x}" y="0" width="${+n * f}" height="${h}" fill="#000000" />\n`;
+            }
+            x += +n * f;
+        });
+    };
+
+    // Draw start code (Start B)
+    draw("211214");
+
+    // Draw data characters
+    this.input.split("").forEach((c, i) => {
+        const l = lookup[c] || [0, ""];
+        sum += l[0] * (i + 1);
+        draw(l[1]);
+    });
+
+    // Draw checksum
+    draw(data[sum % 103]);
+
+    // Draw stop code
+    draw("2331112");
+    
+    // Final bar (always B=2)
+    svg += `<rect x="${x}" y="0" width="${2 * f}" height="${h}" fill="#000000" />\n`;
+    x += 2 * f;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${x}px" height="${h}px" viewBox="0 0 ${x} ${h}">${svg}</svg>`;
+};
+

@@ -7,7 +7,7 @@ import AdminVerificationModal from "./AdminVerificationModal";
 import "./roles.css";
 
 function UserRolesSection({ showToast }) {
-    const { selectedWarehouseId, selectedWarehouseName, userName, userPassword } = useAuth();
+    const { selectedWarehouseId, selectedWarehouseName, userName, userPassword, selectedRoleName } = useAuth();
 
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -199,18 +199,29 @@ function UserRolesSection({ showToast }) {
 
     const handleSavePermissions = (updatedPermissions, onSuccess) => {
         if (!selectedEmployee) return;
-        requestVerification({
-            message: "Permission changes affect system security. Please enter administrator password to continue.",
-            confirmLabel: "Verify & Save",
-            onSuccess: () => {
-                setCustomPermissions((prev) => ({
-                    ...prev,
-                    [selectedEmployee.id]: updatedPermissions,
-                }));
-                showToast?.("Employee permissions updated successfully.");
-                if (onSuccess) onSuccess();
-            },
-        });
+
+        const saveAction = () => {
+            setCustomPermissions((prev) => ({
+                ...prev,
+                [selectedEmployee.id]: updatedPermissions,
+            }));
+            showToast?.("Employee permissions updated successfully.");
+            if (onSuccess) onSuccess();
+        };
+
+        const roleLower = (selectedRoleName || "").toLowerCase();
+        const isAdminRole = roleLower.includes("admin") || roleLower === "sa";
+
+        if (isAdminRole) {
+            // Skip verification prompt for logged-in Administrator
+            saveAction();
+        } else {
+            requestVerification({
+                message: "Permission changes affect system security. Please enter administrator password to continue.",
+                confirmLabel: "Verify & Save",
+                onSuccess: saveAction,
+            });
+        }
     };
 
     return (

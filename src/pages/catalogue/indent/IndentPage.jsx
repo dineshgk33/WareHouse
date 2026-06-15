@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
     Download,
     AlertTriangle,
@@ -58,7 +59,10 @@ function IndentPage() {
     const [warehouseStock, setWarehouseStock] = useState([]);
     const [darkhouseStock, setDarkhouseStock] = useState([]);
     const [lowStockAlerts, setLowStockAlerts] = useState([]);
-    const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'registry' | 'ledger'
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const activeTab = searchParams.get("tab") || "list";
+    const statusParam = searchParams.get("status") || "";
 
     // Refresh state from localStorage database
     const refreshData = () => {
@@ -88,6 +92,14 @@ function IndentPage() {
     const [priorityFilter, setPriorityFilter] = useState("All");
     const [warehouseFilter, setWarehouseFilter] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
+        if (statusParam) {
+            setStatusFilter(statusParam);
+        } else {
+            setStatusFilter("All");
+        }
+    }, [statusParam]);
 
     // Timeline tracker selection
     const [trackedIndentId, setTrackedIndentId] = useState("");
@@ -278,6 +290,7 @@ function IndentPage() {
             );
             setIsModalOpen(false);
             refreshData();
+            setSearchParams({ tab: "list" });
             showToast("Replenishment stock request created successfully!");
         } catch (error) {
             alert(error.message);
@@ -370,8 +383,8 @@ function IndentPage() {
 
     const openViewDetails = (indent) => {
         setSelectedIndent(indent);
-        setModalType("view");
-        setIsModalOpen(true);
+        setTrackedIndentId(indent.id);
+        setSearchParams({ tab: "details" });
     };
 
     const openApproveModal = (indent) => {
@@ -476,9 +489,59 @@ function IndentPage() {
             </div>
 
             {/* Tab Selectors */}
-            <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", paddingBottom: 1, gap: 24, marginTop: 4 }}>
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", paddingBottom: 1, gap: 24, marginTop: 4, flexWrap: "wrap" }}>
                 <button 
-                    onClick={() => setActiveTab("dashboard")}
+                    onClick={() => setSearchParams({ tab: "list" })}
+                    style={{
+                        padding: "10px 4px",
+                        fontSize: 14,
+                        fontWeight: (activeTab === "list" || activeTab === "registry") ? "700" : "500",
+                        color: (activeTab === "list" || activeTab === "registry") ? "var(--primary)" : "var(--text-muted)",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        borderBottom: (activeTab === "list" || activeTab === "registry") ? "2px solid var(--primary)" : "none",
+                        cursor: "pointer",
+                        transition: "all var(--transition-fast)"
+                    }}
+                >
+                    Indent List
+                </button>
+                {!isMainWarehouse && (
+                    <button 
+                        onClick={() => setSearchParams({ tab: "create" })}
+                        style={{
+                            padding: "10px 4px",
+                            fontSize: 14,
+                            fontWeight: activeTab === "create" ? "700" : "500",
+                            color: activeTab === "create" ? "var(--primary)" : "var(--text-muted)",
+                            border: "none",
+                            backgroundColor: "transparent",
+                            borderBottom: activeTab === "create" ? "2px solid var(--primary)" : "none",
+                            cursor: "pointer",
+                            transition: "all var(--transition-fast)"
+                        }}
+                    >
+                        Create Indent
+                    </button>
+                )}
+                <button 
+                    onClick={() => setSearchParams({ tab: "details" })}
+                    style={{
+                        padding: "10px 4px",
+                        fontSize: 14,
+                        fontWeight: activeTab === "details" ? "700" : "500",
+                        color: activeTab === "details" ? "var(--primary)" : "var(--text-muted)",
+                        border: "none",
+                        backgroundColor: "transparent",
+                        borderBottom: activeTab === "details" ? "2px solid var(--primary)" : "none",
+                        cursor: "pointer",
+                        transition: "all var(--transition-fast)"
+                    }}
+                >
+                    Indent Details
+                </button>
+                <button 
+                    onClick={() => setSearchParams({ tab: "dashboard" })}
                     style={{
                         padding: "10px 4px",
                         fontSize: 14,
@@ -494,23 +557,7 @@ function IndentPage() {
                     Dashboard Overview
                 </button>
                 <button 
-                    onClick={() => setActiveTab("registry")}
-                    style={{
-                        padding: "10px 4px",
-                        fontSize: 14,
-                        fontWeight: activeTab === "registry" ? "700" : "500",
-                        color: activeTab === "registry" ? "var(--primary)" : "var(--text-muted)",
-                        border: "none",
-                        backgroundColor: "transparent",
-                        borderBottom: activeTab === "registry" ? "2px solid var(--primary)" : "none",
-                        cursor: "pointer",
-                        transition: "all var(--transition-fast)"
-                    }}
-                >
-                    Stock Requests Registry
-                </button>
-                <button 
-                    onClick={() => setActiveTab("ledger")}
+                    onClick={() => setSearchParams({ tab: "ledger" })}
                     style={{
                         padding: "10px 4px",
                         fontSize: 14,
@@ -817,7 +864,7 @@ function IndentPage() {
             )}
 
             {/* ─── TAB 2: STOCK REQUESTS REGISTRY ────────────────────────────── */}
-            {activeTab === "registry" && (
+            {(activeTab === "registry" || activeTab === "list") && (
                 <div className="inv-table-card" style={{ marginTop: 12 }}>
                     
                     {/* Search & Filter Toolbar */}
@@ -827,7 +874,14 @@ function IndentPage() {
                                 <button
                                     key={status}
                                     className={`inv-tab ${statusFilter === status ? "inv-tab--active" : ""}`}
-                                    onClick={() => { setStatusFilter(status); setCurrentPage(1); }}
+                                    onClick={() => {
+                                        if (status === "All") {
+                                            setSearchParams({ tab: activeTab });
+                                        } else {
+                                            setSearchParams({ tab: activeTab, status });
+                                        }
+                                        setCurrentPage(1);
+                                    }}
                                 >
                                     {status}
                                 </button>
@@ -1016,6 +1070,243 @@ function IndentPage() {
                                 >
                                     <ChevronRight size={14} />
                                 </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─── TAB: CREATE INDENT (INLINE VIEW) ────────────────────────── */}
+            {activeTab === "create" && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+                    <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)", padding: 28, boxShadow: "var(--shadow-card)", width: "100%", maxWidth: "680px" }}>
+                        <form onSubmit={handleCreateRequestSubmit}>
+                            <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-main)", margin: "0 0 6px 0" }}>Create Replacement Indent</h2>
+                            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 20px 0" }}>Replenish local inventory by requesting stock from HAATZA Central Warehouse.</p>
+                            
+                            <div className="inv-modal-form" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                    <label htmlFor="productSelect" style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Select Product</label>
+                                    <select 
+                                        id="productSelect" 
+                                        value={selectedProductSku}
+                                        onChange={(e) => setSelectedProductSku(e.target.value)}
+                                        required
+                                        className="styled-select"
+                                        style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", background: "var(--bg-card)", color: "var(--text-main)", fontSize: 14 }}
+                                    >
+                                        {warehouseStock.map(p => (
+                                            <option key={p.sku} value={p.sku}>{p.product}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                                    <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                        <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Product SKU</label>
+                                        <input type="text" value={selectedProductSku} disabled style={{ backgroundColor: "var(--bg-app)", fontFamily: "monospace", padding: "10px 14px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", width: "100%", boxSizing: "border-box" }} />
+                                    </div>
+                                    <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                        <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Your Hub Available Stock</label>
+                                        <input 
+                                            type="text" 
+                                            value={`${currentHubQty} units`} 
+                                            disabled 
+                                            style={{ 
+                                                backgroundColor: "var(--bg-app)", 
+                                                fontWeight: "600",
+                                                color: currentHubQty <= 15 ? "var(--color-danger)" : "var(--text-main)",
+                                                padding: "10px 14px",
+                                                border: "1px solid var(--border-color)",
+                                                borderRadius: "var(--radius-md)",
+                                                width: "100%",
+                                                boxSizing: "border-box"
+                                            }} 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16 }}>
+                                    <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                        <label htmlFor="reqQty" style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Required Quantity</label>
+                                        <div className="adjust-number-input" style={{ position: "relative" }}>
+                                            <input 
+                                                type="number" 
+                                                id="reqQty" 
+                                                value={requestedQty}
+                                                onChange={(e) => setRequestedQty(e.target.value)}
+                                                placeholder="Enter quantity"
+                                                required 
+                                                min="1" 
+                                                style={{ padding: "10px 60px 10px 14px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", width: "100%", boxSizing: "border-box", fontSize: 13 }}
+                                            />
+                                            <span className="unit-label" style={{ position: "absolute", right: 14, top: 12, fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>units</span>
+                                        </div>
+                                    </div>
+                                    <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                        <label htmlFor="prioritySelect" style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Priority Level</label>
+                                        <select 
+                                            id="prioritySelect" 
+                                            value={requestPriority} 
+                                            onChange={(e) => setRequestPriority(e.target.value)}
+                                            className="styled-select"
+                                            style={{ width: "100%", padding: "10px 14px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", background: "var(--bg-card)", color: "var(--text-main)", fontSize: 14 }}
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="inv-form-group" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                    <label htmlFor="reqRemarks" style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>Remarks / Notes</label>
+                                    <textarea 
+                                        id="reqRemarks"
+                                        style={{ height: 80, padding: "10px 14px", resize: "none", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", width: "100%", boxSizing: "border-box", fontFamily: "inherit", fontSize: 13 }}
+                                        placeholder="Add reasons or special instructions..."
+                                        value={requestRemarks}
+                                        onChange={(e) => setRequestRemarks(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, borderTop: "1px solid var(--border-color)", paddingTop: 20 }}>
+                                <button type="button" className="inv-modal-cancel-btn" onClick={() => setSearchParams({ tab: "list" })} style={{ padding: "10px 18px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", background: "transparent", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                                <button type="submit" className="inv-action-btn-primary" style={{ padding: "10px 18px", borderRadius: "var(--radius-md)", border: "none", background: "var(--primary)", color: "var(--text-inverse)", fontWeight: 700, cursor: "pointer" }}>Create Indent</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── TAB: INDENT DETAILS (INLINE VIEW) ────────────────────────── */}
+            {activeTab === "details" && (
+                <div style={{ marginTop: 12 }}>
+                    {trackedIndent ? (
+                        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.8fr", gap: 24, alignItems: "start" }}>
+                            {/* Left Side: General details */}
+                            <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)", padding: 24, boxShadow: "var(--shadow-card)", display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                        <h2 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-main)", margin: 0 }}>Indent Details</h2>
+                                        <span style={{ fontSize: 12, fontFamily: "monospace", color: "var(--primary)", fontWeight: 700 }}>{trackedIndent.id}</span>
+                                    </div>
+                                    <span className={`inv-pill ${getStatusPillClass(trackedIndent.status)}`} style={{ padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                                        {trackedIndent.status}
+                                    </span>
+                                </div>
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, fontSize: 13 }}>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>Product Name</span>
+                                        <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{trackedIndent.productName}</span>
+                                    </div>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>SKU</span>
+                                        <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--text-main)" }}>{trackedIndent.sku}</span>
+                                    </div>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>Requested By</span>
+                                        <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{trackedIndent.requestedBy}</span>
+                                    </div>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>Priority</span>
+                                        <span className={`inv-pill ${getPriorityClass(trackedIndent.priority)}`} style={{ display: "inline-block", marginTop: 4 }}>
+                                            {trackedIndent.priority}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>Requested Qty</span>
+                                        <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{trackedIndent.requestedQty} units</span>
+                                    </div>
+                                    <div>
+                                        <span style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.3 }}>Approved Qty</span>
+                                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{trackedIndent.approvedQty || "-"} units</span>
+                                    </div>
+                                </div>
+
+                                {trackedIndent.vehicleNumber && (
+                                    <div style={{ backgroundColor: "var(--bg-app)", padding: 14, borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: 8 }}>
+                                        <h4 style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase" }}>Logistics Dispatch Handoff</h4>
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 12 }}>
+                                            <div>
+                                                <span style={{ display: "block", color: "var(--text-muted)", fontSize: 11 }}>Vehicle</span>
+                                                <strong style={{ fontFamily: "monospace" }}>{trackedIndent.vehicleNumber}</strong>
+                                            </div>
+                                            <div>
+                                                <span style={{ display: "block", color: "var(--text-muted)", fontSize: 11 }}>Driver Name</span>
+                                                <strong>{trackedIndent.driverName}</strong>
+                                            </div>
+                                        </div>
+                                        {trackedIndent.dispatchRemarks && (
+                                            <div style={{ fontSize: 11.5, fontStyle: "italic", color: "var(--text-main)", borderTop: "1px dashed var(--border-color)", paddingTop: 6, marginTop: 4 }}>
+                                                "{trackedIndent.dispatchRemarks}"
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {trackedIndent.status === "Completed" && (
+                                    <div style={{ backgroundColor: "#ecfdf5", padding: 14, borderRadius: "var(--radius-md)", border: "1px solid #a7f3d0", display: "flex", flexDirection: "column", gap: 8 }}>
+                                        <h4 style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#065f46", textTransform: "uppercase" }}>Reception Verification</h4>
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 12 }}>
+                                            <div>
+                                                <span style={{ display: "block", color: "#047857", fontSize: 11 }}>Received Qty</span>
+                                                <strong style={{ color: "#065f46" }}>{trackedIndent.receivedQty} units</strong>
+                                            </div>
+                                            <div>
+                                                <span style={{ display: "block", color: "#047857", fontSize: 11 }}>Damaged Qty</span>
+                                                <strong style={{ color: trackedIndent.damagedQty > 0 ? "var(--color-danger)" : "#065f46" }}>{trackedIndent.damagedQty || 0} units</strong>
+                                            </div>
+                                        </div>
+                                        {trackedIndent.receiveRemarks && (
+                                            <div style={{ fontSize: 11.5, fontStyle: "italic", color: "#065f46", borderTop: "1px dashed #a7f3d0", paddingTop: 6, marginTop: 4 }}>
+                                                "{trackedIndent.receiveRemarks}"
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Right Side: Timeline audit */}
+                            <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)", padding: 24, boxShadow: "var(--shadow-card)" }}>
+                                <h3 style={{ fontSize: 14, fontWeight: 800, color: "var(--text-main)", marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border-color)", paddingBottom: 10 }}>
+                                    Audit History Pipeline
+                                </h3>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingLeft: 6 }}>
+                                    {trackedIndent.history.map((h, i) => (
+                                        <div key={i} style={{ display: "flex", gap: 12, position: "relative" }}>
+                                            {i < trackedIndent.history.length - 1 && (
+                                                <div style={{ position: "absolute", left: 7, top: 16, bottom: -12, width: 2, backgroundColor: "var(--border-color)" }} />
+                                            )}
+                                            <div style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: "var(--primary-light)", border: "2px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1, marginTop: 2 }}>
+                                                <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--primary)" }} />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-main)" }}>{h.status}</span>
+                                                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{h.date}</span>
+                                                </div>
+                                                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>By: {h.user}</div>
+                                                {h.remarks && (
+                                                    <div style={{ fontSize: 12, color: "var(--text-main)", backgroundColor: "var(--bg-app)", padding: "8px 12px", borderRadius: 8, marginTop: 6, fontStyle: "italic", border: "1px solid var(--border-color)" }}>
+                                                        "{h.remarks}"
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: "center", padding: "48px 12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-lg)" }}>
+                            <ClipboardList style={{ color: "var(--border-color)", margin: "0 auto 12px" }} size={40} />
+                            <span style={{ fontSize: 14, color: "var(--text-muted)", fontWeight: 500 }}>No stock requests selected. Please select a request from the List tab to inspect its details.</span>
+                            <div style={{ marginTop: 16 }}>
+                                <button className="inv-action-btn-primary" onClick={() => setSearchParams({ tab: "list" })}>Go to Indent List</button>
                             </div>
                         </div>
                     )}

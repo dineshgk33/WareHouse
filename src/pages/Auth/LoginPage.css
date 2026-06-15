@@ -482,3 +482,242 @@
     font-size: 36px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RECOVERY & FORGOT PASSWORD FLOW EXTENSIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.login-fade-in {
+  animation: loginFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.highlight-email {
+  color: #0F172A;
+  font-weight: 700;
+}
+
+/* Success State Layout */
+.success-centered {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.success-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  background-color: #ECFDF5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  box-shadow: inset 0 2px 4px rgba(16, 185, 129, 0.06);
+}
+
+.success-check-icon {
+  color: #10B981;
+  stroke-width: 2.5px;
+  animation: scaleUpCheck 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleUpCheck {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.login-form-success-pane {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* OTP 6-Digit Individual Blocks */
+.otp-digit-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.otp-digit-inputs .otp-digit-box {
+  flex: 1 !important;
+  width: 14% !important; /* Critical override for global mobile input width */
+  min-width: 0 !important; /* Critical fix for flexbox input elements to allow shrinking */
+  max-width: 50px !important; /* Constrain size on desktop */
+  height: 60px !important;
+  text-align: center !important;
+  padding: 0 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  border: 1.5px solid #E2E8F0 !important;
+  background: #FFFFFF !important;
+  outline: none !important;
+  transition: all 0.25s ease !important;
+  box-sizing: border-box !important;
+}
+
+.otp-digit-inputs .otp-digit-box:hover {
+  border-color: #CBD5E1 !important;
+}
+
+.otp-digit-inputs .otp-digit-box:focus {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Demo Mode Banner */
+.demo-otp-banner {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  animation: loginFadeIn 0.3s ease-out forwards;
+}
+
+.demo-badge {
+  background-color: #3B82F6;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* OTP Resend Row */
+.otp-resend-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: #64748B;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.otp-resend-btn {
+  background: transparent;
+  border: none;
+  color: #2563EB;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  font-size: 13.5px;
+}
+
+.otp-resend-btn:hover:not(:disabled) {
+  color: #1D4ED8;
+}
+
+.otp-resend-btn:disabled {
+  color: #94A3B8;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* Back navigation button */
+.login-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: #64748B;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 8px 16px;
+  border-radius: 12px;
+  margin: 0 auto;
+}
+
+.login-back-btn:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+}
+
+.forgot-form-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* Float Custom Premium Toast System */
+.login-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: #1E293B; /* Modern Slate Dark */
+  color: #F8FAFC;
+  padding: 14px 22px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 90%;
+  word-break: break-word;
+}
+
+.login-toast .toast-icon {
+  color: #34D399; /* Emerald Green */
+  flex-shrink: 0;
+  stroke-width: 2.5px;
+}
+
+.slide-in-top {
+  animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translate(-50%, -24px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+

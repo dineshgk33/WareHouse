@@ -87,24 +87,49 @@ export function AuthProvider({ children }) {
 
     // Helper methods for RBAC
     const canView = useCallback((pageId) => {
-        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canView);
-    }, [accessiblePages]);
+        const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+        if (hasPage) {
+            return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canView);
+        }
+        const fallbacks = getFallbackAccessiblePages(selectedRoleName || localStorage.getItem("selectedRoleName") || "");
+        return fallbacks.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canView);
+    }, [accessiblePages, selectedRoleName]);
 
     const canCreate = useCallback((pageId) => {
-        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canCreate);
-    }, [accessiblePages]);
+        const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+        if (hasPage) {
+            return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canCreate);
+        }
+        const fallbacks = getFallbackAccessiblePages(selectedRoleName || localStorage.getItem("selectedRoleName") || "");
+        return fallbacks.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canCreate);
+    }, [accessiblePages, selectedRoleName]);
 
     const canEdit = useCallback((pageId) => {
-        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canEdit);
-    }, [accessiblePages]);
+        const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+        if (hasPage) {
+            return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canEdit);
+        }
+        const fallbacks = getFallbackAccessiblePages(selectedRoleName || localStorage.getItem("selectedRoleName") || "");
+        return fallbacks.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canEdit);
+    }, [accessiblePages, selectedRoleName]);
 
     const canDelete = useCallback((pageId) => {
-        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canDelete);
-    }, [accessiblePages]);
+        const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+        if (hasPage) {
+            return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canDelete);
+        }
+        const fallbacks = getFallbackAccessiblePages(selectedRoleName || localStorage.getItem("selectedRoleName") || "");
+        return fallbacks.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canDelete);
+    }, [accessiblePages, selectedRoleName]);
 
     const canApprove = useCallback((pageId) => {
-        return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canApprove);
-    }, [accessiblePages]);
+        const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
+        if (hasPage) {
+            return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canApprove);
+        }
+        const fallbacks = getFallbackAccessiblePages(selectedRoleName || localStorage.getItem("selectedRoleName") || "");
+        return fallbacks.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canApprove);
+    }, [accessiblePages, selectedRoleName]);
 
     const permissions = selectedRoleName ? [] : []; // Kept for backwards compatibility but unused
 
@@ -166,7 +191,7 @@ export function AuthProvider({ children }) {
             if (!GET_USER_PERMISSIONS_API) {
                 throw new Error("No API endpoint configured.");
             }
-            const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId);
+            const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId, role.roleName);
             if (res.status === "success") {
                 pages = res.message.accessiblePages || [];
                 setAccessiblePages(pages);

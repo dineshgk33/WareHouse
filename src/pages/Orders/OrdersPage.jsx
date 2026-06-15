@@ -23,7 +23,15 @@ import {
     PhoneCall,
     MapPin,
     AlertCircle,
-    Store
+    Store,
+    Sliders,
+    XCircle,
+    FileText,
+    List,
+    Clock,
+    Sparkles,
+    Check,
+    RefreshCw
 } from "lucide-react";
 import { MOCK_ORDERS, MOCK_PICKING, MOCK_PACKING, MOCK_DELIVERY } from "../../data/ordersData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
@@ -31,6 +39,7 @@ import { getOrderStatusClass } from "../../utils/statusUtils";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 import { Barcode128Svg } from "../../utils/barcode";
+import InvoicePreviewModal from "./InvoicePreviewModal";
 import "./Orders.css";
 
 const chunkArray = (array, size) => {
@@ -78,13 +87,69 @@ function OrdersPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const activeTab = location.pathname === "/orders/pending" ? "pending" : (searchParams.get("tab") || "orders");
+    
+    const rawTab = searchParams.get("tab") || "orders";
+    
+    // Normalize old "board" tab parameter to the specific page tabs
+    let activeTab = rawTab;
+    let initialStep = searchParams.get("step") || "all";
+    if (rawTab === "board") {
+        if (initialStep === "picking") activeTab = "picking";
+        else if (initialStep === "packing") activeTab = "packing";
+        else if (initialStep === "delivery") activeTab = "tracking";
+        else activeTab = "orders";
+    }
+    
+    // Synchronize steps based on active tabs
+    let boardStep = initialStep;
+    if (activeTab === "picking") boardStep = "picking";
+    else if (activeTab === "packing") boardStep = "packing";
+    else if (activeTab === "tracking") boardStep = "delivery";
+
+    const activePaginationView = activeTab;
 
     // ─── States ───────────────────────────────────────────────────────────────
-    const [orders, setOrders] = useState(MOCK_ORDERS);
+    const [orders, setOrders] = useState(() => {
+        return MOCK_ORDERS.map((o, idx) => {
+            const dh = INITIAL_DARKHOUSES[idx % INITIAL_DARKHOUSES.length];
+            return {
+                ...o,
+                warehouse: o.warehouse || dh.name,
+                warehouseCode: dh.code,
+                priority: o.priority || (parseInt(o.id.replace(/\D/g, "")) % 3 === 0 ? "Critical" : parseInt(o.id.replace(/\D/g, "")) % 3 === 1 ? "High" : "Normal")
+            };
+        });
+    });
     const [picks, setPicks] = useState(MOCK_PICKING);
     const [packs, setPacks] = useState(MOCK_PACKING);
     const [deliveries, setDeliveries] = useState(MOCK_DELIVERY);
+
+    // ─── New Restructured Module States ──────────────────────────────────────
+    // Management Tab States
+    const [selectedManagementIds, setSelectedManagementIds] = useState([]);
+    const [bulkActionType, setBulkActionType] = useState("");
+    const [managementSearch, setManagementSearch] = useState("");
+
+    // Inspector Tab States
+    const [inspectorSearch, setInspectorSearch] = useState("");
+    const [selectedInspectorOrderId, setSelectedInspectorOrderId] = useState(null);
+    const selectedInspectorOrder = useMemo(() => {
+        return orders.find(o => o.id === selectedInspectorOrderId) || null;
+    }, [orders, selectedInspectorOrderId]);
+
+    // New Order Query Tab States
+    const [queryIdInput, setQueryIdInput] = useState("");
+    const [queryResult, setQueryResult] = useState(null);
+
+    // Cancelled Orders Tab States
+    const [cancelledSearch, setCancelledSearch] = useState("");
+    const [processedRefunds, setProcessedRefunds] = useState([]);
+
+    useEffect(() => {
+        if (activeTab === "details" && !selectedInspectorOrderId && orders.length > 0) {
+            setSelectedInspectorOrderId(orders[0].id);
+        }
+    }, [activeTab, orders, selectedInspectorOrderId]);
 
     // Dynamic Active Dropdowns (per row)
     const [activeRowMenuId, setActiveRowMenuId] = useState(null);
@@ -96,7 +161,22 @@ function OrdersPage() {
     // Filters All Orders
     const [ordSearch, setOrdSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("ALL");
+    const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState("All");
     const [ordPage, setOrdPage] = useState(1);
+
+    useEffect(() => {
+        if (activeTab === "orders") {
+            if (boardStep === "all") setSelectedStatus("ALL");
+            else if (boardStep === "pending") setSelectedStatus("Pending");
+            else if (boardStep === "completed") setSelectedStatus("Delivered");
+        } else if (activeTab === "picking") {
+            setSelectedStatus("Picking");
+        } else if (activeTab === "packing") {
+            setSelectedStatus("Packing");
+        } else if (activeTab === "tracking") {
+            setSelectedStatus("Ready To Dispatch");
+        }
+    }, [activeTab, boardStep]);
 
     // Filters Picking
     const [pickSearch, setPickSearch] = useState("");
@@ -137,11 +217,16 @@ function OrdersPage() {
     const [modalType, setModalType] = useState(null); // 'ord-view' | 'ord-edit' | 'pick-assign' | 'dlv-track' | 'dlv-update'
     const [selectedItem, setSelectedItem] = useState(null);
 
+    // Invoice Modal States
+    const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+    const [invoiceOrder, setInvoiceOrder] = useState(null);
+
     // Form fields
     const [formCustomer, setFormCustomer] = useState("");
     const [formAmount, setFormAmount] = useState("");
     const [formPayment, setFormPayment] = useState("");
     const [formStatus, setFormStatus] = useState("");
+    const [formWarehouse, setFormWarehouse] = useState("");
     const [formPicker, setFormPicker] = useState("Ramesh Kumar");
     
     // Delivery update fields
@@ -221,7 +306,7 @@ function OrdersPage() {
             setActiveRowMenuId(null);
             setSelectedOrderIds([]); // Clear selection when switching tabs
         }, 0);
-    }, [activeTab]);
+    }, [activeTab, boardStep]);
 
 
 
@@ -239,6 +324,7 @@ function OrdersPage() {
     const filteredOrders = useMemo(() => {
         return orders.filter(o => {
             const matchesSearch = o.id.toLowerCase().includes(ordSearch.toLowerCase()) || o.customer.toLowerCase().includes(ordSearch.toLowerCase());
+            const matchesWarehouse = selectedWarehouseFilter === "All" || o.warehouse === selectedWarehouseFilter;
             
             let matchesStatus = false;
             if (selectedStatus === "ALL") {
@@ -257,9 +343,9 @@ function OrdersPage() {
                 matchesStatus = o.status === "Delivered";
             }
             
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesStatus && matchesWarehouse;
         });
-    }, [orders, ordSearch, selectedStatus]);
+    }, [orders, ordSearch, selectedStatus, selectedWarehouseFilter]);
 
     const paginatedOrders = useMemo(() => {
         const start = (ordPage - 1) * ROWS_PER_PAGE;
@@ -277,6 +363,163 @@ function OrdersPage() {
         return { total, pending, picking, packing, readyToDispatch, shipped, delivered };
     }, [orders]);
 
+    // ─── Restructured Tabs Filter States & Handlers ──────────────────────────
+    // Deterministic Item Generator Helper for Details/Query Views
+    const getItemsForOrder = (order) => {
+        if (!order) return [];
+        const idNum = parseInt((order.id || "").replace(/\D/g, "")) || 1234;
+        const productsList = [
+            { name: "Alphonso Mangoes Premium", sku: "FRT-ANG-01", price: 120 },
+            { name: "Organic Whole Milk 1L", sku: "DRY-MILK-02", price: 65 },
+            { name: "Frozen French Fries 1kg", sku: "FZN-FRIES-03", price: 149 },
+            { name: "Fresh Red Apples 1kg", sku: "FRT-AAPL-04", price: 180 },
+            { name: "Paneer Block Fresh 200g", sku: "DRY-PANR-05", price: 85 }
+        ];
+        const selected = [];
+        const count = order.items || 1;
+        for (let i = 0; i < count; i++) {
+            const prod = productsList[(idNum + i) % productsList.length];
+            selected.push({
+                ...prod,
+                qty: ((idNum + i) % 2) + 1
+            });
+        }
+        return selected;
+    };
+
+    // Filters for Management
+    const filteredManagementOrders = useMemo(() => {
+        return orders.filter(o => {
+            const query = managementSearch.toLowerCase();
+            const matchesSearch = o.id.toLowerCase().includes(query) || o.customer.toLowerCase().includes(query);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || o.warehouse === selectedWarehouseFilter;
+            return matchesSearch && matchesWarehouse;
+        });
+    }, [orders, managementSearch, selectedWarehouseFilter]);
+
+    // Filters for Inspector List
+    const filteredInspectorOrders = useMemo(() => {
+        return orders.filter(o => {
+            const query = inspectorSearch.toLowerCase();
+            const matchesSearch = o.id.toLowerCase().includes(query) || o.customer.toLowerCase().includes(query);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || o.warehouse === selectedWarehouseFilter;
+            return matchesSearch && matchesWarehouse;
+        });
+    }, [orders, inspectorSearch, selectedWarehouseFilter]);
+
+    // Filters for Cancelled Orders
+    const cancelledOrders = useMemo(() => {
+        return orders.filter(o => o.status === "Cancelled");
+    }, [orders]);
+
+    const filteredCancelledOrders = useMemo(() => {
+        return cancelledOrders.filter(o => {
+            const query = cancelledSearch.toLowerCase();
+            const matchesSearch = o.id.toLowerCase().includes(query) || o.customer.toLowerCase().includes(query);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || o.warehouse === selectedWarehouseFilter;
+            return matchesSearch && matchesWarehouse;
+        });
+    }, [cancelledOrders, cancelledSearch, selectedWarehouseFilter]);
+
+    // Handlers for Management
+    const handleTogglePriority = (id) => {
+        setOrders(prev => prev.map(o => {
+            if (o.id === id) {
+                const nextPriority = o.priority === "Normal" ? "High" : o.priority === "High" ? "Critical" : "Normal";
+                showToast(`Priority for ${o.id} set to ${nextPriority}`);
+                return { ...o, priority: nextPriority };
+            }
+            return o;
+        }));
+    };
+
+    const handleToggleAllManagementSelect = () => {
+        if (selectedManagementIds.length === filteredManagementOrders.length) {
+            setSelectedManagementIds([]);
+        } else {
+            setSelectedManagementIds(filteredManagementOrders.map(o => o.id));
+        }
+    };
+
+    const handleToggleManagementSelect = (id) => {
+        setSelectedManagementIds(prev => 
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const handleExecuteBulkAction = () => {
+        if (selectedManagementIds.length === 0 || !bulkActionType) return;
+        
+        let releasedOrders = [];
+        setOrders(prev => prev.map(o => {
+            if (selectedManagementIds.includes(o.id)) {
+                if (bulkActionType === "high-priority") {
+                    return { ...o, priority: "High" };
+                } else if (bulkActionType === "critical-priority") {
+                    return { ...o, priority: "Critical" };
+                } else if (bulkActionType === "release-picking") {
+                    releasedOrders.push(o);
+                    return { ...o, status: "Picking" };
+                } else if (bulkActionType === "cancel") {
+                    return { ...o, status: "Cancelled" };
+                }
+            }
+            return o;
+        }));
+
+        if (releasedOrders.length > 0) {
+            setPicks(prev => {
+                const updated = [...prev];
+                releasedOrders.forEach(o => {
+                    if (!updated.some(p => p.orderId === o.id)) {
+                        updated.push({
+                            id: `PCK-${Math.floor(4000 + Math.random() * 1000)}`,
+                            orderId: o.id,
+                            customer: o.customer,
+                            picker: "Unassigned",
+                            productsCount: o.items || 1,
+                            status: "Pending"
+                        });
+                    }
+                });
+                return updated;
+            });
+        }
+        
+        if (bulkActionType === "cancel") {
+            setPicks(prev => prev.map(p => selectedManagementIds.includes(p.orderId) ? { ...p, status: "Cancelled" } : p));
+            setPacks(prev => prev.map(p => selectedManagementIds.includes(p.orderId) ? { ...p, status: "Cancelled" } : p));
+            setDeliveries(prev => prev.map(d => selectedManagementIds.includes(d.orderId) ? { ...d, status: "Failed" } : d));
+        }
+
+        showToast(`Successfully processed bulk '${bulkActionType}' for ${selectedManagementIds.length} orders.`);
+        setSelectedManagementIds([]);
+        setBulkActionType("");
+    };
+
+    // Handler for New Order Query
+    const handleRunQuery = (targetId = null) => {
+        const checkId = targetId || queryIdInput;
+        if (!checkId) {
+            showToast("Please enter an Order ID");
+            return;
+        }
+        const found = orders.find(o => o.id.toLowerCase() === checkId.trim().toLowerCase());
+        if (found) {
+            setQueryResult(found);
+            showToast(`Found Order ${found.id} stock allocations & dispatch routing!`);
+        } else {
+            setQueryResult(null);
+            showToast(`Order ID '${checkId}' not found.`);
+        }
+    };
+
+    // Handler for Cancelled Refunds
+    const handleTriggerRefund = (id) => {
+        setProcessedRefunds(prev => [...prev, id]);
+        showToast(`Refund processed successfully for order ${id}. Valuation credited.`);
+    };
+
     // Filters Pending Orders
     const filteredPendingOrders = useMemo(() => {
         return orders.filter(o => {
@@ -285,9 +528,10 @@ function OrdersPage() {
             const matchesId = o.id.toLowerCase().includes(query);
             const matchesCustomer = o.customer.toLowerCase().includes(query);
             const matchesMobile = o.mobile ? o.mobile.toLowerCase().includes(query) : false;
-            return matchesId || matchesCustomer || matchesMobile;
+            const matchesWarehouse = selectedWarehouseFilter === "All" || o.warehouse === selectedWarehouseFilter;
+            return (matchesId || matchesCustomer || matchesMobile) && matchesWarehouse;
         });
-    }, [orders, pendingSearch]);
+    }, [orders, pendingSearch, selectedWarehouseFilter]);
 
     const paginatedPendingOrders = useMemo(() => {
         const start = (pendingPage - 1) * ROWS_PER_PAGE;
@@ -299,9 +543,11 @@ function OrdersPage() {
         return picks.filter(p => {
             const matchesSearch = p.id.toLowerCase().includes(pickSearch.toLowerCase()) || p.orderId.toLowerCase().includes(pickSearch.toLowerCase()) || p.customer.toLowerCase().includes(pickSearch.toLowerCase());
             const matchesPicker = pickPicker === "All" || p.picker === pickPicker;
-            return matchesSearch && matchesPicker;
+            const assocOrder = orders.find(o => o.id === p.orderId);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || (assocOrder && assocOrder.warehouse === selectedWarehouseFilter);
+            return matchesSearch && matchesPicker && matchesWarehouse;
         });
-    }, [picks, pickSearch, pickPicker]);
+    }, [picks, pickSearch, pickPicker, orders, selectedWarehouseFilter]);
 
     const paginatedPicks = useMemo(() => {
         const start = (pickPage - 1) * ROWS_PER_PAGE;
@@ -320,9 +566,11 @@ function OrdersPage() {
         return packs.filter(p => {
             const matchesSearch = p.id.toLowerCase().includes(packSearch.toLowerCase()) || p.orderId.toLowerCase().includes(packSearch.toLowerCase()) || p.customer.toLowerCase().includes(packSearch.toLowerCase());
             const matchesStatus = packStatus === "All" || p.status === packStatus;
-            return matchesSearch && matchesStatus;
+            const assocOrder = orders.find(o => o.id === p.orderId);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || (assocOrder && assocOrder.warehouse === selectedWarehouseFilter);
+            return matchesSearch && matchesStatus && matchesWarehouse;
         });
-    }, [packs, packSearch, packStatus]);
+    }, [packs, packSearch, packStatus, orders, selectedWarehouseFilter]);
 
     const paginatedPacks = useMemo(() => {
         const start = (packPage - 1) * ROWS_PER_PAGE;
@@ -342,9 +590,11 @@ function OrdersPage() {
             const matchesSearch = d.id.toLowerCase().includes(dlvSearch.toLowerCase()) || d.orderId.toLowerCase().includes(dlvSearch.toLowerCase()) || d.customer.toLowerCase().includes(dlvSearch.toLowerCase());
             const matchesRider = dlvRider === "All" || d.rider === dlvRider;
             const matchesStatus = dlvStatus === "All" || d.status === dlvStatus;
-            return matchesSearch && matchesRider && matchesStatus;
+            const assocOrder = orders.find(o => o.id === d.orderId);
+            const matchesWarehouse = selectedWarehouseFilter === "All" || (assocOrder && assocOrder.warehouse === selectedWarehouseFilter);
+            return matchesSearch && matchesRider && matchesStatus && matchesWarehouse;
         });
-    }, [deliveries, dlvSearch, dlvRider, dlvStatus]);
+    }, [deliveries, dlvSearch, dlvRider, dlvStatus, orders, selectedWarehouseFilter]);
 
     const paginatedDeliveries = useMemo(() => {
         const start = (dlvPage - 1) * ROWS_PER_PAGE;
@@ -418,7 +668,7 @@ function OrdersPage() {
     };
 
     const toggleSelectAll = () => {
-        const targetList = activeTab === "pending" ? paginatedPendingOrders : paginatedOrders.filter(o => o.status === "Pending" || o.status === "Label Generated");
+        const targetList = activePaginationView === "pending" ? paginatedPendingOrders : paginatedOrders.filter(o => o.status === "Pending" || o.status === "Label Generated");
         if (targetList.length === 0) return;
         
         const allSelected = targetList.every(o => selectedOrderIds.includes(o.id));
@@ -478,11 +728,42 @@ function OrdersPage() {
         setTriggerImmediatePrint(true);
     };
 
-       const handleCardClick = (status) => {
-        if (status === "Pending") {
-            navigate("/orders/pending");
-        } else {
-            navigate("/orders");
+    const handleBoardStepClick = (step) => {
+        setSelectedOrderIds([]);
+        if (step === "all") {
+            setSearchParams({ tab: "orders" });
+            setSelectedStatus("ALL");
+        } else if (step === "completed") {
+            setSearchParams({ tab: "orders", step: "completed" });
+            setSelectedStatus("Delivered");
+        } else if (step === "pending") {
+            setSearchParams({ tab: "orders", step: "pending" });
+            setSelectedStatus("Pending");
+        } else if (step === "picking") {
+            setSearchParams({ tab: "picking" });
+            setSelectedStatus("Picking");
+        } else if (step === "packing") {
+            setSearchParams({ tab: "packing" });
+            setSelectedStatus("Packing");
+        } else if (step === "delivery") {
+            setSearchParams({ tab: "tracking" });
+            setSelectedStatus("Ready To Dispatch");
+        }
+        setOrdPage(1);
+        setPendingPage(1);
+        setPickPage(1);
+        setPackPage(1);
+        setDlvPage(1);
+    };
+
+    const handleCardClick = (status) => {
+        if (status === "ALL") handleBoardStepClick("all");
+        else if (status === "Pending") handleBoardStepClick("pending");
+        else if (status === "Picking") handleBoardStepClick("picking");
+        else if (status === "Packing") handleBoardStepClick("packing");
+        else if (status === "Ready To Dispatch" || status === "Shipped" || status === "Out for Delivery") handleBoardStepClick("delivery");
+        else if (status === "Delivered") handleBoardStepClick("completed");
+        else {
             setSelectedStatus(status);
             setOrdPage(1);
         }
@@ -609,8 +890,15 @@ function OrdersPage() {
         setFormAmount(order.amount);
         setFormPayment(order.payment);
         setFormStatus(order.status);
+        setFormWarehouse(order.warehouse || (INITIAL_DARKHOUSES[0] ? INITIAL_DARKHOUSES[0].name : ""));
         setModalType("ord-edit");
         setIsModalOpen(true);
+        setActiveRowMenuId(null);
+    };
+
+    const handleGenerateInvoice = (order) => {
+        setInvoiceOrder(order);
+        setIsInvoiceOpen(true);
         setActiveRowMenuId(null);
     };
 
@@ -645,12 +933,15 @@ function OrdersPage() {
         e.preventDefault();
         setOrders(prev => prev.map(o => {
             if (o.id === selectedItem.id) {
+                const matchedDh = INITIAL_DARKHOUSES.find(dh => dh.name === formWarehouse);
                 return {
                     ...o,
                     customer: formCustomer,
                     amount: formAmount,
                     payment: formPayment,
-                    status: formStatus
+                    status: formStatus,
+                    warehouse: formWarehouse,
+                    warehouseCode: matchedDh ? matchedDh.code : o.warehouseCode
                 };
             }
             return o;
@@ -661,34 +952,73 @@ function OrdersPage() {
 
     const handlePickAssignSubmit = (e) => {
         e.preventDefault();
-        setPicks(prev => prev.map(p => {
-            if (p.id === selectedItem.id) {
-                return {
-                    ...p,
+        const orderIdToUpdate = selectedItem.orderId;
+        setPicks(prev => {
+            const exists = prev.some(p => p.id === selectedItem.id);
+            if (exists) {
+                return prev.map(p => p.id === selectedItem.id ? { ...p, picker: formPicker, status: "Assigned" } : p);
+            } else {
+                return [...prev, {
+                    id: `PCK-${Math.floor(4000 + Math.random() * 1000)}`,
+                    orderId: orderIdToUpdate,
+                    customer: selectedItem.customer,
                     picker: formPicker,
+                    productsCount: selectedItem.productsCount || 1,
                     status: "Assigned"
-                };
+                }];
             }
-            return p;
-        }));
+        });
+        setOrders(prev => prev.map(o => o.id === orderIdToUpdate ? { ...o, status: "Picking" } : o));
         setIsModalOpen(false);
         showToast(`Assigned Picker ${formPicker} to ticket ${selectedItem.id}`);
     };
 
     const handleDlvUpdateSubmit = (e) => {
         e.preventDefault();
-        setDeliveries(prev => prev.map(d => {
-            if (d.id === selectedItem.id) {
-                return {
-                    ...d,
+        const orderIdToUpdate = selectedItem.orderId;
+        setDeliveries(prev => {
+            const exists = prev.some(d => d.id === selectedItem.id);
+            if (exists) {
+                return prev.map(d => {
+                    if (d.id === selectedItem.id) {
+                        return {
+                            ...d,
+                            rider: formRider,
+                            status: formDlvStatus,
+                            location: formLocation,
+                            eta: formEta
+                        };
+                    }
+                    return d;
+                });
+            } else {
+                return [...prev, {
+                    id: `DLV-${Math.floor(6000 + Math.random() * 1000)}`,
+                    orderId: orderIdToUpdate,
+                    customer: selectedItem.customer,
                     rider: formRider,
                     status: formDlvStatus,
                     location: formLocation,
                     eta: formEta
-                };
+                }];
             }
-            return d;
-        }));
+        });
+        if (orderIdToUpdate) {
+            setOrders(prev => prev.map(o => {
+                if (o.id === orderIdToUpdate) {
+                    let nextStatus = o.status;
+                    if (formDlvStatus === "Out for Delivery") {
+                        nextStatus = "Shipped";
+                    } else if (formDlvStatus === "Delivered") {
+                        nextStatus = "Delivered";
+                    } else if (formDlvStatus === "Failed") {
+                        nextStatus = "Failed";
+                    }
+                    return { ...o, status: nextStatus };
+                }
+                return o;
+            }));
+        }
         setIsModalOpen(false);
         showToast(`Updated delivery transit details for ${selectedItem.id}`);
     };
@@ -703,6 +1033,9 @@ function OrdersPage() {
     const handleConfirmCancel = () => {
         const id = confirmState.orderId;
         setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "Cancelled" } : o));
+        setPicks(prev => prev.map(p => p.orderId === id ? { ...p, status: "Cancelled" } : p));
+        setPacks(prev => prev.map(p => p.orderId === id ? { ...p, status: "Cancelled" } : p));
+        setDeliveries(prev => prev.map(d => d.orderId === id ? { ...d, status: "Failed" } : d));
         setConfirmState({ open: false, orderId: null });
         showToast(`Cancelled order ${id}`);
     };
@@ -712,12 +1045,45 @@ function OrdersPage() {
     };
 
     const handleCompletePick = (id) => {
-        setPicks(prev => prev.map(p => p.id === id ? { ...p, status: "Completed" } : p));
+        let orderIdToUpdate = null;
+        let pickItem = null;
+        setPicks(prev => prev.map(p => {
+            if (p.id === id) {
+                orderIdToUpdate = p.orderId;
+                pickItem = p;
+                return { ...p, status: "Completed" };
+            }
+            return p;
+        }));
+        if (orderIdToUpdate) {
+            setOrders(prev => prev.map(o => o.id === orderIdToUpdate ? { ...o, status: "Packing" } : o));
+            setPacks(prev => {
+                if (prev.some(p => p.orderId === orderIdToUpdate)) return prev;
+                return [...prev, {
+                    id: `PAK-${Math.floor(5000 + Math.random() * 1000)}`,
+                    orderId: orderIdToUpdate,
+                    customer: pickItem.customer,
+                    packedBy: "Unassigned",
+                    items: pickItem.productsCount || 1,
+                    status: "Waiting"
+                }];
+            });
+        }
         showToast(`Marked picking ticket ${id} as completed`);
     };
 
     const handleStartPacking = (id) => {
-        setPacks(prev => prev.map(p => p.id === id ? { ...p, status: "Packing", packedBy: "Ananya Iyer" } : p));
+        let orderIdToUpdate = null;
+        setPacks(prev => prev.map(p => {
+            if (p.id === id) {
+                orderIdToUpdate = p.orderId;
+                return { ...p, status: "Packing", packedBy: "Ananya Iyer" };
+            }
+            return p;
+        }));
+        if (orderIdToUpdate) {
+            setOrders(prev => prev.map(o => o.id === orderIdToUpdate ? { ...o, status: "Packing" } : o));
+        }
         showToast(`Started packing order matching sheet ${id}`);
     };
 
@@ -745,7 +1111,33 @@ function OrdersPage() {
     };
 
     const handleCompletePack = (id) => {
-        setPacks(prev => prev.map(p => p.id === id ? { ...p, status: "Packed" } : p));
+        let orderIdToUpdate = null;
+        let packItem = null;
+        setPacks(prev => prev.map(p => {
+            if (p.id === id) {
+                orderIdToUpdate = p.orderId;
+                packItem = p;
+                return { ...p, status: "Packed" };
+            }
+            return p;
+        }));
+        if (orderIdToUpdate) {
+            const assocOrder = orders.find(o => o.id === orderIdToUpdate);
+            const wh = assocOrder ? (assocOrder.warehouse || "Warehouse Hub") : "Warehouse Hub";
+            setOrders(prev => prev.map(o => o.id === orderIdToUpdate ? { ...o, status: "Ready for Dispatch" } : o));
+            setDeliveries(prev => {
+                if (prev.some(d => d.orderId === orderIdToUpdate)) return prev;
+                return [...prev, {
+                    id: `DLV-${Math.floor(6000 + Math.random() * 1000)}`,
+                    orderId: orderIdToUpdate,
+                    customer: packItem.customer,
+                    rider: "Unassigned",
+                    eta: "Pending Assignment",
+                    location: wh,
+                    status: "Assigned"
+                }];
+            });
+        }
         showToast(`Packed & sealed package box for ${id}`);
     };
 
@@ -799,23 +1191,32 @@ function OrdersPage() {
             <div className="orders-header-block print-btn-no-print">
                 <div className="orders-header-left">
                     <h1 className="orders-header-title">
-                        {activeTab === "orders" && "All Orders"}
-                        {activeTab === "pending" && "Pending Orders"}
-                        {activeTab === "picking" && "Order Picking Control"}
-                        {activeTab === "packing" && "Order Packing & Labeling"}
-                        {activeTab === "tracking" && "Real-Time Delivery Tracking"}
-                        {activeTab === "label-history" && "Label Printing History Log"}
+                        {activeTab === "management" && "Order Management"}
+                        {activeTab === "orders" && "Order List"}
+                        {activeTab === "details" && "Order Details"}
+                        {activeTab === "new-query" && "New Order Query"}
+                        {activeTab === "picking" && "Picking"}
+                        {activeTab === "packing" && "Packing"}
+                        {activeTab === "tracking" && "Delivery Management"}
+                        {activeTab === "cancelled" && "Cancelled Orders"}
                     </h1>
                     <p className="orders-header-subtitle">
-                        {activeTab === "orders" && "Track customer invoices, payment statuses, and overall execution lifecycle."}
-                        {activeTab === "pending" && "Track and manage all newly placed orders awaiting warehouse processing."}
-                        {activeTab === "picking" && "Dispatch inventory pickers to gather mapped items across darkhouse bins."}
-                        {activeTab === "packing" && "Box, seal, and generate custom package barcode tags for active riders."}
-                        {activeTab === "tracking" && "Monitor dispatch riders, ETAs, active locations, and package handovers."}
-                        {activeTab === "label-history" && "Search, audit, and reprint previously compiled A4 adhesive label sheets."}
+                        {activeTab === "management" && "Override routing priorities, manage process queues, and execute bulk order states."}
+                        {activeTab === "orders" && (
+                            boardStep === "all" ? "Unified quick-commerce database list: audit general customer orders, review payment methods, and manage database records." :
+                            boardStep === "pending" ? "Incoming orders queue: verify store stock check allocations and release to pickers." :
+                            boardStep === "completed" ? "Completed order directory: view historical records of successfully delivered orders." :
+                            "Unified database overview."
+                        )}
+                        {activeTab === "details" && "Detailed inspector sheet displaying ordered products, execution timelines, and barcodes."}
+                        {activeTab === "new-query" && "Lookup order status, check real-time stock allocation checks, and view transit routes."}
+                        {activeTab === "picking" && "Order picking queue: active picker assignments and shelf bin item checklists."}
+                        {activeTab === "packing" && "Bagger packing station: box, verify items, print barcode labels, and seal packages."}
+                        {activeTab === "tracking" && "Courier delivery hub: assign riders, track live simulated routes, and monitor ETAs."}
+                        {activeTab === "cancelled" && "Review cancelled orders, verify cancellation reasons, and process direct refunds."}
                     </p>
                 </div>
-                {activeTab === "orders" && (
+                {activeTab === "orders" && boardStep === "all" && (
                     <div className="orders-header-right">
                         <button 
                             className="orders-inline-btn orders-inline-btn--secondary"
@@ -830,11 +1231,44 @@ function OrdersPage() {
 
             {/* Summary Stat Grid */}
             <div className="orders-stats-grid">
-                {(activeTab === "orders" || activeTab === "pending") && (
+                {activeTab === "management" && (
+                    <>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-info" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{orders.length}</span>
+                                <span className="stat-card-label">Total Volume</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-failed" style={{ backgroundColor: "#ef4444" }} />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{orders.filter(o => o.priority === "High" || o.priority === "Critical").length}</span>
+                                <span className="stat-card-label">High/Critical Priority</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-pending" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">{orders.filter(o => o.status === "Pending").length}</span>
+                                <span className="stat-card-label">Pending Processing</span>
+                            </div>
+                        </div>
+                        <div className="orders-stat-card">
+                            <span className="stat-dot dot-delivered" />
+                            <div className="stat-card-body">
+                                <span className="stat-card-value">94.2%</span>
+                                <span className="stat-card-label">Fulfillment Rate</span>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {activeTab === "orders" && (
                     <>
                         <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "ALL" ? "active" : ""}`}
-                            onClick={() => handleCardClick("ALL")}
+                            className={`orders-stat-card ${boardStep === "all" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("all")}
                         >
                             <span className="stat-dot dot-info" />
                             <div className="stat-card-body">
@@ -843,148 +1277,86 @@ function OrdersPage() {
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${activeTab === "pending" || (activeTab === "orders" && selectedStatus === "Pending") ? "active" : ""}`}
-                            onClick={() => handleCardClick("Pending")}
+                            className={`orders-stat-card ${boardStep === "pending" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("pending")}
                         >
                             <span className="stat-dot dot-pending" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.pending}</span>
-                                <span className="stat-card-label">Pending Orders</span>
+                                <span className="stat-card-label">Pending Queue</span>
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Picking" ? "active" : ""}`}
-                            onClick={() => handleCardClick("Picking")}
+                            className={`orders-stat-card ${boardStep === "picking" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("picking")}
                         >
                             <span className="stat-dot dot-info" style={{ backgroundColor: "#3b82f6" }} />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.picking}</span>
-                                <span className="stat-card-label">Picking</span>
+                                <span className="stat-card-label">Picking Queue</span>
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Packing" ? "active" : ""}`}
-                            onClick={() => handleCardClick("Packing")}
+                            className={`orders-stat-card ${boardStep === "packing" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("packing")}
                         >
                             <span className="stat-dot dot-pending" style={{ backgroundColor: "#f97316" }} />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.packing}</span>
-                                <span className="stat-card-label">Packing</span>
+                                <span className="stat-card-label">Packing Queue</span>
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Ready To Dispatch" ? "active" : ""}`}
-                            onClick={() => handleCardClick("Ready To Dispatch")}
+                            className={`orders-stat-card ${boardStep === "delivery" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("delivery")}
                         >
                             <span className="stat-dot dot-shipped" style={{ backgroundColor: "#10b981" }} />
                             <div className="stat-card-body">
-                                <span className="stat-card-value">{ordStats.readyToDispatch}</span>
-                                <span className="stat-card-label">Ready To Dispatch</span>
+                                <span className="stat-card-value">{orders.filter(o => o.status === "Ready for Dispatch" || o.status === "Shipped" || o.status === "Out for Delivery").length}</span>
+                                <span className="stat-card-label">Delivery Queue</span>
                             </div>
                         </div>
                         <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Shipped" ? "active" : ""}`}
-                            onClick={() => handleCardClick("Shipped")}
-                        >
-                            <span className="stat-dot dot-shipped" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{ordStats.shipped}</span>
-                                <span className="stat-card-label">Shipped</span>
-                            </div>
-                        </div>
-                        <div 
-                            className={`orders-stat-card ${activeTab === "orders" && selectedStatus === "Delivered" ? "active" : ""}`}
-                            onClick={() => handleCardClick("Delivered")}
+                            className={`orders-stat-card ${boardStep === "completed" ? "active" : ""}`}
+                            onClick={() => handleBoardStepClick("completed")}
                         >
                             <span className="stat-dot dot-delivered" />
                             <div className="stat-card-body">
                                 <span className="stat-card-value">{ordStats.delivered}</span>
-                                <span className="stat-card-label">Delivered</span>
+                                <span className="stat-card-label">Completed</span>
                             </div>
                         </div>
                     </>
                 )}
 
-                {activeTab === "picking" && (
+                {activeTab === "cancelled" && (
                     <>
                         <div className="orders-stat-card">
-                            <span className="stat-dot dot-pending" />
+                            <span className="stat-dot dot-failed" style={{ backgroundColor: "#ef4444" }} />
                             <div className="stat-card-body">
-                                <span className="stat-card-value">{pickStats.pending}</span>
-                                <span className="stat-card-label">Pending Picks</span>
+                                <span className="stat-card-value">{cancelledOrders.length}</span>
+                                <span className="stat-card-label">Total Cancelled</span>
                             </div>
                         </div>
                         <div className="orders-stat-card">
-                            <span className="stat-dot dot-shipped" />
+                            <span className="stat-dot dot-info" style={{ backgroundColor: "#f59e0b" }} />
                             <div className="stat-card-body">
-                                <span className="stat-card-value">{pickStats.assigned}</span>
-                                <span className="stat-card-label">Assigned</span>
-                            </div>
-                        </div>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-delivered" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{pickStats.completed}</span>
-                                <span className="stat-card-label">Completed Picks</span>
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                {activeTab === "packing" && (
-                    <>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-pending" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{packStats.waiting}</span>
-                                <span className="stat-card-label">Waiting Box</span>
-                            </div>
-                        </div>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-shipped" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{packStats.packing}</span>
-                                <span className="stat-card-label">Packing Box</span>
-                            </div>
-                        </div>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-delivered" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{packStats.packed}</span>
-                                <span className="stat-card-label">Packed & Sealed</span>
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                {activeTab === "tracking" && (
-                    <>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-info" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{dlvStats.assigned}</span>
-                                <span className="stat-card-label">Assigned Riders</span>
+                                <span className="stat-card-value">
+                                    ₹{cancelledOrders.reduce((sum, o) => {
+                                        const amtVal = parseFloat(o.amount.replace(/[^0-9.]/g, "")) || 0;
+                                        return sum + amtVal;
+                                    }, 0).toFixed(2)}
+                                </span>
+                                <span className="stat-card-label">Refund Valuation</span>
                             </div>
                         </div>
                         <div className="orders-stat-card">
                             <span className="stat-dot dot-pending" />
                             <div className="stat-card-body">
-                                <span className="stat-card-value">{dlvStats.outForDelivery}</span>
-                                <span className="stat-card-label">In Transit</span>
-                            </div>
-                        </div>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-delivered" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{dlvStats.delivered}</span>
-                                <span className="stat-card-label">Delivered</span>
-                            </div>
-                        </div>
-                        <div className="orders-stat-card">
-                            <span className="stat-dot dot-failed" />
-                            <div className="stat-card-body">
-                                <span className="stat-card-value">{dlvStats.failed}</span>
-                                <span className="stat-card-label">Failed</span>
+                                <span className="stat-card-value">
+                                    {cancelledOrders.filter(o => !processedRefunds.includes(o.id)).length}
+                                </span>
+                                <span className="stat-card-label">Awaiting Refund</span>
                             </div>
                         </div>
                     </>
@@ -1037,57 +1409,69 @@ function OrdersPage() {
                     <div className="orders-tabs" role="tablist">
                         <button
                             role="tab"
-                            aria-selected={activeTab === "orders"}
-                            className={`orders-tab ${activeTab === "orders" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("orders")}
+                            aria-selected={activeTab === "board"}
+                            className={`orders-tab ${activeTab === "board" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("board")}
                         >
-                            All Orders
+                            Order List
                         </button>
                         <button
                             role="tab"
-                            aria-selected={activeTab === "pending"}
-                            className={`orders-tab ${activeTab === "pending" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("pending")}
+                            aria-selected={activeTab === "details"}
+                            className={`orders-tab ${activeTab === "details" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("details")}
                         >
-                            Pending Orders
+                            Order Details
                         </button>
                         <button
                             role="tab"
-                            aria-selected={activeTab === "picking"}
-                            className={`orders-tab ${activeTab === "picking" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("picking")}
+                            aria-selected={activeTab === "management"}
+                            className={`orders-tab ${activeTab === "management" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("management")}
                         >
-                            Picking
+                            Order Management
                         </button>
                         <button
                             role="tab"
-                            aria-selected={activeTab === "packing"}
-                            className={`orders-tab ${activeTab === "packing" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("packing")}
+                            aria-selected={activeTab === "new-query"}
+                            className={`orders-tab ${activeTab === "new-query" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("new-query")}
                         >
-                            Packing
+                            New Order Query
                         </button>
                         <button
                             role="tab"
-                            aria-selected={activeTab === "tracking"}
-                            className={`orders-tab ${activeTab === "tracking" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("tracking")}
+                            aria-selected={activeTab === "cancelled"}
+                            className={`orders-tab ${activeTab === "cancelled" ? "orders-tab--active" : ""}`}
+                            onClick={() => handleTabClick("cancelled")}
                         >
-                            Delivery Tracking
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "label-history"}
-                            className={`orders-tab ${activeTab === "label-history" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("label-history")}
-                        >
-                            Label History
+                            Cancelled Orders
                         </button>
                     </div>
 
                     {/* Toolbar Search / Select Filters */}
                     <div className="orders-toolbar__actions">
-                        {activeTab === "pending" && (
+                        {["management", "orders", "picking", "packing", "tracking", "cancelled"].includes(activeTab) && (
+                            <select
+                                className="orders-toolbar-select global-warehouse-filter"
+                                value={selectedWarehouseFilter}
+                                onChange={(e) => {
+                                    setSelectedWarehouseFilter(e.target.value);
+                                    setOrdPage(1);
+                                    setPendingPage(1);
+                                    setPickPage(1);
+                                    setPackPage(1);
+                                    setDlvPage(1);
+                                }}
+                                style={{ border: "2px solid var(--primary)", fontWeight: "600", marginRight: "8px" }}
+                            >
+                                <option value="All">🏪 All Hubs & Darkhouses</option>
+                                {INITIAL_DARKHOUSES.map(d => (
+                                    <option key={d.id} value={d.name}>{d.name}</option>
+                                ))}
+                            </select>
+                        )}
+                        {activePaginationView === "pending" && (
                             <div className="orders-search-wrap">
                                 <Search size={14} className="orders-search-icon" />
                                 <input
@@ -1099,7 +1483,19 @@ function OrdersPage() {
                                 />
                             </div>
                         )}
-                        {activeTab === "orders" && (
+                        {activeTab === "cancelled" && (
+                            <div className="orders-search-wrap">
+                                <Search size={14} className="orders-search-icon" />
+                                <input
+                                    type="text"
+                                    className="orders-search-input"
+                                    placeholder="Search ID or customer..."
+                                    value={cancelledSearch}
+                                    onChange={(e) => setCancelledSearch(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {activePaginationView === "orders" && (
                             <>
                                 <div className="orders-search-wrap">
                                     <Search size={14} className="orders-search-icon" />
@@ -1127,7 +1523,7 @@ function OrdersPage() {
                             </>
                         )}
 
-                        {activeTab === "picking" && (
+                        {activePaginationView === "picking" && (
                             <>
                                 <div className="orders-search-wrap">
                                     <Search size={14} className="orders-search-icon" />
@@ -1153,7 +1549,7 @@ function OrdersPage() {
                             </>
                         )}
 
-                        {activeTab === "packing" && (
+                        {activePaginationView === "packing" && (
                             <>
                                 <div className="orders-search-wrap">
                                     <Search size={14} className="orders-search-icon" />
@@ -1178,7 +1574,7 @@ function OrdersPage() {
                             </>
                         )}
 
-                        {activeTab === "tracking" && (
+                        {activePaginationView === "tracking" && (
                             <>
                                 <div className="orders-search-wrap">
                                     <Search size={14} className="orders-search-icon" />
@@ -1213,7 +1609,7 @@ function OrdersPage() {
                                 </select>
                             </>
                         )}
-                        {activeTab === "label-history" && (
+                        {activePaginationView === "label-history" && (
                             <div className="orders-toolbar-log-info" style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
                                 Total printed batches recorded: {labelHistory.length}
                             </div>
@@ -1221,510 +1617,1196 @@ function OrdersPage() {
                     </div>
                 </div>
 
-                {/* Table Data Grid */}
-                {activeTab === "pending" && filteredPendingOrders.length === 0 ? (
-                    <div className="orders-empty-state-container" style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "60px 20px",
-                        textAlign: "center"
-                    }}>
-                        <CheckCircle size={48} style={{ color: "#10b981", marginBottom: "16px" }} />
-                        <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
-                            No Pending Orders
-                        </h3>
-                        <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
-                            All orders have been processed successfully.
-                        </p>
-                        <button 
-                            className="orders-inline-btn" 
-                            onClick={() => handleTabClick("orders")}
-                            style={{ padding: "10px 24px", fontSize: "13px" }}
-                        >
-                            View All Orders
-                        </button>
-                    </div>
-                ) : (
-                    <div className="orders-table-responsive">
-                        <table className="orders-data-table">
-                            {activeTab === "pending" && (
-                                <>
+                {/* 1. Order Management Tab */}
+                {activeTab === "management" && (
+                    <div className="management-control-dashboard fade-in">
+                        {/* Priority Overrides Table */}
+                        <div className="management-table-container">
+                            <div className="management-table-header-row">
+                                <h3 className="section-title">Priority Overrides & Routing Control</h3>
+                                <div className="management-search-box">
+                                    <Search size={14} className="orders-search-icon" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Quick filter priority orders..." 
+                                        className="orders-search-input"
+                                        value={managementSearch}
+                                        onChange={(e) => setManagementSearch(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="orders-table-responsive">
+                                <table className="orders-data-table">
                                     <thead>
                                         <tr>
-                                            <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
+                                            <th style={{ width: "40px", textAlign: "center" }}>
                                                 <input 
                                                     type="checkbox"
-                                                    className="orders-checkbox-main"
-                                                    checked={
-                                                        paginatedPendingOrders.length > 0 &&
-                                                        paginatedPendingOrders.every(o => selectedOrderIds.includes(o.id))
-                                                    }
-                                                    onChange={toggleSelectAll}
-                                                    title="Select all Pending orders on this page"
+                                                    checked={filteredManagementOrders.length > 0 && selectedManagementIds.length === filteredManagementOrders.length}
+                                                    onChange={handleToggleAllManagementSelect}
                                                 />
                                             </th>
                                             <th>Order ID</th>
                                             <th>Customer</th>
                                             <th>Date</th>
-                                            <th>Items</th>
-                                            <th>Amount</th>
-                                            <th>Payment</th>
-                                            <th>Status</th>
-                                            <th style={{ textAlign: "right" }}>Action</th>
+                                            <th>Stage</th>
+                                            <th>Current Priority</th>
+                                            <th className="text-right">Action Overrides</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {paginatedPendingOrders.map((order, index) => (
-                                            <tr key={order.id} className="orders-row-hover">
-                                                <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                        {filteredManagementOrders.map(order => (
+                                            <tr key={order.id}>
+                                                <td style={{ textAlign: "center" }}>
                                                     <input 
                                                         type="checkbox"
-                                                        className="orders-checkbox-row"
-                                                        checked={selectedOrderIds.includes(order.id)}
-                                                        onChange={() => toggleSelectOrder(order.id)}
+                                                        checked={selectedManagementIds.includes(order.id)}
+                                                        onChange={() => handleToggleManagementSelect(order.id)}
                                                     />
                                                 </td>
-                                                <td className="odt-id">{order.id}</td>
+                                                <td className="font-mono font-bold">{order.id}</td>
+                                                <td>{order.customer}</td>
+                                                <td>{order.date}</td>
                                                 <td>
-                                                    <div className="odt-customer">
-                                                        <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
-                                                            {order.initials}
-                                                        </span>
-                                                        <span className="odt-customer-name">{order.customer}</span>
-                                                    </div>
+                                                    <span className={`orders-status-badge ${getStatusClass(order.status)}`}>
+                                                        {order.status}
+                                                    </span>
                                                 </td>
-                                                <td className="odt-date">{order.date}</td>
-                                                <td className="odt-items">{order.items} items</td>
-                                                <td className="odt-amount">{order.amount}</td>
-                                                <td className="odt-payment">{order.payment}</td>
-                                                <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
-                                                <td style={{ position: "relative" }}>
-                                                    <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
-                                                        <MoreVertical size={14} />
+                                                <td>
+                                                    <span className={`priority-badge priority-${(order.priority || "Normal").toLowerCase()}`}>
+                                                        {order.priority || "Normal"}
+                                                    </span>
+                                                </td>
+                                                <td className="text-right actions-cell">
+                                                    <button 
+                                                        onClick={() => handleTogglePriority(order.id)}
+                                                        className="orders-inline-btn orders-inline-btn--secondary"
+                                                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                                                    >
+                                                        <RefreshCw size={10} style={{ marginRight: "4px" }} />
+                                                        Toggle Priority
                                                     </button>
-                                                    {activeRowMenuId === order.id && (
-                                                        <>
-                                                            <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                            <div 
-                                                                className="global-action-dropdown"
-                                                                style={index >= paginatedPendingOrders.length - 2 && paginatedPendingOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
-                                                            >
-                                                                <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
-                                                                    <Eye size={13} />
-                                                                    <span>View Details</span>
-                                                                </button>
-                                                                <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
-                                                                    <Edit2 size={13} />
-                                                                    <span>Edit Order</span>
-                                                                </button>
-                                                                <div className="global-dropdown-divider"></div>
-                                                                <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
-                                                                    <Trash2 size={13} />
-                                                                    <span>Cancel Order</span>
-                                                                </button>
-                                                            </div>
-                                                        </>
-                                                    )}
                                                 </td>
                                             </tr>
                                         ))}
+                                        {filteredManagementOrders.length === 0 && (
+                                            <tr>
+                                                <td colSpan="7" className="text-center" style={{ padding: "40px 10px", color: "var(--text-muted)" }}>
+                                                    No orders match the filter search.
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
-                                </>
-                            )}
-                            {activeTab === "orders" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
-                                            <input 
-                                                type="checkbox"
-                                                className="orders-checkbox-main"
-                                                checked={
-                                                    paginatedOrders.length > 0 &&
-                                                    paginatedOrders.filter(o => o.status === "Pending").length > 0 &&
-                                                    paginatedOrders.filter(o => o.status === "Pending").every(o => selectedOrderIds.includes(o.id))
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Bulk Actions Console */}
+                        <div className="management-bulk-panel">
+                            <h3 className="section-title">Bulk Lifecycle Controls</h3>
+                            <div className="bulk-controls-row">
+                                <span className="bulk-selection-count">
+                                    <strong>{selectedManagementIds.length}</strong> orders selected
+                                </span>
+                                <select 
+                                    className="orders-toolbar-select"
+                                    value={bulkActionType}
+                                    onChange={(e) => setBulkActionType(e.target.value)}
+                                    style={{ width: "220px" }}
+                                >
+                                    <option value="">Choose bulk action...</option>
+                                    <option value="high-priority">Set Priority to High</option>
+                                    <option value="critical-priority">Set Priority to Critical</option>
+                                    <option value="release-picking">Release to Picking Queue</option>
+                                    <option value="cancel">Cancel Orders</option>
+                                </select>
+                                <button 
+                                    className="orders-inline-btn orders-inline-btn--primary"
+                                    onClick={handleExecuteBulkAction}
+                                    disabled={selectedManagementIds.length === 0 || !bulkActionType}
+                                    style={{ height: "36px", fontSize: "13px" }}
+                                >
+                                    Execute Action
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 2. Order Details Inspector Tab */}
+                {activeTab === "details" && (
+                    <div className="details-inspector-container fade-in">
+                        {/* Left Column: List selector */}
+                        <div className="details-inspector-left">
+                            <div className="inspector-search-box">
+                                <Search size={14} className="orders-search-icon" />
+                                <input 
+                                    type="text"
+                                    placeholder="Search ID or customer..."
+                                    className="orders-search-input"
+                                    value={inspectorSearch}
+                                    onChange={(e) => setInspectorSearch(e.target.value)}
+                                    style={{ width: "100%" }}
+                                />
+                            </div>
+                            <div className="inspector-orders-list">
+                                {filteredInspectorOrders.map(o => (
+                                    <div 
+                                        key={o.id}
+                                        className={`inspector-order-row ${selectedInspectorOrder?.id === o.id ? "active" : ""}`}
+                                        onClick={() => setSelectedInspectorOrderId(o.id)}
+                                    >
+                                        <div className="inspector-row-top">
+                                            <span className="order-id font-mono">{o.id}</span>
+                                            <span className="order-date">{o.date}</span>
+                                        </div>
+                                        <div className="inspector-row-bottom">
+                                            <span className="customer-name">{o.customer}</span>
+                                            <span className={`orders-status-badge ${getStatusClass(o.status)}`}>
+                                                {o.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {filteredInspectorOrders.length === 0 && (
+                                    <div className="inspector-empty">No matching orders found.</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column: Detailed inspect panel */}
+                        <div className="details-inspector-right">
+                            {selectedInspectorOrder ? (
+                                <div className="inspector-details-card">
+                                    <div className="details-card-header">
+                                        <div>
+                                            <h3 className="inspector-card-title">Order {selectedInspectorOrder.id} Inspector</h3>
+                                            <p className="customer-info">Customer: <strong>{selectedInspectorOrder.customer}</strong> | Mobile: <strong>{selectedInspectorOrder.mobile || "+91 99880 12345"}</strong></p>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <button 
+                                                className="orders-inline-btn orders-inline-btn--secondary"
+                                                onClick={() => handlePrintLabel(selectedInspectorOrder.id)}
+                                            >
+                                                <Printer size={14} style={{ marginRight: "4px" }} />
+                                                <span>Print Tag</span>
+                                            </button>
+                                            {(() => {
+                                                const status = selectedInspectorOrder.status;
+                                                if (status === "Pending") {
+                                                    return (
+                                                        <button 
+                                                            className="orders-inline-btn orders-inline-btn--success"
+                                                            onClick={() => {
+                                                                setOrders(prev => prev.map(o => o.id === selectedInspectorOrder.id ? { ...o, status: "Picking" } : o));
+                                                                setPicks(prev => {
+                                                                    if (prev.some(p => p.orderId === selectedInspectorOrder.id)) return prev;
+                                                                    return [...prev, {
+                                                                        id: `PCK-${Math.floor(4000 + Math.random() * 1000)}`,
+                                                                        orderId: selectedInspectorOrder.id,
+                                                                        customer: selectedInspectorOrder.customer,
+                                                                        picker: "Unassigned",
+                                                                        productsCount: selectedInspectorOrder.items || 1,
+                                                                        status: "Pending"
+                                                                    }];
+                                                                });
+                                                                showToast(`Released order ${selectedInspectorOrder.id} to picking queue`);
+                                                            }}
+                                                        >
+                                                            <span>⚡ Release to Picking</span>
+                                                        </button>
+                                                    );
                                                 }
-                                                onChange={toggleSelectAll}
-                                                title="Select all Pending orders on this page"
-                                            />
-                                        </th>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Date</th>
-                                        <th>Items</th>
-                                        <th>Amount</th>
-                                        <th>Payment</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedOrders.length === 0 ? (
+                                                if (status === "Picking") {
+                                                    const pick = picks.find(p => p.orderId === selectedInspectorOrder.id);
+                                                    if (!pick || pick.status === "Pending") {
+                                                        return (
+                                                            <button 
+                                                                className="orders-inline-btn"
+                                                                onClick={() => openPickAssign(pick || {
+                                                                    id: `PCK-TEMP`,
+                                                                    orderId: selectedInspectorOrder.id,
+                                                                    customer: selectedInspectorOrder.customer,
+                                                                    picker: "Unassigned",
+                                                                    productsCount: selectedInspectorOrder.items || 1
+                                                                })}
+                                                            >
+                                                                <span>👤 Assign Picker</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    if (pick.status === "Assigned") {
+                                                        return (
+                                                            <button 
+                                                                className="orders-inline-btn orders-inline-btn--success"
+                                                                onClick={() => handleCompletePick(pick.id)}
+                                                            >
+                                                                <span>✓ Complete Picking</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                }
+                                                if (status === "Packing") {
+                                                    const pack = packs.find(p => p.orderId === selectedInspectorOrder.id);
+                                                    if (pack) {
+                                                        if (pack.status === "Waiting") {
+                                                            return (
+                                                                <button 
+                                                                    className="orders-inline-btn"
+                                                                    onClick={() => handleStartPacking(pack.id)}
+                                                                >
+                                                                    <span>📦 Start Packing</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                        if (pack.status === "Packing") {
+                                                            return (
+                                                                <button 
+                                                                    className="orders-inline-btn orders-inline-btn--success"
+                                                                    onClick={() => handleCompletePack(pack.id)}
+                                                                >
+                                                                    <span>✓ Complete Packing</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                    } else {
+                                                        // Fallback pick completion check
+                                                        return (
+                                                            <button 
+                                                                className="orders-inline-btn"
+                                                                onClick={() => {
+                                                                    setPacks(prev => {
+                                                                        if (prev.some(p => p.orderId === selectedInspectorOrder.id)) return prev;
+                                                                        return [...prev, {
+                                                                            id: `PAK-${Math.floor(5000 + Math.random() * 1000)}`,
+                                                                            orderId: selectedInspectorOrder.id,
+                                                                            customer: selectedInspectorOrder.customer,
+                                                                            packedBy: "Unassigned",
+                                                                            items: selectedInspectorOrder.items || 1,
+                                                                            status: "Waiting"
+                                                                        }];
+                                                                    });
+                                                                    showToast(`Initialized packing ticket for ${selectedInspectorOrder.id}`);
+                                                                }}
+                                                            >
+                                                                <span>📦 Start packing ticket</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                }
+                                                if (status === "Ready for Dispatch" || status === "Packed") {
+                                                    const dlv = deliveries.find(d => d.orderId === selectedInspectorOrder.id);
+                                                    return (
+                                                        <button 
+                                                            className="orders-inline-btn"
+                                                            onClick={() => openDlvUpdate(dlv || {
+                                                                id: `DLV-TEMP`,
+                                                                orderId: selectedInspectorOrder.id,
+                                                                customer: selectedInspectorOrder.customer,
+                                                                rider: "Unassigned",
+                                                                status: "Assigned",
+                                                                location: selectedInspectorOrder.warehouse || "Warehouse Hub",
+                                                                eta: "Pending Assignment"
+                                                            })}
+                                                        >
+                                                            <span>🚚 Assign Rider & Ship</span>
+                                                        </button>
+                                                    );
+                                                }
+                                                if (status === "Shipped" || status === "Out for Delivery") {
+                                                    const dlv = deliveries.find(d => d.orderId === selectedInspectorOrder.id);
+                                                    return (
+                                                        <button 
+                                                            className="orders-inline-btn orders-inline-btn--success"
+                                                            onClick={() => {
+                                                                if (dlv) {
+                                                                    setDeliveries(prev => prev.map(d => d.id === dlv.id ? { ...d, status: "Delivered", eta: "Completed" } : d));
+                                                                }
+                                                                setOrders(prev => prev.map(o => o.id === selectedInspectorOrder.id ? { ...o, status: "Delivered" } : o));
+                                                                showToast(`Marked order ${selectedInspectorOrder.id} as Delivered`);
+                                                            }}
+                                                        >
+                                                            <span>✓ Mark Delivered</span>
+                                                        </button>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Items Mapped */}
+                                    <div className="inspector-section">
+                                        <h4 className="inspector-section-title">Ordered Items Allocation</h4>
+                                        <table className="inspector-items-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Item Description</th>
+                                                    <th>Category</th>
+                                                    <th>SKU Code</th>
+                                                    <th className="text-center">Qty Requested</th>
+                                                    <th className="text-right">Unit Rate</th>
+                                                    <th className="text-right">Total Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {getItemsForOrder(selectedInspectorOrder).map((item, idx) => (
+                                                    <tr key={idx}>
+                                                        <td>{item.name}</td>
+                                                        <td>
+                                                            <span className="category-tag">{getCategoryForProduct(item.name, item.sku)}</span>
+                                                        </td>
+                                                        <td className="font-mono">{item.sku}</td>
+                                                        <td className="text-center font-bold">{item.qty}</td>
+                                                        <td className="text-right">₹{item.price.toFixed(2)}</td>
+                                                        <td className="text-right font-bold">₹{(item.qty * item.price).toFixed(2)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Progress Timeline */}
+                                    <div className="inspector-section">
+                                        <h4 className="inspector-section-title">Progress Execution Timeline</h4>
+                                        <div className="execution-timeline">
+                                            {(() => {
+                                                const stages = ["Pending", "Picking", "Packing", "Ready To Dispatch", "Shipped", "Delivered"];
+                                                const normalizeStatus = (st) => {
+                                                    switch (st) {
+                                                        case "Pending": return "Pending";
+                                                        case "Picking": return "Picking";
+                                                        case "Packing":
+                                                        case "Processing": return "Packing";
+                                                        case "Label Generated":
+                                                        case "Ready for Dispatch":
+                                                        case "Ready To Dispatch":
+                                                        case "Packed": return "Ready To Dispatch";
+                                                        case "Shipped":
+                                                        case "Out for Delivery": return "Shipped";
+                                                        case "Delivered": return "Delivered";
+                                                        default: return "Pending";
+                                                    }
+                                                };
+                                                const normalizedStatus = normalizeStatus(selectedInspectorOrder.status);
+                                                const currentStageIdx = stages.indexOf(normalizedStatus);
+                                                return stages.map((stage, idx) => {
+                                                    let isDone = idx <= currentStageIdx;
+                                                    let isCurrent = idx === currentStageIdx;
+                                                    
+                                                    // Handle cancelled state override
+                                                    if (selectedInspectorOrder.status === "Cancelled") {
+                                                        isDone = false;
+                                                        isCurrent = false;
+                                                    }
+                                                    
+                                                    return (
+                                                        <div key={idx} className={`timeline-step ${isDone ? "step-done" : ""} ${isCurrent ? "step-current" : ""} ${selectedInspectorOrder.status === "Cancelled" ? "step-cancelled" : ""}`}>
+                                                            <div className="step-marker">
+                                                                {selectedInspectorOrder.status === "Cancelled" ? "✗" : (isDone ? "✓" : idx + 1)}
+                                                            </div>
+                                                            <div className="step-label-wrap">
+                                                                <span className="step-label">{stage}</span>
+                                                                {isDone && <span className="step-time">{idx === 0 ? "10:15 AM" : idx === 1 ? "10:30 AM" : idx === 2 ? "11:00 AM" : idx === 3 ? "11:15 AM" : idx === 4 ? "11:45 AM" : "12:10 PM"}</span>}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Label Preview */}
+                                    <div className="inspector-section">
+                                        <h4 className="inspector-section-title">Shipping Barcode Tag Sheet</h4>
+                                        <div className="shipping-label-card">
+                                            <div className="label-logo-row">
+                                                <span className="label-logo">HAATZA</span>
+                                                <span className="label-method">EXPRESS WAREHOUSE LOGISTICS</span>
+                                            </div>
+                                            <div className="label-main-grid">
+                                                <div className="label-address">
+                                                    <span className="label-title">SHIP TO:</span>
+                                                    <strong>{selectedInspectorOrder.customer}</strong>
+                                                    <span>{selectedInspectorOrder.mobile || "+91 99880 12345"}</span>
+                                                    <span>Sector 4, Dwarka, New Delhi - 110075</span>
+                                                </div>
+                                                <div className="label-meta-details">
+                                                    <div><span className="meta-label">ORDER REFERENCE:</span> <span className="meta-val font-mono font-bold">{selectedInspectorOrder.id}</span></div>
+                                                    <div><span className="meta-label">DISPATCH DATE:</span> <span className="meta-val">{selectedInspectorOrder.date}</span></div>
+                                                    <div><span className="meta-label">PAYMENT CHANNEL:</span> <span className="meta-val font-bold">{selectedInspectorOrder.payment}</span></div>
+                                                </div>
+                                            </div>
+                                            <div className="label-barcode-section">
+                                                <div 
+                                                    className="barcode-container" 
+                                                    style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: (() => {
+                                                            const barcode = new Barcode128Svg(selectedInspectorOrder.id);
+                                                            barcode.height = 50;
+                                                            barcode.factor = 1.8;
+                                                            return barcode.toString();
+                                                        })()
+                                                    }}
+                                                />
+                                                <span className="barcode-text font-mono">{selectedInspectorOrder.id}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="inspector-empty-state">
+                                    Select an order from the list on the left to inspect detailed properties.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* 3. New Order Query Tab */}
+                {activeTab === "new-query" && (
+                    <div className="new-order-query-container fade-in">
+                        <div className="query-search-panel">
+                            <h3 className="section-title">Real-time Order Query & Stock Checker</h3>
+                            <p className="panel-desc">Query any active Order ID to inspect stock verification status and route milestones mapping.</p>
+                            <div className="query-input-row">
+                                <div className="query-search-wrap">
+                                    <Search size={16} className="orders-search-icon" />
+                                    <input 
+                                        type="text"
+                                        placeholder="Enter Order ID (e.g. #ORD-8818, #ORD-8812...)"
+                                        className="orders-search-input query-input"
+                                        value={queryIdInput}
+                                        onChange={(e) => setQueryIdInput(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") handleRunQuery(); }}
+                                        style={{ width: "100%", fontSize: "14px", paddingLeft: "36px" }}
+                                    />
+                                </div>
+                                <button 
+                                    className="orders-inline-btn orders-inline-btn--primary"
+                                    onClick={() => handleRunQuery()}
+                                    style={{ height: "42px", padding: "0 24px", fontSize: "13px" }}
+                                >
+                                    Run Query
+                                </button>
+                            </div>
+                            <div className="suggestion-chips">
+                                <span className="chip-label">Suggestions:</span>
+                                {orders.slice(0, 5).map(o => (
+                                    <button 
+                                        key={o.id}
+                                        className="suggestion-chip"
+                                        onClick={() => { setQueryIdInput(o.id); handleRunQuery(o.id); }}
+                                    >
+                                        {o.id}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {queryResult ? (
+                            <div className="query-results-grid">
+                                {/* Stock Verification */}
+                                <div className="query-stock-card">
+                                    <h4 className="card-title">Darkhouse Allocation Check</h4>
+                                    <div className="order-info-strip">
+                                        <span>Order: <strong className="font-mono">{queryResult.id}</strong></span>
+                                        <span>Customer: <strong>{queryResult.customer}</strong></span>
+                                        <span>Darkhouse: <strong>{queryResult.warehouse || "HAATZA Koramangala Hub"}</strong></span>
+                                        <span>Stage: <span className={`orders-status-badge ${getStatusClass(queryResult.status)}`}>{queryResult.status}</span></span>
+                                    </div>
+                                    <table className="query-stock-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Item Name</th>
+                                                <th>SKU Code</th>
+                                                <th>Qty</th>
+                                                <th>Allocated Bin</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {getItemsForOrder(queryResult).map((item, idx) => (
+                                                <tr key={idx}>
+                                                    <td>{item.name}</td>
+                                                    <td className="font-mono">{item.sku}</td>
+                                                    <td>{item.qty} units</td>
+                                                    <td className="font-mono">BIN-{(idx * 3) + 12}-A</td>
+                                                    <td>
+                                                        <span className="stock-badge in-stock" style={{ color: "#10b981", fontWeight: "700" }}>✓ In Stock</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Dispatch Route */}
+                                <div className="query-route-card">
+                                    <h4 className="card-title">Simulated Dispatch Route Mapped</h4>
+                                    <p className="card-subtitle">Milestones from origin Darkhouse to shipping destination.</p>
+                                    
+                                    <div className="route-flowchart">
+                                        <div className="route-node origin">
+                                            <div className="node-icon" style={{ backgroundColor: "#3b82f6", color: "white" }}><Store size={14} /></div>
+                                            <div className="node-info">
+                                                <span className="node-label">Origin Hub</span>
+                                                <strong className="node-value">{queryResult.warehouse || "HAATZA Koramangala Hub"}</strong>
+                                            </div>
+                                        </div>
+                                        <div className="route-line-connector">
+                                            <div className="route-line-pulse"></div>
+                                        </div>
+                                        <div className="route-node transit">
+                                            <div className="node-icon" style={{ backgroundColor: "#f59e0b", color: "white" }}><Truck size={14} /></div>
+                                            <div className="node-info">
+                                                <span className="node-label">Dispatch Courier</span>
+                                                <strong className="node-value">{["Shipped", "Delivered"].includes(queryResult.status) ? "Amit Patel (Rider #882)" : "Awaiting Picker Handoff"}</strong>
+                                            </div>
+                                        </div>
+                                        <div className="route-line-connector"></div>
+                                        <div className="route-node destination">
+                                            <div className="node-icon" style={{ backgroundColor: "#10b981", color: "white" }}><MapPin size={14} /></div>
+                                            <div className="node-info">
+                                                <span className="node-label">Destination Address</span>
+                                                <strong className="node-value">Dwarka Sector-4, New Delhi - 110075</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="query-empty-state">
+                                Enter an active Order ID above to check inventory allocations and courier progress.
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 4. Cancelled Orders Tab */}
+                {activeTab === "cancelled" && (
+                    <div className="cancelled-orders-container fade-in">
+                        {filteredCancelledOrders.length === 0 ? (
+                            <div className="orders-empty-state-container" style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "60px 20px",
+                                textAlign: "center"
+                            }}>
+                                <XCircle size={48} style={{ color: "var(--brand-danger)", marginBottom: "16px" }} />
+                                <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
+                                    No Cancelled Orders
+                                </h3>
+                                <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
+                                    There are currently no orders flagged as cancelled.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="orders-table-responsive">
+                                <table className="orders-data-table">
+                                    <thead>
                                         <tr>
-                                            <td colSpan={9} className="odt-empty">
-                                                No customer orders found matching filters.
-                                            </td>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Cancelled Value</th>
+                                            <th>Cancellation Reason</th>
+                                            <th>Refund Stage</th>
+                                            <th className="text-right">Action</th>
                                         </tr>
-                                    ) : (
-                                        paginatedOrders.map((order, index) => (
-                                            <tr key={order.id} className="orders-row-hover">
-                                                <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                    </thead>
+                                    <tbody>
+                                        {filteredCancelledOrders.map(order => {
+                                            const isRefunded = processedRefunds.includes(order.id);
+                                            return (
+                                                <tr key={order.id}>
+                                                    <td className="font-mono font-bold">{order.id}</td>
+                                                    <td>{order.customer}</td>
+                                                    <td>{order.date}</td>
+                                                    <td>{order.amount}</td>
+                                                    <td>{order.items > 2 ? "Out of Stock Allocation" : "Customer Cancellation"}</td>
+                                                    <td>
+                                                        <span className={`refund-badge ${isRefunded ? "refunded" : "pending"}`}>
+                                                            {isRefunded ? "Refunded" : "Awaiting Refund"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="text-right actions-cell">
+                                                        {!isRefunded ? (
+                                                            <button 
+                                                                className="orders-inline-btn orders-inline-btn--primary refund-action-btn"
+                                                                onClick={() => handleTriggerRefund(order.id)}
+                                                                style={{ fontSize: "11px", padding: "4px 12px" }}
+                                                            >
+                                                                <Check size={10} style={{ marginRight: "4px" }} />
+                                                                Process Refund
+                                                            </button>
+                                                        ) : (
+                                                            <span className="refunded-check" style={{ color: "#10b981", fontWeight: "700", fontSize: "12px" }}>✓ Refunded</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Darkstore Fulfillment Board Table Data Grid */}
+                {["orders", "picking", "packing", "tracking"].includes(activeTab) && (
+                    boardStep === "pending" && filteredPendingOrders.length === 0 ? (
+                        <div className="orders-empty-state-container" style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "60px 20px",
+                            textAlign: "center"
+                        }}>
+                            <CheckCircle size={48} style={{ color: "#10b981", marginBottom: "16px" }} />
+                            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
+                                No Pending Orders
+                            </h3>
+                            <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
+                                All orders have been processed successfully.
+                            </p>
+                            <button 
+                                className="orders-inline-btn" 
+                                onClick={() => handleBoardStepClick("all")}
+                                style={{ padding: "10px 24px", fontSize: "13px" }}
+                            >
+                                View All Orders
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="orders-table-responsive">
+                            <table className="orders-data-table">
+                                {activePaginationView === "pending" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
                                                     <input 
                                                         type="checkbox"
-                                                        className="orders-checkbox-row"
-                                                        checked={selectedOrderIds.includes(order.id)}
-                                                        onChange={() => toggleSelectOrder(order.id)}
-                                                        disabled={order.status !== "Pending" && order.status !== "Label Generated"}
-                                                        title={order.status !== "Pending" && order.status !== "Label Generated" ? "Only Pending or Label Generated orders can be selected" : ""}
+                                                        className="orders-checkbox-main"
+                                                        checked={
+                                                            paginatedPendingOrders.length > 0 &&
+                                                            paginatedPendingOrders.every(o => selectedOrderIds.includes(o.id))
+                                                        }
+                                                        onChange={toggleSelectAll}
+                                                        title="Select all Pending orders on this page"
                                                     />
-                                                </td>
-                                                <td className="odt-id">{order.id}</td>
-                                                <td>
-                                                    <div className="odt-customer">
-                                                        <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
-                                                            {order.initials}
-                                                        </span>
-                                                        <span className="odt-customer-name">{order.customer}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="odt-date">{order.date}</td>
-                                                <td className="odt-items">{order.items} items</td>
-                                                <td className="odt-amount">{order.amount}</td>
-                                                <td className="odt-payment">{order.payment}</td>
-                                                <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
-                                                <td style={{ position: "relative" }}>
-                                                    <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
-                                                        <MoreVertical size={14} />
-                                                    </button>
-                                                    {activeRowMenuId === order.id && (
-                                                        <>
-                                                            <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                            <div 
-                                                                className="global-action-dropdown"
-                                                                style={index >= paginatedOrders.length - 2 && paginatedOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
-                                                            >
-                                                                <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
-                                                                    <Eye size={13} />
-                                                                    <span>View Details</span>
+                                                </th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Date</th>
+                                                <th>Items</th>
+                                                <th>Amount</th>
+                                                <th>Payment</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: "right" }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedPendingOrders.map((order, index) => (
+                                                <tr key={order.id} className="orders-row-hover">
+                                                    <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                                        <input 
+                                                            type="checkbox"
+                                                            className="orders-checkbox-row"
+                                                            checked={selectedOrderIds.includes(order.id)}
+                                                            onChange={() => toggleSelectOrder(order.id)}
+                                                        />
+                                                    </td>
+                                                    <td className="odt-id">{order.id}</td>
+                                                    <td>
+                                                        <div className="odt-customer">
+                                                            <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
+                                                                {order.initials}
+                                                            </span>
+                                                            <div className="odt-customer-name">
+                                                                <div>{order.customer}</div>
+                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
+                                                                    <Store size={10} style={{ display: "inline-block" }} /> {order.warehouse || "Koramangala Hub"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="odt-date">{order.date}</td>
+                                                    <td className="odt-items">{order.items} items</td>
+                                                    <td className="odt-amount">{order.amount}</td>
+                                                    <td className="odt-payment">{order.payment}</td>
+                                                    <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
+                                                    <td style={{ position: "relative" }}>
+                                                        <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
+                                                            <MoreVertical size={14} />
+                                                        </button>
+                                                        {activeRowMenuId === order.id && (
+                                                            <>
+                                                                <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
+                                                                <div 
+                                                                    className="global-action-dropdown"
+                                                                    style={index >= paginatedPendingOrders.length - 2 && paginatedPendingOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                                >
+                                                                    <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
+                                                                        <Eye size={13} />
+                                                                        <span>View Details</span>
+                                                                    </button>
+                                                                    <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
+                                                                        <Edit2 size={13} />
+                                                                        <span>Edit Order</span>
+                                                                    </button>
+                                                                    <button className="global-dropdown-item" onClick={() => handleGenerateInvoice(order)}>
+                                                                        <FileText size={13} />
+                                                                        <span>Generate Invoice</span>
+                                                                    </button>
+                                                                    <div className="global-dropdown-divider"></div>
+                                                                    <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
+                                                                        <Trash2 size={13} />
+                                                                        <span>Cancel Order</span>
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </>
+                                )}
+                                {activePaginationView === "orders" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="orders-checkbox-main"
+                                                        checked={
+                                                            paginatedOrders.length > 0 &&
+                                                            paginatedOrders.filter(o => o.status === "Pending").length > 0 &&
+                                                            paginatedOrders.filter(o => o.status === "Pending").every(o => selectedOrderIds.includes(o.id))
+                                                        }
+                                                        onChange={toggleSelectAll}
+                                                        title="Select all Pending orders on this page"
+                                                    />
+                                                </th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Date</th>
+                                                <th>Items</th>
+                                                <th>Amount</th>
+                                                <th>Payment</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: "right" }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedOrders.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={9} className="odt-empty">
+                                                        No customer orders found matching filters.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedOrders.map((order, index) => (
+                                                    <tr key={order.id} className="orders-row-hover">
+                                                        <td style={{ textAlign: "center", paddingRight: "10px" }}>
+                                                            <input 
+                                                                type="checkbox"
+                                                                className="orders-checkbox-row"
+                                                                checked={selectedOrderIds.includes(order.id)}
+                                                                onChange={() => toggleSelectOrder(order.id)}
+                                                                disabled={order.status !== "Pending" && order.status !== "Label Generated"}
+                                                                title={order.status !== "Pending" && order.status !== "Label Generated" ? "Only Pending or Label Generated orders can be selected" : ""}
+                                                            />
+                                                        </td>
+                                                        <td className="odt-id">{order.id}</td>
+                                                        <td>
+                                                            <div className="odt-customer">
+                                                                <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
+                                                                    {order.initials}
+                                                                </span>
+                                                                <div className="odt-customer-name">
+                                                                    <div>{order.customer}</div>
+                                                                    <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
+                                                                        <Store size={10} style={{ display: "inline-block" }} /> {order.warehouse || "Koramangala Hub"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="odt-date">{order.date}</td>
+                                                        <td className="odt-items">{order.items} items</td>
+                                                        <td className="odt-amount">{order.amount}</td>
+                                                        <td className="odt-payment">{order.payment}</td>
+                                                        <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
+                                                        <td style={{ position: "relative" }}>
+                                                            <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
+                                                                <MoreVertical size={14} />
+                                                            </button>
+                                                            {activeRowMenuId === order.id && (
+                                                                <>
+                                                                    <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
+                                                                    <div 
+                                                                        className="global-action-dropdown"
+                                                                        style={index >= paginatedOrders.length - 2 && paginatedOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
+                                                                    >
+                                                                        <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
+                                                                            <Eye size={13} />
+                                                                            <span>View Details</span>
+                                                                        </button>
+                                                                        <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
+                                                                            <Edit2 size={13} />
+                                                                            <span>Edit Order</span>
+                                                                        </button>
+                                                                        <button className="global-dropdown-item" onClick={() => handleGenerateInvoice(order)}>
+                                                                            <FileText size={13} />
+                                                                            <span>Generate Invoice</span>
+                                                                        </button>
+                                                                        <div className="global-dropdown-divider"></div>
+                                                                        <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
+                                                                            <Trash2 size={13} />
+                                                                            <span>Cancel Order</span>
+                                                                        </button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </>
+                                )}
+
+                                {activePaginationView === "picking" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th>Pick ID</th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Picker Assigned</th>
+                                                <th>Products Count</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: "right" }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedPicks.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={7} className="odt-empty">
+                                                        No pick lists found matching filters.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedPicks.map(item => {
+                                                    const assocOrder = orders.find(o => o.id === item.orderId);
+                                                    return (
+                                                        <tr key={item.id} className="orders-row-hover">
+                                                            <td className="odt-id">{item.id}</td>
+                                                            <td className="odt-id">{item.orderId}</td>
+                                                            <td className="odt-customer-name">
+                                                                <div>{item.customer}</div>
+                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
+                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span className={`picker-assigned-pill ${item.picker === "Unassigned" ? "unassigned" : ""}`}>
+                                                                    <User size={12} />
+                                                                    {item.picker}
+                                                                </span>
+                                                            </td>
+                                                            <td className="odt-items">{item.productsCount} SKUs</td>
+                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                            <td>
+                                                                <div className="orders-actions-cell">
+                                                                    {item.status === "Pending" && (
+                                                                        <button className="orders-inline-btn" onClick={() => openPickAssign(item)}>
+                                                                            Assign Picker
+                                                                        </button>
+                                                                    )}
+                                                                    {item.status === "Assigned" && (
+                                                                        <>
+                                                                            <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => openPickAssign(item)}>
+                                                                                Reassign
+                                                                            </button>
+                                                                            <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePick(item.id)}>
+                                                                                Complete Pick
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {item.status === "Completed" && (
+                                                                        <span className="orders-inline-completed">Completed</span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </>
+                                )}
+
+                                {activePaginationView === "packing" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th>Pack ID</th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Packed By</th>
+                                                <th>Items Count</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: "right" }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedPacks.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={7} className="odt-empty">
+                                                        No packing boxes found matching filters.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedPacks.map(item => {
+                                                    const assocOrder = orders.find(o => o.id === item.orderId);
+                                                    return (
+                                                        <tr key={item.id} className="orders-row-hover">
+                                                            <td className="odt-id">{item.id}</td>
+                                                            <td className="odt-id">{item.orderId}</td>
+                                                            <td className="odt-customer-name">
+                                                                <div>{item.customer}</div>
+                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
+                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span className={`picker-assigned-pill ${item.packedBy === "Unassigned" ? "unassigned" : ""}`}>
+                                                                    <User size={12} />
+                                                                    {item.packedBy}
+                                                                </span>
+                                                            </td>
+                                                            <td className="odt-items">{item.items} items</td>
+                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                            <td>
+                                                                <div className="orders-actions-cell">
+                                                                    {item.status === "Waiting" && (
+                                                                        <button className="orders-inline-btn" onClick={() => handleStartPacking(item.id)}>
+                                                                            Start Packing
+                                                                        </button>
+                                                                    )}
+                                                                    {item.status === "Packing" && (
+                                                                        <>
+                                                                            <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
+                                                                                <Printer size={12} />
+                                                                                <span>Print Label</span>
+                                                                            </button>
+                                                                            <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePack(item.id)}>
+                                                                                Complete
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {item.status === "Packed" && (
+                                                                        <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
+                                                                            <Printer size={12} />
+                                                                            <span>Reprint Tag</span>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </>
+                                )}
+
+                                {activePaginationView === "tracking" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th>Delivery ID</th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Rider Assigned</th>
+                                                <th>ETA</th>
+                                                <th>Current Location</th>
+                                                <th>Status</th>
+                                                <th style={{ textAlign: "right" }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedDeliveries.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={8} className="odt-empty">
+                                                        No delivery riders found matching filters.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedDeliveries.map(item => {
+                                                    const assocOrder = orders.find(o => o.id === item.orderId);
+                                                    return (
+                                                        <tr key={item.id} className="orders-row-hover">
+                                                            <td className="odt-id">{item.id}</td>
+                                                            <td className="odt-id">{item.orderId}</td>
+                                                            <td className="odt-customer-name">
+                                                                <div>{item.customer}</div>
+                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
+                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <span className={`picker-assigned-pill ${item.rider === "Unassigned" ? "unassigned" : ""}`}>
+                                                                    <User size={12} />
+                                                                    {item.rider}
+                                                                </span>
+                                                            </td>
+                                                            <td className="odt-items">{item.eta}</td>
+                                                            <td className="odt-warehouse">{item.location}</td>
+                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
+                                                            <td>
+                                                                <div className="orders-actions-cell">
+                                                                    <button className="orders-inline-btn orders-inline-btn--secondary" title="Call rider" onClick={() => handleCallRider(item.rider)} disabled={item.rider === "Unassigned"}>
+                                                                        <PhoneCall size={12} />
+                                                                    </button>
+                                                                    <button className="orders-inline-btn orders-inline-btn--secondary" title="Track on map" onClick={() => openDlvTrack(item)} disabled={item.status === "Delivered" || item.status === "Failed"}>
+                                                                        <Navigation size={12} />
+                                                                    </button>
+                                                                    <button className="orders-inline-btn" title="Update status" onClick={() => openDlvUpdate(item)}>
+                                                                        Update
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </>
+                                )}
+
+                                {activeTab === "label-history" && (
+                                    <>
+                                        <thead>
+                                            <tr>
+                                                <th>Batch ID</th>
+                                                <th>Generated Date & Time</th>
+                                                <th>Orders Count</th>
+                                                <th>Labels Count</th>
+                                                <th style={{ textAlign: "right" }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedHistory.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="odt-empty">
+                                                        No label printing history found. Generate some labels to start logging.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                paginatedHistory.map(batch => (
+                                                    <tr key={batch.id} className="orders-row-hover">
+                                                        <td className="odt-id">{batch.id}</td>
+                                                        <td className="odt-date">{batch.timestamp}</td>
+                                                        <td className="odt-items">{batch.ordersCount} orders</td>
+                                                        <td className="odt-items">{batch.labelsCount} labels</td>
+                                                        <td>
+                                                            <div className="orders-actions-cell">
+                                                                <button 
+                                                                    className="orders-inline-btn orders-inline-btn--secondary"
+                                                                    onClick={() => {
+                                                                        setPreviewLabels(batch.labels);
+                                                                        setIsPrintPreviewOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <Eye size={12} />
+                                                                    <span>Preview</span>
                                                                 </button>
-                                                                <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
-                                                                    <Edit2 size={13} />
-                                                                    <span>Edit Order</span>
-                                                                </button>
-                                                                <div className="global-dropdown-divider"></div>
-                                                                <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
-                                                                    <Trash2 size={13} />
-                                                                    <span>Cancel Order</span>
+                                                                <button 
+                                                                    className="orders-inline-btn"
+                                                                    onClick={() => {
+                                                                        setPreviewLabels(batch.labels);
+                                                                        setIsPrintPreviewOpen(true);
+                                                                        setTriggerImmediatePrint(true);
+                                                                    }}
+                                                                >
+                                                                    <Printer size={12} />
+                                                                    <span>Reprint Sheet</span>
                                                                 </button>
                                                             </div>
-                                                        </>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-
-                        {activeTab === "picking" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Pick ID</th>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Picker Assigned</th>
-                                        <th>Products Count</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedPicks.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="odt-empty">
-                                                No pick lists found matching filters.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedPicks.map(item => (
-                                            <tr key={item.id} className="orders-row-hover">
-                                                <td className="odt-id">{item.id}</td>
-                                                <td className="odt-id">{item.orderId}</td>
-                                                <td className="odt-customer-name">{item.customer}</td>
-                                                <td>
-                                                    <span className={`picker-assigned-pill ${item.picker === "Unassigned" ? "unassigned" : ""}`}>
-                                                        <User size={12} />
-                                                        {item.picker}
-                                                    </span>
-                                                </td>
-                                                <td className="odt-items">{item.productsCount} SKUs</td>
-                                                <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                <td>
-                                                    <div className="orders-actions-cell">
-                                                        {item.status === "Pending" && (
-                                                            <button className="orders-inline-btn" onClick={() => openPickAssign(item)}>
-                                                                Assign Picker
-                                                            </button>
-                                                        )}
-                                                        {item.status === "Assigned" && (
-                                                            <>
-                                                                <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => openPickAssign(item)}>
-                                                                    Reassign
-                                                                </button>
-                                                                <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePick(item.id)}>
-                                                                    Complete Pick
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {item.status === "Completed" && (
-                                                            <span className="orders-inline-completed">Completed</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-
-                        {activeTab === "packing" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Pack ID</th>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Packed By</th>
-                                        <th>Items Count</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedPacks.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="odt-empty">
-                                                No packing boxes found matching filters.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedPacks.map(item => (
-                                            <tr key={item.id} className="orders-row-hover">
-                                                <td className="odt-id">{item.id}</td>
-                                                <td className="odt-id">{item.orderId}</td>
-                                                <td className="odt-customer-name">{item.customer}</td>
-                                                <td>
-                                                    <span className={`picker-assigned-pill ${item.packedBy === "Unassigned" ? "unassigned" : ""}`}>
-                                                        <User size={12} />
-                                                        {item.packedBy}
-                                                    </span>
-                                                </td>
-                                                <td className="odt-items">{item.items} items</td>
-                                                <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                <td>
-                                                    <div className="orders-actions-cell">
-                                                        {item.status === "Waiting" && (
-                                                            <button className="orders-inline-btn" onClick={() => handleStartPacking(item.id)}>
-                                                                Start Packing
-                                                            </button>
-                                                        )}
-                                                        {item.status === "Packing" && (
-                                                            <>
-                                                                <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
-                                                                    <Printer size={12} />
-                                                                    <span>Print Label</span>
-                                                                </button>
-                                                                <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePack(item.id)}>
-                                                                    Complete
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {item.status === "Packed" && (
-                                                            <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
-                                                                <Printer size={12} />
-                                                                <span>Reprint Tag</span>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-
-                        {activeTab === "tracking" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Delivery ID</th>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Rider Assigned</th>
-                                        <th>ETA</th>
-                                        <th>Current Location</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedDeliveries.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={8} className="odt-empty">
-                                                No delivery riders found matching filters.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedDeliveries.map(item => (
-                                            <tr key={item.id} className="orders-row-hover">
-                                                <td className="odt-id">{item.id}</td>
-                                                <td className="odt-id">{item.orderId}</td>
-                                                <td className="odt-customer-name">{item.customer}</td>
-                                                <td>
-                                                    <span className={`picker-assigned-pill ${item.rider === "Unassigned" ? "unassigned" : ""}`}>
-                                                        <User size={12} />
-                                                        {item.rider}
-                                                    </span>
-                                                </td>
-                                                <td className="odt-items">{item.eta}</td>
-                                                <td className="odt-warehouse">{item.location}</td>
-                                                <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                <td>
-                                                    <div className="orders-actions-cell">
-                                                        <button className="orders-inline-btn orders-inline-btn--secondary" title="Call rider" onClick={() => handleCallRider(item.rider)} disabled={item.rider === "Unassigned"}>
-                                                            <PhoneCall size={12} />
-                                                        </button>
-                                                        <button className="orders-inline-btn orders-inline-btn--secondary" title="Track on map" onClick={() => openDlvTrack(item)} disabled={item.status === "Delivered" || item.status === "Failed"}>
-                                                            <Navigation size={12} />
-                                                        </button>
-                                                        <button className="orders-inline-btn" title="Update status" onClick={() => openDlvUpdate(item)}>
-                                                            Update
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-
-                        {activeTab === "label-history" && (
-                            <>
-                                <thead>
-                                    <tr>
-                                        <th>Batch ID</th>
-                                        <th>Generated Date & Time</th>
-                                        <th>Orders Count</th>
-                                        <th>Labels Count</th>
-                                        <th style={{ textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedHistory.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="odt-empty">
-                                                No label printing history found. Generate some labels to start logging.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedHistory.map(batch => (
-                                            <tr key={batch.id} className="orders-row-hover">
-                                                <td className="odt-id">{batch.id}</td>
-                                                <td className="odt-date">{batch.timestamp}</td>
-                                                <td className="odt-items">{batch.ordersCount} orders</td>
-                                                <td className="odt-items">{batch.labelsCount} labels</td>
-                                                <td>
-                                                    <div className="orders-actions-cell">
-                                                        <button 
-                                                            className="orders-inline-btn orders-inline-btn--secondary"
-                                                            onClick={() => {
-                                                                setPreviewLabels(batch.labels);
-                                                                setIsPrintPreviewOpen(true);
-                                                            }}
-                                                        >
-                                                            <Eye size={12} />
-                                                            <span>Preview</span>
-                                                        </button>
-                                                                                        <button 
-                                                            className="orders-inline-btn"
-                                                            onClick={() => {
-                                                                setPreviewLabels(batch.labels);
-                                                                setIsPrintPreviewOpen(true);
-                                                                setTriggerImmediatePrint(true);
-                                                            }}
-                                                        >
-                                                            <Printer size={12} />
-                                                            <span>Reprint Sheet</span>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </>
-                        )}
-                    </table>
-                </div>
-            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </>
+                                )}
+                            </table>
+                        </div>
+                    )
+                )}
 
                 {/* Pagination Controls */}
-                {((activeTab === "orders" && filteredOrders.length > ROWS_PER_PAGE) ||
-                  (activeTab === "pending" && filteredPendingOrders.length > ROWS_PER_PAGE) ||
-                  (activeTab === "picking" && filteredPicks.length > ROWS_PER_PAGE) ||
-                  (activeTab === "packing" && filteredPacks.length > ROWS_PER_PAGE) ||
-                  (activeTab === "tracking" && filteredDeliveries.length > ROWS_PER_PAGE) ||
-                  (activeTab === "label-history" && labelHistory.length > ROWS_PER_PAGE)) && (
+                {!["management", "details", "new-query", "cancelled"].includes(activeTab) && 
+                 ((activePaginationView === "orders" && filteredOrders.length > ROWS_PER_PAGE) ||
+                  (activePaginationView === "pending" && filteredPendingOrders.length > ROWS_PER_PAGE) ||
+                  (activePaginationView === "picking" && filteredPicks.length > ROWS_PER_PAGE) ||
+                  (activePaginationView === "packing" && filteredPacks.length > ROWS_PER_PAGE) ||
+                  (activePaginationView === "tracking" && filteredDeliveries.length > ROWS_PER_PAGE) ||
+                  (activePaginationView === "label-history" && labelHistory.length > ROWS_PER_PAGE)) && (
                     <div className="orders-pagination print-btn-no-print">
                         <span className="orders-pagination-info">
                             Showing <strong>{
-                                activeTab === "orders" ? Math.min(filteredOrders.length, (ordPage - 1) * ROWS_PER_PAGE + 1) :
-                                activeTab === "pending" ? Math.min(filteredPendingOrders.length, (pendingPage - 1) * ROWS_PER_PAGE + 1) :
-                                activeTab === "picking" ? Math.min(filteredPicks.length, (pickPage - 1) * ROWS_PER_PAGE + 1) :
-                                activeTab === "packing" ? Math.min(filteredPacks.length, (packPage - 1) * ROWS_PER_PAGE + 1) :
-                                activeTab === "tracking" ? Math.min(filteredDeliveries.length, (dlvPage - 1) * ROWS_PER_PAGE + 1) :
+                                activePaginationView === "orders" ? Math.min(filteredOrders.length, (ordPage - 1) * ROWS_PER_PAGE + 1) :
+                                activePaginationView === "pending" ? Math.min(filteredPendingOrders.length, (pendingPage - 1) * ROWS_PER_PAGE + 1) :
+                                activePaginationView === "picking" ? Math.min(filteredPicks.length, (pickPage - 1) * ROWS_PER_PAGE + 1) :
+                                activePaginationView === "packing" ? Math.min(filteredPacks.length, (packPage - 1) * ROWS_PER_PAGE + 1) :
+                                activePaginationView === "tracking" ? Math.min(filteredDeliveries.length, (dlvPage - 1) * ROWS_PER_PAGE + 1) :
                                 Math.min(labelHistory.length, (histPage - 1) * ROWS_PER_PAGE + 1)
                             }</strong> to <strong>{
-                                activeTab === "orders" ? Math.min(filteredOrders.length, ordPage * ROWS_PER_PAGE) :
-                                activeTab === "pending" ? Math.min(filteredPendingOrders.length, pendingPage * ROWS_PER_PAGE) :
-                                activeTab === "picking" ? Math.min(filteredPicks.length, pickPage * ROWS_PER_PAGE) :
-                                activeTab === "packing" ? Math.min(filteredPacks.length, packPage * ROWS_PER_PAGE) :
-                                activeTab === "tracking" ? Math.min(filteredDeliveries.length, dlvPage * ROWS_PER_PAGE) :
+                                activePaginationView === "orders" ? Math.min(filteredOrders.length, ordPage * ROWS_PER_PAGE) :
+                                activePaginationView === "pending" ? Math.min(filteredPendingOrders.length, pendingPage * ROWS_PER_PAGE) :
+                                activePaginationView === "picking" ? Math.min(filteredPicks.length, pickPage * ROWS_PER_PAGE) :
+                                activePaginationView === "packing" ? Math.min(filteredPacks.length, packPage * ROWS_PER_PAGE) :
+                                activePaginationView === "tracking" ? Math.min(filteredDeliveries.length, dlvPage * ROWS_PER_PAGE) :
                                 Math.min(labelHistory.length, histPage * ROWS_PER_PAGE)
                             }</strong> of <strong>{
-                                activeTab === "orders" ? filteredOrders.length :
-                                activeTab === "pending" ? filteredPendingOrders.length :
-                                activeTab === "picking" ? filteredPicks.length :
-                                activeTab === "packing" ? filteredPacks.length :
-                                activeTab === "tracking" ? filteredDeliveries.length :
+                                activePaginationView === "orders" ? filteredOrders.length :
+                                activePaginationView === "pending" ? filteredPendingOrders.length :
+                                activePaginationView === "picking" ? filteredPicks.length :
+                                activePaginationView === "packing" ? filteredPacks.length :
+                                activePaginationView === "tracking" ? filteredDeliveries.length :
                                 labelHistory.length
-                            }</strong> {activeTab === "label-history" ? "batches" : "orders"}
+                            }</strong> {activePaginationView === "label-history" ? "batches" : "orders"}
                         </span>
 
                         <div className="orders-pagination-controls">
                             <button
                                 className="orders-page-btn"
                                 onClick={() => {
-                                    if (activeTab === "orders") setOrdPage(p => Math.max(1, p - 1));
-                                    else if (activeTab === "pending") setPendingPage(p => Math.max(1, p - 1));
-                                    else if (activeTab === "picking") setPickPage(p => Math.max(1, p - 1));
-                                    else if (activeTab === "packing") setPackPage(p => Math.max(1, p - 1));
-                                    else if (activeTab === "tracking") setDlvPage(p => Math.max(1, p - 1));
+                                    if (activePaginationView === "orders") setOrdPage(p => Math.max(1, p - 1));
+                                    else if (activePaginationView === "pending") setPendingPage(p => Math.max(1, p - 1));
+                                    else if (activePaginationView === "picking") setPickPage(p => Math.max(1, p - 1));
+                                    else if (activePaginationView === "packing") setPackPage(p => Math.max(1, p - 1));
+                                    else if (activePaginationView === "tracking") setDlvPage(p => Math.max(1, p - 1));
                                     else setHistPage(p => Math.max(1, p - 1));
                                 }}
                                 disabled={
-                                    activeTab === "orders" ? ordPage === 1 :
-                                    activeTab === "pending" ? pendingPage === 1 :
-                                    activeTab === "picking" ? pickPage === 1 :
-                                    activeTab === "packing" ? packPage === 1 :
-                                    activeTab === "tracking" ? dlvPage === 1 :
+                                    activePaginationView === "orders" ? ordPage === 1 :
+                                    activePaginationView === "pending" ? pendingPage === 1 :
+                                    activePaginationView === "picking" ? pickPage === 1 :
+                                    activePaginationView === "packing" ? packPage === 1 :
+                                    activePaginationView === "tracking" ? dlvPage === 1 :
                                     histPage === 1
                                 }
                             >
@@ -1732,30 +2814,30 @@ function OrdersPage() {
                             </button>
 
                             {Array.from({ length:
-                                activeTab === "orders" ? Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
-                                activeTab === "pending" ? Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
-                                activeTab === "picking" ? Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
-                                activeTab === "packing" ? Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
-                                activeTab === "tracking" ? Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
+                                activePaginationView === "orders" ? Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
+                                activePaginationView === "pending" ? Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
+                                activePaginationView === "picking" ? Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
+                                activePaginationView === "packing" ? Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
+                                activePaginationView === "tracking" ? Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
                                 Math.ceil(labelHistory.length / ROWS_PER_PAGE)
                             }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
                                     className={`orders-page-btn orders-page-number ${
-                                        (activeTab === "orders" && ordPage === page) ||
-                                        (activeTab === "pending" && pendingPage === page) ||
-                                        (activeTab === "picking" && pickPage === page) ||
-                                        (activeTab === "packing" && packPage === page) ||
-                                        (activeTab === "tracking" && dlvPage === page) ||
-                                        (activeTab === "label-history" && histPage === page)
+                                        (activePaginationView === "orders" && ordPage === page) ||
+                                        (activePaginationView === "pending" && pendingPage === page) ||
+                                        (activePaginationView === "picking" && pickPage === page) ||
+                                        (activePaginationView === "packing" && packPage === page) ||
+                                        (activePaginationView === "tracking" && dlvPage === page) ||
+                                        (activePaginationView === "label-history" && histPage === page)
                                             ? "orders-page-number--active" : ""
                                     }`}
                                     onClick={() => {
-                                        if (activeTab === "orders") setOrdPage(page);
-                                        else if (activeTab === "pending") setPendingPage(page);
-                                        else if (activeTab === "picking") setPickPage(page);
-                                        else if (activeTab === "packing") setPackPage(page);
-                                        else if (activeTab === "tracking") setDlvPage(page);
+                                        if (activePaginationView === "orders") setOrdPage(page);
+                                        else if (activePaginationView === "pending") setPendingPage(page);
+                                        else if (activePaginationView === "picking") setPickPage(page);
+                                        else if (activePaginationView === "packing") setPackPage(page);
+                                        else if (activePaginationView === "tracking") setDlvPage(page);
                                         else setHistPage(page);
                                     }}
                                 >
@@ -1766,19 +2848,19 @@ function OrdersPage() {
                             <button
                                 className="orders-page-btn"
                                 onClick={() => {
-                                    if (activeTab === "orders") setOrdPage(p => Math.min(Math.ceil(filteredOrders.length / ROWS_PER_PAGE), p + 1));
-                                    else if (activeTab === "pending") setPendingPage(p => Math.min(Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE), p + 1));
-                                    else if (activeTab === "picking") setPickPage(p => Math.min(Math.ceil(filteredPicks.length / ROWS_PER_PAGE), p + 1));
-                                    else if (activeTab === "packing") setPackPage(p => Math.min(Math.ceil(filteredPacks.length / ROWS_PER_PAGE), p + 1));
-                                    else if (activeTab === "tracking") setDlvPage(p => Math.min(Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE), p + 1));
+                                    if (activePaginationView === "orders") setOrdPage(p => Math.min(Math.ceil(filteredOrders.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activePaginationView === "pending") setPendingPage(p => Math.min(Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activePaginationView === "picking") setPickPage(p => Math.min(Math.ceil(filteredPicks.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activePaginationView === "packing") setPackPage(p => Math.min(Math.ceil(filteredPacks.length / ROWS_PER_PAGE), p + 1));
+                                    else if (activePaginationView === "tracking") setDlvPage(p => Math.min(Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE), p + 1));
                                     else setHistPage(p => Math.min(Math.ceil(labelHistory.length / ROWS_PER_PAGE), p + 1));
                                 }}
                                 disabled={
-                                    activeTab === "orders" ? ordPage === Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
-                                    activeTab === "pending" ? pendingPage === Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
-                                    activeTab === "picking" ? pickPage === Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
-                                    activeTab === "packing" ? packPage === Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
-                                    activeTab === "tracking" ? dlvPage === Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
+                                    activePaginationView === "orders" ? ordPage === Math.ceil(filteredOrders.length / ROWS_PER_PAGE) :
+                                    activePaginationView === "pending" ? pendingPage === Math.ceil(filteredPendingOrders.length / ROWS_PER_PAGE) :
+                                    activePaginationView === "picking" ? pickPage === Math.ceil(filteredPicks.length / ROWS_PER_PAGE) :
+                                    activePaginationView === "packing" ? packPage === Math.ceil(filteredPacks.length / ROWS_PER_PAGE) :
+                                    activePaginationView === "tracking" ? dlvPage === Math.ceil(filteredDeliveries.length / ROWS_PER_PAGE) :
                                     histPage === Math.ceil(labelHistory.length / ROWS_PER_PAGE)
                                 }
                             >
@@ -1857,6 +2939,14 @@ function OrdersPage() {
                                             <option value="Shipped">Shipped</option>
                                             <option value="Delivered">Delivered</option>
                                             <option value="Cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div className="orders-form-group">
+                                        <label htmlFor="formWarehouse">Fulfillment Hub / Darkhouse</label>
+                                        <select id="formWarehouse" value={formWarehouse} onChange={(e) => setFormWarehouse(e.target.value)}>
+                                            {INITIAL_DARKHOUSES.map(d => (
+                                                <option key={d.id} value={d.name}>{d.name} ({d.code})</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </form>
@@ -1954,6 +3044,20 @@ function OrdersPage() {
                                 Close
                             </button>
 
+                            {modalType === "ord-view" && (
+                                <button
+                                    onClick={() => {
+                                        setIsModalOpen(false);
+                                        handleGenerateInvoice(selectedItem);
+                                    }}
+                                    className="orders-modal-submit-btn"
+                                    style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                                >
+                                    <FileText size={14} />
+                                    <span>Generate Invoice</span>
+                                </button>
+                            )}
+
                             {modalType === "ord-edit" && (
                                 <button type="submit" form="ord-edit-form" className="orders-modal-submit-btn">
                                     Apply Changes
@@ -1978,7 +3082,7 @@ function OrdersPage() {
             )}
 
             {/* ─── FLOATING BULK ACTIONS TOOLBAR ─── */}
-            {selectedOrderIds.length > 0 && (activeTab === "orders" || activeTab === "pending") && (
+            {selectedOrderIds.length > 0 && activeTab === "orders" && (boardStep === "all" || boardStep === "pending") && (
                 <div className="orders-bulk-toolbar fade-in-up print-btn-no-print">
                     <div className="bulk-toolbar-info">
                         <div className="bulk-count-badge">{selectedOrderIds.length}</div>
@@ -1992,7 +3096,7 @@ function OrdersPage() {
                             <Printer size={13} />
                             <span>Print Labels</span>
                         </button>
-                        {activeTab === "pending" ? (
+                        {boardStep === "pending" ? (
                             <button className="bulk-action-btn info" onClick={handleBulkMarkReadyForPicking}>
                                 Mark Ready For Picking
                             </button>
@@ -2162,6 +3266,14 @@ function OrdersPage() {
 
                     </div>
                 </div>
+            )}
+
+            {isInvoiceOpen && invoiceOrder && (
+                <InvoicePreviewModal
+                    isOpen={isInvoiceOpen}
+                    order={invoiceOrder}
+                    onClose={() => setIsInvoiceOpen(false)}
+                />
             )}
 
             {/* ─── DEDICATED PRINT CONTAINER (HIDDEN ON SCREEN, VISIBLE ON PRINT) ─── */}

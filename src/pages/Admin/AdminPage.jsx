@@ -17,7 +17,13 @@ import {
     Loader2,
     Copy,
     Key,
-    Mail
+    Mail,
+    ShieldCheck,
+    Shield,
+    Layers,
+    ShoppingBag,
+    Edit,
+    Trash2
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
@@ -36,6 +42,9 @@ import {
     PERMISSION_CATEGORIES
 } from "../../components/Roles/rolePermissionsUtils";
 import { authService } from "../../services/authService";
+import DarkhousesPage from "../Darkhouses/DarkhousesPage";
+import CategoriesPage from "../catalog/Categories/CategoriesPage";
+import ProductsPage from "../catalog/Products/ProductsPage";
 import "../Settings/Settings.css";
 
 // Helper to resolve URLs dynamically, routing through the Vite proxy on localhost to avoid CORS errors
@@ -56,7 +65,9 @@ function AdminPage() {
     
     // Determine active tab from URL path
     const pathParts = location.pathname.split('/');
-    const initialTab = pathParts[pathParts.length - 1] === "roles" ? "roles" : "members";
+    const tabFromPath = pathParts[pathParts.length - 1];
+    const validTabs = ["users", "permissions", "rolemaster", "warehouses", "categories", "products"];
+    const initialTab = validTabs.includes(tabFromPath) ? tabFromPath : "users";
 
     const [activeTab, setActiveTab] = useState(initialTab);
     const { toast, showToast } = useToast(3000);
@@ -92,7 +103,9 @@ function AdminPage() {
     // Sync activeTab state when URL changes
     useEffect(() => {
         const pathParts = location.pathname.split('/');
-        const currentTab = pathParts[pathParts.length - 1] === "roles" ? "roles" : "members";
+        const tabFromPath = pathParts[pathParts.length - 1];
+        const validTabs = ["users", "permissions", "rolemaster", "warehouses", "categories", "products"];
+        const currentTab = validTabs.includes(tabFromPath) ? tabFromPath : "users";
         setTimeout(() => {
             setActiveTab(currentTab);
         }, 0);
@@ -110,7 +123,12 @@ function AdminPage() {
     };
 
     const tabs = [
-        { id: "members", label: "Members", icon: Users }
+        { id: "users", label: "Manage Users", icon: Users },
+        { id: "permissions", label: "Role & Page Permissions", icon: ShieldCheck },
+        { id: "rolemaster", label: "Role Master", icon: Shield },
+        { id: "warehouses", label: "Manage Warehouses & Dark Houses", icon: Warehouse },
+        { id: "categories", label: "Manage Categories", icon: Layers },
+        { id: "products", label: "Manage Products", icon: ShoppingBag }
     ];
 
     const name = user ? `${user.firstName} ${user.lastName}` : "";
@@ -377,6 +395,51 @@ function AdminPage() {
     const [rolesLoading, setRolesLoading] = useState(false);
     const [roleErrorText, setRoleErrorText] = useState("");
     const [roleSearchQuery, setRoleSearchQuery] = useState("");
+
+    // Role Master Tab States
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [isDeleteRoleModalOpen, setIsDeleteRoleModalOpen] = useState(false);
+    const [editingRole, setEditingRole] = useState(null);
+    const [formRoleName, setFormRoleName] = useState("");
+    const [formRoleDesc, setFormRoleDesc] = useState("");
+    const [formRolePermissions, setFormRolePermissions] = useState([]);
+    const [confirmDeleteRoleId, setConfirmDeleteRoleId] = useState(null);
+
+    const handleSaveRoleMaster = (e) => {
+        e.preventDefault();
+        if (!formRoleName.trim()) {
+            showToast("Role name is required.");
+            return;
+        }
+        if (editingRole) {
+            setFetchedRoles(prev => prev.map(r => {
+                if (r.roleId === editingRole.roleId) {
+                    return { ...r, roleName: formRoleName, description: formRoleDesc };
+                }
+                return r;
+            }));
+            showToast("Role updated successfully.");
+        } else {
+            const newId = `role-${formRoleName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+            const newRole = {
+                roleId: newId,
+                roleName: formRoleName,
+                description: formRoleDesc || "Access to assigned workspace modules and settings.",
+                warehouseId: selectedWarehouseId
+            };
+            setFetchedRoles(prev => [...prev, newRole]);
+            showToast("Role created successfully.");
+        }
+        setIsRoleModalOpen(false);
+    };
+
+    const handleDeleteRoleMaster = () => {
+        if (!confirmDeleteRoleId) return;
+        setFetchedRoles(prev => prev.filter(r => r.roleId !== confirmDeleteRoleId));
+        showToast("Role deleted successfully.");
+        setIsDeleteRoleModalOpen(false);
+        setConfirmDeleteRoleId(null);
+    };
     
     const [permissionsList, setPermissionsList] = useState([]);
     const [permissionsLoading, setPermissionsLoading] = useState(false);
@@ -1223,7 +1286,7 @@ function AdminPage() {
     };
 
     const renderActiveContent = () => {
-        if (activeTab === "members") {
+        if (activeTab === "users") {
             return (
                 <div className="tab-panel-content fade-in" style={{ marginTop: '0', padding: 0 }}>
                     <style>{`
@@ -1570,8 +1633,186 @@ function AdminPage() {
                     )}
                 </div>
             );
-        } else if (activeTab === "roles") {
+        } else if (activeTab === "permissions") {
             return <div style={{ marginTop: '0' }}><UserRolesSection showToast={showToast} /></div>;
+        } else if (activeTab === "rolemaster") {
+            // Role Master Grid View
+            const filteredRolesList = fetchedRoles.filter(role => 
+                role.roleName.toLowerCase().includes(roleSearchQuery.toLowerCase())
+            );
+
+            return (
+                <div className="tab-panel-content fade-in" style={{ marginTop: '0', padding: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Role Master</h3>
+                            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Configure global role definitions and access templates</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <div className="search-input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <Search size={16} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search roles..."
+                                    value={roleSearchQuery}
+                                    onChange={(e) => setRoleSearchQuery(e.target.value)}
+                                    style={{
+                                        padding: '8px 12px 8px 36px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e2e8f0',
+                                        fontSize: '13px',
+                                        outline: 'none',
+                                        width: '200px'
+                                    }}
+                                />
+                            </div>
+                            <button
+                                className="btn-add-member"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    backgroundColor: '#2563eb',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 16px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => {
+                                    setEditingRole(null);
+                                    setFormRoleName("");
+                                    setFormRoleDesc("");
+                                    setFormRolePermissions([]);
+                                    setIsRoleModalOpen(true);
+                                }}
+                            >
+                                <Plus size={16} />
+                                <span>Create Role</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="role-cards-container">
+                        {filteredRolesList.map((role) => {
+                            const permsCount = rolePermissionsMap[role.roleId]?.length || 0;
+                            const description = role.description || getRoleDescription(role.roleName);
+                            const initials = role.roleName
+                                .split(' ')
+                                .filter(Boolean)
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase()
+                                .slice(0, 2) || "RL";
+
+                            return (
+                                <div key={role.roleId} className="role-master-card" style={{
+                                    background: '#ffffff',
+                                    borderRadius: '16px',
+                                    border: '1px solid #e2e8f0',
+                                    padding: '20px',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    position: 'relative',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    <div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                                            <div style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '10px',
+                                                backgroundColor: '#eff6ff',
+                                                color: '#2563eb',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: '700',
+                                                fontSize: '14px'
+                                            }}>
+                                                {initials}
+                                            </div>
+                                            <span style={{
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                color: '#475569',
+                                                backgroundColor: '#f1f5f9',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px'
+                                            }}>
+                                                {permsCount} permissions
+                                            </span>
+                                        </div>
+                                        <h4 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>{role.roleName}</h4>
+                                        <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#64748b', lineHeight: '1.5', height: '45px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {description}
+                                        </p>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                                        <button
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: '#475569',
+                                                cursor: 'pointer',
+                                                padding: '6px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: '500'
+                                            }}
+                                            onClick={() => {
+                                                setEditingRole(role);
+                                                setFormRoleName(role.roleName);
+                                                setFormRoleDesc(description);
+                                                setFormRolePermissions(rolePermissionsMap[role.roleId] || []);
+                                                setIsRoleModalOpen(true);
+                                            }}
+                                        >
+                                            <Edit size={14} />
+                                            <span>Edit</span>
+                                        </button>
+                                        <button
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: '#ef4444',
+                                                cursor: 'pointer',
+                                                padding: '6px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                fontSize: '12px',
+                                                fontWeight: '500'
+                                            }}
+                                            onClick={() => {
+                                                setConfirmDeleteRoleId(role.roleId);
+                                                setIsDeleteRoleModalOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 size={14} />
+                                            <span>Delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        } else if (activeTab === "warehouses") {
+            return <div style={{ marginTop: '0', padding: '12px' }}><DarkhousesPage /></div>;
+        } else if (activeTab === "categories") {
+            return <div style={{ marginTop: '0', padding: '12px' }}><CategoriesPage /></div>;
+        } else if (activeTab === "products") {
+            return <div style={{ marginTop: '0', padding: '12px' }}><ProductsPage /></div>;
         }
         return null;
     };
@@ -3454,6 +3695,156 @@ function AdminPage() {
                 }}
                 onSave={handleSavePassword}
             />
+
+            {/* Create/Edit Role Modal */}
+            <Modal
+                isOpen={isRoleModalOpen}
+                onClose={() => setIsRoleModalOpen(false)}
+                ariaLabelledBy="role-modal-title"
+                header={
+                    <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div className="employee-avatar-placeholder" style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '50%',
+                            backgroundColor: '#eff6ff',
+                            color: '#2563eb',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Shield size={22} />
+                        </div>
+                        <div>
+                            <h2 id="role-modal-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+                                {editingRole ? "Edit Role" : "Create New Role"}
+                            </h2>
+                            <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                                {editingRole ? "Modify role settings and description" : "Define a new warehouse role profile"}
+                            </p>
+                        </div>
+                    </div>
+                }
+                footer={
+                    <div className="add-employee-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', padding: '16px 24px', borderTop: '1px solid #e2e8f0' }}>
+                        <button type="button" className="role-btn role-btn--ghost" onClick={() => setIsRoleModalOpen(false)}>
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            form="role-master-form"
+                            className="role-btn role-btn--primary"
+                            disabled={!formRoleName.trim()}
+                        >
+                            Save Role
+                        </button>
+                    </div>
+                }
+            >
+                <form id="role-master-form" onSubmit={handleSaveRoleMaster} className="employee-modal-sections" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="employee-section-card" style={{ border: 'none', padding: 0, boxShadow: 'none' }}>
+                        <div className="employee-form-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+                            <label htmlFor="role-name" style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Role Name <span style={{ color: '#ef4444' }}>*</span></label>
+                            <input
+                                id="role-name"
+                                type="text"
+                                required
+                                placeholder="e.g. Operation Supervisor"
+                                value={formRoleName}
+                                onChange={(e) => setFormRoleName(e.target.value)}
+                                style={{
+                                    padding: '10px 14px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                        <div className="employee-form-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label htmlFor="role-desc" style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Description</label>
+                            <textarea
+                                id="role-desc"
+                                rows={4}
+                                placeholder="Describe the responsibilities and scope of this role..."
+                                value={formRoleDesc}
+                                onChange={(e) => setFormRoleDesc(e.target.value)}
+                                style={{
+                                    padding: '10px 14px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #d1d5db',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    width: '100%',
+                                    resize: 'vertical',
+                                    fontFamily: 'inherit',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Delete Role Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteRoleModalOpen}
+                onClose={() => setIsDeleteRoleModalOpen(false)}
+                ariaLabelledBy="delete-role-title"
+                size="compact"
+                header={
+                    <div className="add-employee-header-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div className="employee-avatar-placeholder" style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '50%',
+                            backgroundColor: '#fee2e2',
+                            color: '#ef4444',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Trash2 size={22} />
+                        </div>
+                        <div>
+                            <h2 id="delete-role-title" className="role-edit-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Delete Role</h2>
+                            <p className="role-edit-modal-subtitle" style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>This action cannot be undone</p>
+                        </div>
+                    </div>
+                }
+                footer={
+                    <div className="add-employee-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', padding: '16px 24px', borderTop: '1px solid #e2e8f0' }}>
+                        <button type="button" className="role-btn role-btn--ghost" onClick={() => setIsDeleteRoleModalOpen(false)}>
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="role-btn"
+                            style={{
+                                backgroundColor: '#ef4444',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                            }}
+                            onClick={handleDeleteRoleMaster}
+                        >
+                            Delete Role
+                        </button>
+                    </div>
+                }
+            >
+                <div style={{ padding: '24px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: '1.5' }}>
+                        Are you sure you want to delete this role from the Role Master? Employees with this role assigned will lose their role template bindings.
+                    </p>
+                </div>
+            </Modal>
         </div>
     );
 }

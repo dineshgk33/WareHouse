@@ -15,6 +15,9 @@ const OPERATION_HEAD_ONLY = [ROLES.OPERATION_HEAD];
 const MainLayout              = lazy(() => import("./layouts/MainLayout"));
 const Dashboard               = lazy(() => import("./pages/dashboard/Dashboard.jsx"));
 const Orders                  = lazy(() => import("./pages/orders/OrdersPage.jsx"));
+const Receiving               = lazy(() => import("./pages/receiving/ReceivingPage.jsx"));
+const DispatchPage            = lazy(() => import("./pages/dispatch/DispatchPage.jsx"));
+const GRNPage                 = lazy(() => import("./pages/grn/GRNPage.jsx"));
 const WarehouseCatalogue      = lazy(() => import("./pages/catalogue/warehouse/WarehouseCataloguePage.jsx"));
 const DarkhouseProducts       = lazy(() => import("./pages/catalogue/darkhouse/ProductsPage.jsx"));
 const DarkhouseInventory      = lazy(() => import("./pages/catalogue/darkhouse/InventoryPage.jsx"));
@@ -165,6 +168,21 @@ function App() {
                                     <Route path="orders/pending" element={<Orders />} />
                                 </Route>
 
+                                {/* Receiving Management */}
+                                <Route element={<ProtectedRoute pageId={["ORDERS", "RECEIVING"]} />}>
+                                    <Route path="receiving" element={<Receiving />} />
+                                </Route>
+
+                                {/* Dispatch Management */}
+                                <Route element={<ProtectedRoute pageId="DISPATCH" />}>
+                                    <Route path="dispatch" element={<DispatchPage />} />
+                                </Route>
+
+                                {/* GRN (Goods Receipt Note) */}
+                                <Route element={<ProtectedRoute pageId="GRN" />}>
+                                    <Route path="grn" element={<GRNPage />} />
+                                </Route>
+
                                 <Route element={<ProtectedRoute pageId={["WAREHOUSE_INVENTORY", "DARKHOUSE_INVENTORY", "STOCK_TRANSFERS"]} />}>
                                     <Route path="catalogue/warehouse" element={<WarehouseCatalogue />} />
                                     <Route path="catalogue/darkhouse/products" element={<DarkhouseProducts />} />
@@ -210,16 +228,23 @@ function App() {
                                     <Route path="employees" element={<AdminPage />} />
                                 </Route>
 
-                                {/* Admin — Members & User Roles */}
+                                {/* Admin — Unified Command Console sub-routes */}
                                 <Route element={<ProtectedRoute pageId="ADMIN" />}>
-                                    <Route path="admin/members" element={<AdminPage />} />
-                                    <Route path="admin/roles" element={<AdminPage />} />
-                                    <Route path="admin" element={<AdminPage />} />
+                                    <Route path="admin/users" element={<AdminPage />} />
+                                    <Route path="admin/permissions" element={<AdminPage />} />
+                                    <Route path="admin/rolemaster" element={<AdminPage />} />
+                                    <Route path="admin/warehouses" element={<AdminPage />} />
+                                    <Route path="admin/categories" element={<AdminPage />} />
+                                    <Route path="admin/products" element={<AdminPage />} />
+                                    <Route path="admin" element={<Navigate to="/admin/users" replace />} />
+                                    <Route path="admin/members" element={<Navigate to="/admin/users" replace />} />
+                                    <Route path="admin/roles" element={<Navigate to="/admin/permissions" replace />} />
                                 </Route>
 
                                 {/* Reports */}
                                 <Route element={<ProtectedRoute pageId="REPORTS" />}>
                                     <Route path="reports" element={<ReportsPage />} />
+                                    <Route path="reports/:reportType" element={<ReportsPage />} />
                                 </Route>
 
                                 {/* Operations */}

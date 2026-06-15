@@ -1,6 +1,18 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, PackageSearch, PackageCheck, Truck, Clock, History } from "lucide-react";
+import { 
+    ShoppingBag, 
+    PackageSearch, 
+    PackageCheck, 
+    Truck, 
+    Clock, 
+    History,
+    Sliders,
+    Search,
+    XCircle,
+    FileText,
+    List
+} from "lucide-react";
 import "./Sidebar.css"; // Reuse sidebar styling structure
 
 function OrdersFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
@@ -25,16 +37,26 @@ function OrdersFlyout({ menu, position, onMouseEnter, onMouseLeave }) {
     // Map label to matching icon
     const getMenuIcon = (label) => {
         switch (label) {
+            case "Order Management":
+                return <Sliders size={16} className="flyout-item-icon" />;
+            case "Order List":
             case "All Orders":
-                return <ShoppingBag size={16} className="flyout-item-icon" />;
-            case "Pending Orders":
-                return <Clock size={16} className="flyout-item-icon" />;
+                return <List size={16} className="flyout-item-icon" />;
+            case "Order Details":
+                return <FileText size={16} className="flyout-item-icon" />;
+            case "New Order Query":
+                return <Search size={16} className="flyout-item-icon" />;
             case "Picking":
                 return <PackageSearch size={16} className="flyout-item-icon" />;
             case "Packing":
                 return <PackageCheck size={16} className="flyout-item-icon" />;
+            case "Delivery Management":
             case "Delivery Tracking":
                 return <Truck size={16} className="flyout-item-icon" />;
+            case "Cancelled Orders":
+                return <XCircle size={16} className="flyout-item-icon" />;
+            case "Pending Orders":
+                return <Clock size={16} className="flyout-item-icon" />;
             case "Label History":
                 return <History size={16} className="flyout-item-icon" />;
             default:
