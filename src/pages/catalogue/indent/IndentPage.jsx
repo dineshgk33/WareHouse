@@ -202,7 +202,7 @@ function IndentPage() {
             const matchesStatus = statusFilter === "All" || indent.status === statusFilter;
             const matchesPriority = priorityFilter === "All" || indent.priority === priorityFilter;
             
-            // Sub warehouses only see their own requests
+            // Dark House / regional hubs only see their own requests
             const isWarehouseAllowed = isMainWarehouse 
                 ? (warehouseFilter === "All" || indent.requestedBy === warehouseFilter)
                 : (indent.requestedBy === selectedWarehouseName);
@@ -471,7 +471,7 @@ function IndentPage() {
                 <div className="inv-header__title-block">
                     <h1 className="inv-header__title">Stock Request (Indent) Management</h1>
                     <p className="inv-header__subtitle">
-                        Enterprise inventory replenishment pipeline linking sub-warehouses / darkhouse hubs to HAATZA Central Warehouse.
+                        Enterprise inventory replenishment pipeline linking Dark House hubs to HAATZA Central Warehouse.
                     </p>
                 </div>
                 <div className="inv-header-actions-group">
@@ -1022,7 +1022,7 @@ function IndentPage() {
                                                         </button>
                                                     )}
 
-                                                    {/* Receive trigger (Sub Warehouse users only, matches own hub) */}
+                                                    {/* Receive trigger (Dark House / regional hub users only, matches own hub) */}
                                                     {!isMainWarehouse && indent.status === "Dispatched" && indent.requestedBy === selectedWarehouseName && (
                                                         <button 
                                                             className="inv-action-inline-btn inv-action-inline-btn--success"

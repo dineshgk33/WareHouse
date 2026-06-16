@@ -38,8 +38,15 @@ import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
 import { getOrderStatusClass } from "../../utils/statusUtils";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
-import { Barcode128Svg } from "../../utils/barcode";
 import InvoicePreviewModal from "./InvoicePreviewModal";
+import OrderDetailInspector from "./components/OrderDetailInspector";
+import OrderQueryView from "./components/OrderQueryView";
+import CancelledOrdersView from "./components/CancelledOrdersView";
+import OrderManagementView from "./components/OrderManagementView";
+import OrderListTable from "./components/OrderListTable";
+import PickingQueueView from "./components/PickingQueueView";
+import PackingQueueView from "./components/PackingQueueView";
+import DeliveryQueueView from "./components/DeliveryQueueView";
 import "./Orders.css";
 
 const chunkArray = (array, size) => {
@@ -1138,7 +1145,7 @@ function OrdersPage() {
                 }];
             });
         }
-        showToast(`Packed & sealed package box for ${id}`);
+        showToast(`Packenpm d & sealed package box for ${id}`);
     };
 
     const handleCallRider = (rider) => {
@@ -1405,49 +1412,7 @@ function OrdersPage() {
             {/* Main Table Container */}
             <div className="orders-table-card">
                 {/* Navigation Tabs Toolbar */}
-                <div className="orders-toolbar">
-                    <div className="orders-tabs" role="tablist">
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "board"}
-                            className={`orders-tab ${activeTab === "board" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("board")}
-                        >
-                            Order List
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "details"}
-                            className={`orders-tab ${activeTab === "details" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("details")}
-                        >
-                            Order Details
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "management"}
-                            className={`orders-tab ${activeTab === "management" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("management")}
-                        >
-                            Order Management
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "new-query"}
-                            className={`orders-tab ${activeTab === "new-query" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("new-query")}
-                        >
-                            New Order Query
-                        </button>
-                        <button
-                            role="tab"
-                            aria-selected={activeTab === "cancelled"}
-                            className={`orders-tab ${activeTab === "cancelled" ? "orders-tab--active" : ""}`}
-                            onClick={() => handleTabClick("cancelled")}
-                        >
-                            Cancelled Orders
-                        </button>
-                    </div>
+                <div className="orders-toolbar" style={{ justifyContent: "flex-end" }}>
 
                     {/* Toolbar Search / Select Filters */}
                     <div className="orders-toolbar__actions">
@@ -1619,643 +1584,69 @@ function OrdersPage() {
 
                 {/* 1. Order Management Tab */}
                 {activeTab === "management" && (
-                    <div className="management-control-dashboard fade-in">
-                        {/* Priority Overrides Table */}
-                        <div className="management-table-container">
-                            <div className="management-table-header-row">
-                                <h3 className="section-title">Priority Overrides & Routing Control</h3>
-                                <div className="management-search-box">
-                                    <Search size={14} className="orders-search-icon" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Quick filter priority orders..." 
-                                        className="orders-search-input"
-                                        value={managementSearch}
-                                        onChange={(e) => setManagementSearch(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="orders-table-responsive">
-                                <table className="orders-data-table">
-                                    <thead>
-                                        <tr>
-                                            <th style={{ width: "40px", textAlign: "center" }}>
-                                                <input 
-                                                    type="checkbox"
-                                                    checked={filteredManagementOrders.length > 0 && selectedManagementIds.length === filteredManagementOrders.length}
-                                                    onChange={handleToggleAllManagementSelect}
-                                                />
-                                            </th>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Date</th>
-                                            <th>Stage</th>
-                                            <th>Current Priority</th>
-                                            <th className="text-right">Action Overrides</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredManagementOrders.map(order => (
-                                            <tr key={order.id}>
-                                                <td style={{ textAlign: "center" }}>
-                                                    <input 
-                                                        type="checkbox"
-                                                        checked={selectedManagementIds.includes(order.id)}
-                                                        onChange={() => handleToggleManagementSelect(order.id)}
-                                                    />
-                                                </td>
-                                                <td className="font-mono font-bold">{order.id}</td>
-                                                <td>{order.customer}</td>
-                                                <td>{order.date}</td>
-                                                <td>
-                                                    <span className={`orders-status-badge ${getStatusClass(order.status)}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className={`priority-badge priority-${(order.priority || "Normal").toLowerCase()}`}>
-                                                        {order.priority || "Normal"}
-                                                    </span>
-                                                </td>
-                                                <td className="text-right actions-cell">
-                                                    <button 
-                                                        onClick={() => handleTogglePriority(order.id)}
-                                                        className="orders-inline-btn orders-inline-btn--secondary"
-                                                        style={{ fontSize: "11px", padding: "4px 10px" }}
-                                                    >
-                                                        <RefreshCw size={10} style={{ marginRight: "4px" }} />
-                                                        Toggle Priority
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {filteredManagementOrders.length === 0 && (
-                                            <tr>
-                                                <td colSpan="7" className="text-center" style={{ padding: "40px 10px", color: "var(--text-muted)" }}>
-                                                    No orders match the filter search.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Bulk Actions Console */}
-                        <div className="management-bulk-panel">
-                            <h3 className="section-title">Bulk Lifecycle Controls</h3>
-                            <div className="bulk-controls-row">
-                                <span className="bulk-selection-count">
-                                    <strong>{selectedManagementIds.length}</strong> orders selected
-                                </span>
-                                <select 
-                                    className="orders-toolbar-select"
-                                    value={bulkActionType}
-                                    onChange={(e) => setBulkActionType(e.target.value)}
-                                    style={{ width: "220px" }}
-                                >
-                                    <option value="">Choose bulk action...</option>
-                                    <option value="high-priority">Set Priority to High</option>
-                                    <option value="critical-priority">Set Priority to Critical</option>
-                                    <option value="release-picking">Release to Picking Queue</option>
-                                    <option value="cancel">Cancel Orders</option>
-                                </select>
-                                <button 
-                                    className="orders-inline-btn orders-inline-btn--primary"
-                                    onClick={handleExecuteBulkAction}
-                                    disabled={selectedManagementIds.length === 0 || !bulkActionType}
-                                    style={{ height: "36px", fontSize: "13px" }}
-                                >
-                                    Execute Action
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <OrderManagementView
+                        managementSearch={managementSearch}
+                        setManagementSearch={setManagementSearch}
+                        filteredManagementOrders={filteredManagementOrders}
+                        selectedManagementIds={selectedManagementIds}
+                        handleToggleAllManagementSelect={handleToggleAllManagementSelect}
+                        handleToggleManagementSelect={handleToggleManagementSelect}
+                        getStatusClass={getStatusClass}
+                        handleTogglePriority={handleTogglePriority}
+                        bulkActionType={bulkActionType}
+                        setBulkActionType={setBulkActionType}
+                        handleExecuteBulkAction={handleExecuteBulkAction}
+                    />
                 )}
 
                 {/* 2. Order Details Inspector Tab */}
                 {activeTab === "details" && (
-                    <div className="details-inspector-container fade-in">
-                        {/* Left Column: List selector */}
-                        <div className="details-inspector-left">
-                            <div className="inspector-search-box">
-                                <Search size={14} className="orders-search-icon" />
-                                <input 
-                                    type="text"
-                                    placeholder="Search ID or customer..."
-                                    className="orders-search-input"
-                                    value={inspectorSearch}
-                                    onChange={(e) => setInspectorSearch(e.target.value)}
-                                    style={{ width: "100%" }}
-                                />
-                            </div>
-                            <div className="inspector-orders-list">
-                                {filteredInspectorOrders.map(o => (
-                                    <div 
-                                        key={o.id}
-                                        className={`inspector-order-row ${selectedInspectorOrder?.id === o.id ? "active" : ""}`}
-                                        onClick={() => setSelectedInspectorOrderId(o.id)}
-                                    >
-                                        <div className="inspector-row-top">
-                                            <span className="order-id font-mono">{o.id}</span>
-                                            <span className="order-date">{o.date}</span>
-                                        </div>
-                                        <div className="inspector-row-bottom">
-                                            <span className="customer-name">{o.customer}</span>
-                                            <span className={`orders-status-badge ${getStatusClass(o.status)}`}>
-                                                {o.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                                {filteredInspectorOrders.length === 0 && (
-                                    <div className="inspector-empty">No matching orders found.</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Right Column: Detailed inspect panel */}
-                        <div className="details-inspector-right">
-                            {selectedInspectorOrder ? (
-                                <div className="inspector-details-card">
-                                    <div className="details-card-header">
-                                        <div>
-                                            <h3 className="inspector-card-title">Order {selectedInspectorOrder.id} Inspector</h3>
-                                            <p className="customer-info">Customer: <strong>{selectedInspectorOrder.customer}</strong> | Mobile: <strong>{selectedInspectorOrder.mobile || "+91 99880 12345"}</strong></p>
-                                        </div>
-                                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                            <button 
-                                                className="orders-inline-btn orders-inline-btn--secondary"
-                                                onClick={() => handlePrintLabel(selectedInspectorOrder.id)}
-                                            >
-                                                <Printer size={14} style={{ marginRight: "4px" }} />
-                                                <span>Print Tag</span>
-                                            </button>
-                                            {(() => {
-                                                const status = selectedInspectorOrder.status;
-                                                if (status === "Pending") {
-                                                    return (
-                                                        <button 
-                                                            className="orders-inline-btn orders-inline-btn--success"
-                                                            onClick={() => {
-                                                                setOrders(prev => prev.map(o => o.id === selectedInspectorOrder.id ? { ...o, status: "Picking" } : o));
-                                                                setPicks(prev => {
-                                                                    if (prev.some(p => p.orderId === selectedInspectorOrder.id)) return prev;
-                                                                    return [...prev, {
-                                                                        id: `PCK-${Math.floor(4000 + Math.random() * 1000)}`,
-                                                                        orderId: selectedInspectorOrder.id,
-                                                                        customer: selectedInspectorOrder.customer,
-                                                                        picker: "Unassigned",
-                                                                        productsCount: selectedInspectorOrder.items || 1,
-                                                                        status: "Pending"
-                                                                    }];
-                                                                });
-                                                                showToast(`Released order ${selectedInspectorOrder.id} to picking queue`);
-                                                            }}
-                                                        >
-                                                            <span>⚡ Release to Picking</span>
-                                                        </button>
-                                                    );
-                                                }
-                                                if (status === "Picking") {
-                                                    const pick = picks.find(p => p.orderId === selectedInspectorOrder.id);
-                                                    if (!pick || pick.status === "Pending") {
-                                                        return (
-                                                            <button 
-                                                                className="orders-inline-btn"
-                                                                onClick={() => openPickAssign(pick || {
-                                                                    id: `PCK-TEMP`,
-                                                                    orderId: selectedInspectorOrder.id,
-                                                                    customer: selectedInspectorOrder.customer,
-                                                                    picker: "Unassigned",
-                                                                    productsCount: selectedInspectorOrder.items || 1
-                                                                })}
-                                                            >
-                                                                <span>👤 Assign Picker</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                    if (pick.status === "Assigned") {
-                                                        return (
-                                                            <button 
-                                                                className="orders-inline-btn orders-inline-btn--success"
-                                                                onClick={() => handleCompletePick(pick.id)}
-                                                            >
-                                                                <span>✓ Complete Picking</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                }
-                                                if (status === "Packing") {
-                                                    const pack = packs.find(p => p.orderId === selectedInspectorOrder.id);
-                                                    if (pack) {
-                                                        if (pack.status === "Waiting") {
-                                                            return (
-                                                                <button 
-                                                                    className="orders-inline-btn"
-                                                                    onClick={() => handleStartPacking(pack.id)}
-                                                                >
-                                                                    <span>📦 Start Packing</span>
-                                                                </button>
-                                                            );
-                                                        }
-                                                        if (pack.status === "Packing") {
-                                                            return (
-                                                                <button 
-                                                                    className="orders-inline-btn orders-inline-btn--success"
-                                                                    onClick={() => handleCompletePack(pack.id)}
-                                                                >
-                                                                    <span>✓ Complete Packing</span>
-                                                                </button>
-                                                            );
-                                                        }
-                                                    } else {
-                                                        // Fallback pick completion check
-                                                        return (
-                                                            <button 
-                                                                className="orders-inline-btn"
-                                                                onClick={() => {
-                                                                    setPacks(prev => {
-                                                                        if (prev.some(p => p.orderId === selectedInspectorOrder.id)) return prev;
-                                                                        return [...prev, {
-                                                                            id: `PAK-${Math.floor(5000 + Math.random() * 1000)}`,
-                                                                            orderId: selectedInspectorOrder.id,
-                                                                            customer: selectedInspectorOrder.customer,
-                                                                            packedBy: "Unassigned",
-                                                                            items: selectedInspectorOrder.items || 1,
-                                                                            status: "Waiting"
-                                                                        }];
-                                                                    });
-                                                                    showToast(`Initialized packing ticket for ${selectedInspectorOrder.id}`);
-                                                                }}
-                                                            >
-                                                                <span>📦 Start packing ticket</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                }
-                                                if (status === "Ready for Dispatch" || status === "Packed") {
-                                                    const dlv = deliveries.find(d => d.orderId === selectedInspectorOrder.id);
-                                                    return (
-                                                        <button 
-                                                            className="orders-inline-btn"
-                                                            onClick={() => openDlvUpdate(dlv || {
-                                                                id: `DLV-TEMP`,
-                                                                orderId: selectedInspectorOrder.id,
-                                                                customer: selectedInspectorOrder.customer,
-                                                                rider: "Unassigned",
-                                                                status: "Assigned",
-                                                                location: selectedInspectorOrder.warehouse || "Warehouse Hub",
-                                                                eta: "Pending Assignment"
-                                                            })}
-                                                        >
-                                                            <span>🚚 Assign Rider & Ship</span>
-                                                        </button>
-                                                    );
-                                                }
-                                                if (status === "Shipped" || status === "Out for Delivery") {
-                                                    const dlv = deliveries.find(d => d.orderId === selectedInspectorOrder.id);
-                                                    return (
-                                                        <button 
-                                                            className="orders-inline-btn orders-inline-btn--success"
-                                                            onClick={() => {
-                                                                if (dlv) {
-                                                                    setDeliveries(prev => prev.map(d => d.id === dlv.id ? { ...d, status: "Delivered", eta: "Completed" } : d));
-                                                                }
-                                                                setOrders(prev => prev.map(o => o.id === selectedInspectorOrder.id ? { ...o, status: "Delivered" } : o));
-                                                                showToast(`Marked order ${selectedInspectorOrder.id} as Delivered`);
-                                                            }}
-                                                        >
-                                                            <span>✓ Mark Delivered</span>
-                                                        </button>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    {/* Items Mapped */}
-                                    <div className="inspector-section">
-                                        <h4 className="inspector-section-title">Ordered Items Allocation</h4>
-                                        <table className="inspector-items-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Item Description</th>
-                                                    <th>Category</th>
-                                                    <th>SKU Code</th>
-                                                    <th className="text-center">Qty Requested</th>
-                                                    <th className="text-right">Unit Rate</th>
-                                                    <th className="text-right">Total Price</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {getItemsForOrder(selectedInspectorOrder).map((item, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>{item.name}</td>
-                                                        <td>
-                                                            <span className="category-tag">{getCategoryForProduct(item.name, item.sku)}</span>
-                                                        </td>
-                                                        <td className="font-mono">{item.sku}</td>
-                                                        <td className="text-center font-bold">{item.qty}</td>
-                                                        <td className="text-right">₹{item.price.toFixed(2)}</td>
-                                                        <td className="text-right font-bold">₹{(item.qty * item.price).toFixed(2)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* Progress Timeline */}
-                                    <div className="inspector-section">
-                                        <h4 className="inspector-section-title">Progress Execution Timeline</h4>
-                                        <div className="execution-timeline">
-                                            {(() => {
-                                                const stages = ["Pending", "Picking", "Packing", "Ready To Dispatch", "Shipped", "Delivered"];
-                                                const normalizeStatus = (st) => {
-                                                    switch (st) {
-                                                        case "Pending": return "Pending";
-                                                        case "Picking": return "Picking";
-                                                        case "Packing":
-                                                        case "Processing": return "Packing";
-                                                        case "Label Generated":
-                                                        case "Ready for Dispatch":
-                                                        case "Ready To Dispatch":
-                                                        case "Packed": return "Ready To Dispatch";
-                                                        case "Shipped":
-                                                        case "Out for Delivery": return "Shipped";
-                                                        case "Delivered": return "Delivered";
-                                                        default: return "Pending";
-                                                    }
-                                                };
-                                                const normalizedStatus = normalizeStatus(selectedInspectorOrder.status);
-                                                const currentStageIdx = stages.indexOf(normalizedStatus);
-                                                return stages.map((stage, idx) => {
-                                                    let isDone = idx <= currentStageIdx;
-                                                    let isCurrent = idx === currentStageIdx;
-                                                    
-                                                    // Handle cancelled state override
-                                                    if (selectedInspectorOrder.status === "Cancelled") {
-                                                        isDone = false;
-                                                        isCurrent = false;
-                                                    }
-                                                    
-                                                    return (
-                                                        <div key={idx} className={`timeline-step ${isDone ? "step-done" : ""} ${isCurrent ? "step-current" : ""} ${selectedInspectorOrder.status === "Cancelled" ? "step-cancelled" : ""}`}>
-                                                            <div className="step-marker">
-                                                                {selectedInspectorOrder.status === "Cancelled" ? "✗" : (isDone ? "✓" : idx + 1)}
-                                                            </div>
-                                                            <div className="step-label-wrap">
-                                                                <span className="step-label">{stage}</span>
-                                                                {isDone && <span className="step-time">{idx === 0 ? "10:15 AM" : idx === 1 ? "10:30 AM" : idx === 2 ? "11:00 AM" : idx === 3 ? "11:15 AM" : idx === 4 ? "11:45 AM" : "12:10 PM"}</span>}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                });
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    {/* Label Preview */}
-                                    <div className="inspector-section">
-                                        <h4 className="inspector-section-title">Shipping Barcode Tag Sheet</h4>
-                                        <div className="shipping-label-card">
-                                            <div className="label-logo-row">
-                                                <span className="label-logo">HAATZA</span>
-                                                <span className="label-method">EXPRESS WAREHOUSE LOGISTICS</span>
-                                            </div>
-                                            <div className="label-main-grid">
-                                                <div className="label-address">
-                                                    <span className="label-title">SHIP TO:</span>
-                                                    <strong>{selectedInspectorOrder.customer}</strong>
-                                                    <span>{selectedInspectorOrder.mobile || "+91 99880 12345"}</span>
-                                                    <span>Sector 4, Dwarka, New Delhi - 110075</span>
-                                                </div>
-                                                <div className="label-meta-details">
-                                                    <div><span className="meta-label">ORDER REFERENCE:</span> <span className="meta-val font-mono font-bold">{selectedInspectorOrder.id}</span></div>
-                                                    <div><span className="meta-label">DISPATCH DATE:</span> <span className="meta-val">{selectedInspectorOrder.date}</span></div>
-                                                    <div><span className="meta-label">PAYMENT CHANNEL:</span> <span className="meta-val font-bold">{selectedInspectorOrder.payment}</span></div>
-                                                </div>
-                                            </div>
-                                            <div className="label-barcode-section">
-                                                <div 
-                                                    className="barcode-container" 
-                                                    style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: (() => {
-                                                            const barcode = new Barcode128Svg(selectedInspectorOrder.id);
-                                                            barcode.height = 50;
-                                                            barcode.factor = 1.8;
-                                                            return barcode.toString();
-                                                        })()
-                                                    }}
-                                                />
-                                                <span className="barcode-text font-mono">{selectedInspectorOrder.id}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="inspector-empty-state">
-                                    Select an order from the list on the left to inspect detailed properties.
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <OrderDetailInspector
+                        selectedInspectorOrder={selectedInspectorOrder}
+                        filteredInspectorOrders={filteredInspectorOrders}
+                        inspectorSearch={inspectorSearch}
+                        setInspectorSearch={setInspectorSearch}
+                        setSelectedInspectorOrderId={setSelectedInspectorOrderId}
+                        handlePrintLabel={handlePrintLabel}
+                        setOrders={setOrders}
+                        setPicks={setPicks}
+                        setPacks={setPacks}
+                        setDeliveries={setDeliveries}
+                        picks={picks}
+                        packs={packs}
+                        deliveries={deliveries}
+                        openPickAssign={openPickAssign}
+                        handleCompletePick={handleCompletePick}
+                        handleStartPacking={handleStartPacking}
+                        handleCompletePack={handleCompletePack}
+                        openDlvUpdate={openDlvUpdate}
+                        showToast={showToast}
+                        getItemsForOrder={getItemsForOrder}
+                        getCategoryForProduct={getCategoryForProduct}
+                        getStatusClass={getStatusClass}
+                    />
                 )}
 
                 {/* 3. New Order Query Tab */}
                 {activeTab === "new-query" && (
-                    <div className="new-order-query-container fade-in">
-                        <div className="query-search-panel">
-                            <h3 className="section-title">Real-time Order Query & Stock Checker</h3>
-                            <p className="panel-desc">Query any active Order ID to inspect stock verification status and route milestones mapping.</p>
-                            <div className="query-input-row">
-                                <div className="query-search-wrap">
-                                    <Search size={16} className="orders-search-icon" />
-                                    <input 
-                                        type="text"
-                                        placeholder="Enter Order ID (e.g. #ORD-8818, #ORD-8812...)"
-                                        className="orders-search-input query-input"
-                                        value={queryIdInput}
-                                        onChange={(e) => setQueryIdInput(e.target.value)}
-                                        onKeyDown={(e) => { if (e.key === "Enter") handleRunQuery(); }}
-                                        style={{ width: "100%", fontSize: "14px", paddingLeft: "36px" }}
-                                    />
-                                </div>
-                                <button 
-                                    className="orders-inline-btn orders-inline-btn--primary"
-                                    onClick={() => handleRunQuery()}
-                                    style={{ height: "42px", padding: "0 24px", fontSize: "13px" }}
-                                >
-                                    Run Query
-                                </button>
-                            </div>
-                            <div className="suggestion-chips">
-                                <span className="chip-label">Suggestions:</span>
-                                {orders.slice(0, 5).map(o => (
-                                    <button 
-                                        key={o.id}
-                                        className="suggestion-chip"
-                                        onClick={() => { setQueryIdInput(o.id); handleRunQuery(o.id); }}
-                                    >
-                                        {o.id}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {queryResult ? (
-                            <div className="query-results-grid">
-                                {/* Stock Verification */}
-                                <div className="query-stock-card">
-                                    <h4 className="card-title">Darkhouse Allocation Check</h4>
-                                    <div className="order-info-strip">
-                                        <span>Order: <strong className="font-mono">{queryResult.id}</strong></span>
-                                        <span>Customer: <strong>{queryResult.customer}</strong></span>
-                                        <span>Darkhouse: <strong>{queryResult.warehouse || "HAATZA Koramangala Hub"}</strong></span>
-                                        <span>Stage: <span className={`orders-status-badge ${getStatusClass(queryResult.status)}`}>{queryResult.status}</span></span>
-                                    </div>
-                                    <table className="query-stock-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Item Name</th>
-                                                <th>SKU Code</th>
-                                                <th>Qty</th>
-                                                <th>Allocated Bin</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {getItemsForOrder(queryResult).map((item, idx) => (
-                                                <tr key={idx}>
-                                                    <td>{item.name}</td>
-                                                    <td className="font-mono">{item.sku}</td>
-                                                    <td>{item.qty} units</td>
-                                                    <td className="font-mono">BIN-{(idx * 3) + 12}-A</td>
-                                                    <td>
-                                                        <span className="stock-badge in-stock" style={{ color: "#10b981", fontWeight: "700" }}>✓ In Stock</span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Dispatch Route */}
-                                <div className="query-route-card">
-                                    <h4 className="card-title">Simulated Dispatch Route Mapped</h4>
-                                    <p className="card-subtitle">Milestones from origin Darkhouse to shipping destination.</p>
-                                    
-                                    <div className="route-flowchart">
-                                        <div className="route-node origin">
-                                            <div className="node-icon" style={{ backgroundColor: "#3b82f6", color: "white" }}><Store size={14} /></div>
-                                            <div className="node-info">
-                                                <span className="node-label">Origin Hub</span>
-                                                <strong className="node-value">{queryResult.warehouse || "HAATZA Koramangala Hub"}</strong>
-                                            </div>
-                                        </div>
-                                        <div className="route-line-connector">
-                                            <div className="route-line-pulse"></div>
-                                        </div>
-                                        <div className="route-node transit">
-                                            <div className="node-icon" style={{ backgroundColor: "#f59e0b", color: "white" }}><Truck size={14} /></div>
-                                            <div className="node-info">
-                                                <span className="node-label">Dispatch Courier</span>
-                                                <strong className="node-value">{["Shipped", "Delivered"].includes(queryResult.status) ? "Amit Patel (Rider #882)" : "Awaiting Picker Handoff"}</strong>
-                                            </div>
-                                        </div>
-                                        <div className="route-line-connector"></div>
-                                        <div className="route-node destination">
-                                            <div className="node-icon" style={{ backgroundColor: "#10b981", color: "white" }}><MapPin size={14} /></div>
-                                            <div className="node-info">
-                                                <span className="node-label">Destination Address</span>
-                                                <strong className="node-value">Dwarka Sector-4, New Delhi - 110075</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="query-empty-state">
-                                Enter an active Order ID above to check inventory allocations and courier progress.
-                            </div>
-                        )}
-                    </div>
+                    <OrderQueryView
+                        queryIdInput={queryIdInput}
+                        setQueryIdInput={setQueryIdInput}
+                        handleRunQuery={handleRunQuery}
+                        orders={orders}
+                        queryResult={queryResult}
+                        getStatusClass={getStatusClass}
+                        getItemsForOrder={getItemsForOrder}
+                    />
                 )}
 
                 {/* 4. Cancelled Orders Tab */}
                 {activeTab === "cancelled" && (
-                    <div className="cancelled-orders-container fade-in">
-                        {filteredCancelledOrders.length === 0 ? (
-                            <div className="orders-empty-state-container" style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "60px 20px",
-                                textAlign: "center"
-                            }}>
-                                <XCircle size={48} style={{ color: "var(--brand-danger)", marginBottom: "16px" }} />
-                                <h3 style={{ fontSize: "18px", fontWeight: "700", color: "var(--text-main)", marginBottom: "8px" }}>
-                                    No Cancelled Orders
-                                </h3>
-                                <p style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px" }}>
-                                    There are currently no orders flagged as cancelled.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="orders-table-responsive">
-                                <table className="orders-data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Date</th>
-                                            <th>Cancelled Value</th>
-                                            <th>Cancellation Reason</th>
-                                            <th>Refund Stage</th>
-                                            <th className="text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredCancelledOrders.map(order => {
-                                            const isRefunded = processedRefunds.includes(order.id);
-                                            return (
-                                                <tr key={order.id}>
-                                                    <td className="font-mono font-bold">{order.id}</td>
-                                                    <td>{order.customer}</td>
-                                                    <td>{order.date}</td>
-                                                    <td>{order.amount}</td>
-                                                    <td>{order.items > 2 ? "Out of Stock Allocation" : "Customer Cancellation"}</td>
-                                                    <td>
-                                                        <span className={`refund-badge ${isRefunded ? "refunded" : "pending"}`}>
-                                                            {isRefunded ? "Refunded" : "Awaiting Refund"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="text-right actions-cell">
-                                                        {!isRefunded ? (
-                                                            <button 
-                                                                className="orders-inline-btn orders-inline-btn--primary refund-action-btn"
-                                                                onClick={() => handleTriggerRefund(order.id)}
-                                                                style={{ fontSize: "11px", padding: "4px 12px" }}
-                                                            >
-                                                                <Check size={10} style={{ marginRight: "4px" }} />
-                                                                Process Refund
-                                                            </button>
-                                                        ) : (
-                                                            <span className="refunded-check" style={{ color: "#10b981", fontWeight: "700", fontSize: "12px" }}>✓ Refunded</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
+                    <CancelledOrdersView
+                        filteredCancelledOrders={filteredCancelledOrders}
+                        processedRefunds={processedRefunds}
+                        handleTriggerRefund={handleTriggerRefund}
+                    />
                 )}
 
                 {/* Darkstore Fulfillment Board Table Data Grid */}
@@ -2288,411 +1679,70 @@ function OrdersPage() {
                         <div className="orders-table-responsive">
                             <table className="orders-data-table">
                                 {activePaginationView === "pending" && (
-                                    <>
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
-                                                    <input 
-                                                        type="checkbox"
-                                                        className="orders-checkbox-main"
-                                                        checked={
-                                                            paginatedPendingOrders.length > 0 &&
-                                                            paginatedPendingOrders.every(o => selectedOrderIds.includes(o.id))
-                                                        }
-                                                        onChange={toggleSelectAll}
-                                                        title="Select all Pending orders on this page"
-                                                    />
-                                                </th>
-                                                <th>Order ID</th>
-                                                <th>Customer</th>
-                                                <th>Date</th>
-                                                <th>Items</th>
-                                                <th>Amount</th>
-                                                <th>Payment</th>
-                                                <th>Status</th>
-                                                <th style={{ textAlign: "right" }}>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {paginatedPendingOrders.map((order, index) => (
-                                                <tr key={order.id} className="orders-row-hover">
-                                                    <td style={{ textAlign: "center", paddingRight: "10px" }}>
-                                                        <input 
-                                                            type="checkbox"
-                                                            className="orders-checkbox-row"
-                                                            checked={selectedOrderIds.includes(order.id)}
-                                                            onChange={() => toggleSelectOrder(order.id)}
-                                                        />
-                                                    </td>
-                                                    <td className="odt-id">{order.id}</td>
-                                                    <td>
-                                                        <div className="odt-customer">
-                                                            <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
-                                                                {order.initials}
-                                                            </span>
-                                                            <div className="odt-customer-name">
-                                                                <div>{order.customer}</div>
-                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                                                                    <Store size={10} style={{ display: "inline-block" }} /> {order.warehouse || "Koramangala Hub"}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="odt-date">{order.date}</td>
-                                                    <td className="odt-items">{order.items} items</td>
-                                                    <td className="odt-amount">{order.amount}</td>
-                                                    <td className="odt-payment">{order.payment}</td>
-                                                    <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
-                                                    <td style={{ position: "relative" }}>
-                                                        <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
-                                                            <MoreVertical size={14} />
-                                                        </button>
-                                                        {activeRowMenuId === order.id && (
-                                                            <>
-                                                                <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                                <div 
-                                                                    className="global-action-dropdown"
-                                                                    style={index >= paginatedPendingOrders.length - 2 && paginatedPendingOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
-                                                                >
-                                                                    <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
-                                                                        <Eye size={13} />
-                                                                        <span>View Details</span>
-                                                                    </button>
-                                                                    <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
-                                                                        <Edit2 size={13} />
-                                                                        <span>Edit Order</span>
-                                                                    </button>
-                                                                    <button className="global-dropdown-item" onClick={() => handleGenerateInvoice(order)}>
-                                                                        <FileText size={13} />
-                                                                        <span>Generate Invoice</span>
-                                                                    </button>
-                                                                    <div className="global-dropdown-divider"></div>
-                                                                    <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
-                                                                        <Trash2 size={13} />
-                                                                        <span>Cancel Order</span>
-                                                                    </button>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </>
+                                    <OrderListTable
+                                        orders={paginatedPendingOrders}
+                                        isPendingOnly={true}
+                                        selectedOrderIds={selectedOrderIds}
+                                        toggleSelectAll={toggleSelectAll}
+                                        toggleSelectOrder={toggleSelectOrder}
+                                        getStatusClass={getStatusClass}
+                                        toggleRowMenu={toggleRowMenu}
+                                        activeRowMenuId={activeRowMenuId}
+                                        setActiveRowMenuId={setActiveRowMenuId}
+                                        openOrdView={openOrdView}
+                                        openOrdEdit={openOrdEdit}
+                                        handleGenerateInvoice={handleGenerateInvoice}
+                                        handleCancelOrder={handleCancelOrder}
+                                    />
                                 )}
                                 {activePaginationView === "orders" && (
-                                    <>
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: "40px", paddingRight: "10px", textAlign: "center" }}>
-                                                    <input 
-                                                        type="checkbox"
-                                                        className="orders-checkbox-main"
-                                                        checked={
-                                                            paginatedOrders.length > 0 &&
-                                                            paginatedOrders.filter(o => o.status === "Pending").length > 0 &&
-                                                            paginatedOrders.filter(o => o.status === "Pending").every(o => selectedOrderIds.includes(o.id))
-                                                        }
-                                                        onChange={toggleSelectAll}
-                                                        title="Select all Pending orders on this page"
-                                                    />
-                                                </th>
-                                                <th>Order ID</th>
-                                                <th>Customer</th>
-                                                <th>Date</th>
-                                                <th>Items</th>
-                                                <th>Amount</th>
-                                                <th>Payment</th>
-                                                <th>Status</th>
-                                                <th style={{ textAlign: "right" }}>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {paginatedOrders.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={9} className="odt-empty">
-                                                        No customer orders found matching filters.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                paginatedOrders.map((order, index) => (
-                                                    <tr key={order.id} className="orders-row-hover">
-                                                        <td style={{ textAlign: "center", paddingRight: "10px" }}>
-                                                            <input 
-                                                                type="checkbox"
-                                                                className="orders-checkbox-row"
-                                                                checked={selectedOrderIds.includes(order.id)}
-                                                                onChange={() => toggleSelectOrder(order.id)}
-                                                                disabled={order.status !== "Pending" && order.status !== "Label Generated"}
-                                                                title={order.status !== "Pending" && order.status !== "Label Generated" ? "Only Pending or Label Generated orders can be selected" : ""}
-                                                            />
-                                                        </td>
-                                                        <td className="odt-id">{order.id}</td>
-                                                        <td>
-                                                            <div className="odt-customer">
-                                                                <span className={`odt-avatar ${order.color || "avatar-indigo"}`}>
-                                                                    {order.initials}
-                                                                </span>
-                                                                <div className="odt-customer-name">
-                                                                    <div>{order.customer}</div>
-                                                                    <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                                                                        <Store size={10} style={{ display: "inline-block" }} /> {order.warehouse || "Koramangala Hub"}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="odt-date">{order.date}</td>
-                                                        <td className="odt-items">{order.items} items</td>
-                                                        <td className="odt-amount">{order.amount}</td>
-                                                        <td className="odt-payment">{order.payment}</td>
-                                                        <td><span className={getStatusClass(order.status)}>{order.status}</span></td>
-                                                        <td style={{ position: "relative" }}>
-                                                            <button className="odt-action-btn" onClick={(e) => toggleRowMenu(order.id, e)}>
-                                                                <MoreVertical size={14} />
-                                                            </button>
-                                                            {activeRowMenuId === order.id && (
-                                                                <>
-                                                                    <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
-                                                                    <div 
-                                                                        className="global-action-dropdown"
-                                                                        style={index >= paginatedOrders.length - 2 && paginatedOrders.length > 2 ? { top: "auto", bottom: "36px" } : {}}
-                                                                    >
-                                                                        <button className="global-dropdown-item" onClick={() => openOrdView(order)}>
-                                                                            <Eye size={13} />
-                                                                            <span>View Details</span>
-                                                                        </button>
-                                                                        <button className="global-dropdown-item" onClick={() => openOrdEdit(order)}>
-                                                                            <Edit2 size={13} />
-                                                                            <span>Edit Order</span>
-                                                                        </button>
-                                                                        <button className="global-dropdown-item" onClick={() => handleGenerateInvoice(order)}>
-                                                                            <FileText size={13} />
-                                                                            <span>Generate Invoice</span>
-                                                                        </button>
-                                                                        <div className="global-dropdown-divider"></div>
-                                                                        <button className="global-dropdown-item global-dropdown-item-danger" onClick={() => handleCancelOrder(order.id)}>
-                                                                            <Trash2 size={13} />
-                                                                            <span>Cancel Order</span>
-                                                                        </button>
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </>
+                                    <OrderListTable
+                                        orders={paginatedOrders}
+                                        isPendingOnly={false}
+                                        selectedOrderIds={selectedOrderIds}
+                                        toggleSelectAll={toggleSelectAll}
+                                        toggleSelectOrder={toggleSelectOrder}
+                                        getStatusClass={getStatusClass}
+                                        toggleRowMenu={toggleRowMenu}
+                                        activeRowMenuId={activeRowMenuId}
+                                        setActiveRowMenuId={setActiveRowMenuId}
+                                        openOrdView={openOrdView}
+                                        openOrdEdit={openOrdEdit}
+                                        handleGenerateInvoice={handleGenerateInvoice}
+                                        handleCancelOrder={handleCancelOrder}
+                                    />
                                 )}
 
                                 {activePaginationView === "picking" && (
-                                    <>
-                                        <thead>
-                                            <tr>
-                                                <th>Pick ID</th>
-                                                <th>Order ID</th>
-                                                <th>Customer</th>
-                                                <th>Picker Assigned</th>
-                                                <th>Products Count</th>
-                                                <th>Status</th>
-                                                <th style={{ textAlign: "right" }}>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {paginatedPicks.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={7} className="odt-empty">
-                                                        No pick lists found matching filters.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                paginatedPicks.map(item => {
-                                                    const assocOrder = orders.find(o => o.id === item.orderId);
-                                                    return (
-                                                        <tr key={item.id} className="orders-row-hover">
-                                                            <td className="odt-id">{item.id}</td>
-                                                            <td className="odt-id">{item.orderId}</td>
-                                                            <td className="odt-customer-name">
-                                                                <div>{item.customer}</div>
-                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
-                                                                </span>
-                                                            </td>
-                                                            <td>
-                                                                <span className={`picker-assigned-pill ${item.picker === "Unassigned" ? "unassigned" : ""}`}>
-                                                                    <User size={12} />
-                                                                    {item.picker}
-                                                                </span>
-                                                            </td>
-                                                            <td className="odt-items">{item.productsCount} SKUs</td>
-                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                            <td>
-                                                                <div className="orders-actions-cell">
-                                                                    {item.status === "Pending" && (
-                                                                        <button className="orders-inline-btn" onClick={() => openPickAssign(item)}>
-                                                                            Assign Picker
-                                                                        </button>
-                                                                    )}
-                                                                    {item.status === "Assigned" && (
-                                                                        <>
-                                                                            <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => openPickAssign(item)}>
-                                                                                Reassign
-                                                                            </button>
-                                                                            <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePick(item.id)}>
-                                                                                Complete Pick
-                                                                            </button>
-                                                                        </>
-                                                                    )}
-                                                                    {item.status === "Completed" && (
-                                                                        <span className="orders-inline-completed">Completed</span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
-                                        </tbody>
-                                    </>
+                                    <PickingQueueView
+                                        picks={paginatedPicks}
+                                        orders={orders}
+                                        getStatusClass={getStatusClass}
+                                        openPickAssign={openPickAssign}
+                                        handleCompletePick={handleCompletePick}
+                                    />
                                 )}
 
                                 {activePaginationView === "packing" && (
-                                    <>
-                                        <thead>
-                                            <tr>
-                                                <th>Pack ID</th>
-                                                <th>Order ID</th>
-                                                <th>Customer</th>
-                                                <th>Packed By</th>
-                                                <th>Items Count</th>
-                                                <th>Status</th>
-                                                <th style={{ textAlign: "right" }}>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {paginatedPacks.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={7} className="odt-empty">
-                                                        No packing boxes found matching filters.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                paginatedPacks.map(item => {
-                                                    const assocOrder = orders.find(o => o.id === item.orderId);
-                                                    return (
-                                                        <tr key={item.id} className="orders-row-hover">
-                                                            <td className="odt-id">{item.id}</td>
-                                                            <td className="odt-id">{item.orderId}</td>
-                                                            <td className="odt-customer-name">
-                                                                <div>{item.customer}</div>
-                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
-                                                                </span>
-                                                            </td>
-                                                            <td>
-                                                                <span className={`picker-assigned-pill ${item.packedBy === "Unassigned" ? "unassigned" : ""}`}>
-                                                                    <User size={12} />
-                                                                    {item.packedBy}
-                                                                </span>
-                                                            </td>
-                                                            <td className="odt-items">{item.items} items</td>
-                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                            <td>
-                                                                <div className="orders-actions-cell">
-                                                                    {item.status === "Waiting" && (
-                                                                        <button className="orders-inline-btn" onClick={() => handleStartPacking(item.id)}>
-                                                                            Start Packing
-                                                                        </button>
-                                                                    )}
-                                                                    {item.status === "Packing" && (
-                                                                        <>
-                                                                            <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
-                                                                                <Printer size={12} />
-                                                                                <span>Print Label</span>
-                                                                            </button>
-                                                                            <button className="orders-inline-btn orders-inline-btn--success" onClick={() => handleCompletePack(item.id)}>
-                                                                                Complete
-                                                                            </button>
-                                                                        </>
-                                                                    )}
-                                                                    {item.status === "Packed" && (
-                                                                        <button className="orders-inline-btn orders-inline-btn--secondary" onClick={() => handlePrintLabel(item.id)}>
-                                                                            <Printer size={12} />
-                                                                            <span>Reprint Tag</span>
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
-                                        </tbody>
-                                    </>
+                                    <PackingQueueView
+                                        packs={paginatedPacks}
+                                        orders={orders}
+                                        getStatusClass={getStatusClass}
+                                        handleStartPacking={handleStartPacking}
+                                        handlePrintLabel={handlePrintLabel}
+                                        handleCompletePack={handleCompletePack}
+                                    />
                                 )}
 
                                 {activePaginationView === "tracking" && (
-                                    <>
-                                        <thead>
-                                            <tr>
-                                                <th>Delivery ID</th>
-                                                <th>Order ID</th>
-                                                <th>Customer</th>
-                                                <th>Rider Assigned</th>
-                                                <th>ETA</th>
-                                                <th>Current Location</th>
-                                                <th>Status</th>
-                                                <th style={{ textAlign: "right" }}>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {paginatedDeliveries.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={8} className="odt-empty">
-                                                        No delivery riders found matching filters.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                paginatedDeliveries.map(item => {
-                                                    const assocOrder = orders.find(o => o.id === item.orderId);
-                                                    return (
-                                                        <tr key={item.id} className="orders-row-hover">
-                                                            <td className="odt-id">{item.id}</td>
-                                                            <td className="odt-id">{item.orderId}</td>
-                                                            <td className="odt-customer-name">
-                                                                <div>{item.customer}</div>
-                                                                <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", marginTop: "2px" }}>
-                                                                    <Store size={10} /> {assocOrder?.warehouse || "Koramangala Hub"}
-                                                                </span>
-                                                            </td>
-                                                            <td>
-                                                                <span className={`picker-assigned-pill ${item.rider === "Unassigned" ? "unassigned" : ""}`}>
-                                                                    <User size={12} />
-                                                                    {item.rider}
-                                                                </span>
-                                                            </td>
-                                                            <td className="odt-items">{item.eta}</td>
-                                                            <td className="odt-warehouse">{item.location}</td>
-                                                            <td><span className={getStatusClass(item.status)}>{item.status}</span></td>
-                                                            <td>
-                                                                <div className="orders-actions-cell">
-                                                                    <button className="orders-inline-btn orders-inline-btn--secondary" title="Call rider" onClick={() => handleCallRider(item.rider)} disabled={item.rider === "Unassigned"}>
-                                                                        <PhoneCall size={12} />
-                                                                    </button>
-                                                                    <button className="orders-inline-btn orders-inline-btn--secondary" title="Track on map" onClick={() => openDlvTrack(item)} disabled={item.status === "Delivered" || item.status === "Failed"}>
-                                                                        <Navigation size={12} />
-                                                                    </button>
-                                                                    <button className="orders-inline-btn" title="Update status" onClick={() => openDlvUpdate(item)}>
-                                                                        Update
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
-                                        </tbody>
-                                    </>
+                                    <DeliveryQueueView
+                                        deliveries={paginatedDeliveries}
+                                        orders={orders}
+                                        getStatusClass={getStatusClass}
+                                        handleCallRider={handleCallRider}
+                                        openDlvTrack={openDlvTrack}
+                                        openDlvUpdate={openDlvUpdate}
+                                    />
                                 )}
 
                                 {activeTab === "label-history" && (

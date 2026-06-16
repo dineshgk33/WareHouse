@@ -235,7 +235,7 @@ const addTransaction = (type, warehouse, productName, sku, qty, prevStock, newSt
 
 // --- Transaction Actions ---
 
-// 1. Create Stock Request (Sub Warehouse)
+// 1. Create Stock Request (Dark House / Main Warehouse)
 export const createIndent = (sku, productName, requestedBy, requestedQty, priority, remarks, userName) => {
     const indents = getIndents();
     const darkhouseStock = getDarkhouseStock();
@@ -405,7 +405,7 @@ export const dispatchIndent = (indentId, vehicleNumber, driverName, remarks, use
     return true;
 };
 
-// 4. Receive Stock (Sub Warehouse Hub User)
+// 4. Receive Stock (Dark House / Main Warehouse Hub User)
 // Adds receivedQty to Darkhouse stock and transitions request to Completed
 export const receiveIndent = (indentId, receivedQty, damagedQty, remarks, userName) => {
     const indents = getIndents();

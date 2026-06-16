@@ -24,9 +24,7 @@ export function AuthProvider({ children }) {
         }
     });
 
-    const [userPassword, setUserPassword] = useState(
-        () => sessionStorage.getItem("userPassword") || ""
-    );
+    const [userPassword, setUserPassword] = useState("");
 
     const [accessiblePages, setAccessiblePages] = useState(() => {
         try {
@@ -175,7 +173,6 @@ export function AuthProvider({ children }) {
         
         if (password) {
             setUserPassword(password);
-            sessionStorage.setItem("userPassword", password);
         }
 
         setIsAuthenticated(true);
@@ -253,7 +250,6 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("accessiblePages");
         localStorage.removeItem("permissionsVersion");
         
-        sessionStorage.removeItem("userPassword");
         setUserPassword("");
 
         setIsAuthenticated(false);
@@ -270,7 +266,6 @@ export function AuthProvider({ children }) {
 
     const updatePassword = useCallback((newPassword) => {
         setUserPassword(newPassword);
-        sessionStorage.setItem("userPassword", newPassword);
     }, []);
 
     const updateUser = useCallback((updatedFields) => {

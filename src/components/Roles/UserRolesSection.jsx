@@ -174,10 +174,9 @@ function UserRolesSection({ showToast }) {
           }
         : null;
 
-    // Password verification logic matching current login account
     const verifyPassword = useCallback(
         (password) => {
-            const adminPassword = userPassword || localStorage.getItem("userPassword") || "";
+            const adminPassword = userPassword || "";
             if (!password || password !== adminPassword) {
                 return { ok: false, message: "Incorrect administrator password." };
             }

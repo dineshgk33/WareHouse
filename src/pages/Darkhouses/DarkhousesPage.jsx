@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
     Search,
     Plus,
@@ -26,9 +27,10 @@ import {
     Mail,
     ChevronLeft,
     ChevronRight,
-    Tag
+    Tag,
+    ArrowUpDown
 } from "lucide-react";
-import { INITIAL_DARKHOUSES, CITIES } from "../../data/darkhouses";
+import { INITIAL_DARKHOUSES, CITIES, WAREHOUSE_CAPABILITIES, refreshDarkhouses } from "../../data/darkhouses";
 import { MOCK_MANAGERS, MOCK_ASSIGNED_PRODUCTS } from "../../data/darkhousesData";
 import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "../../data/catalogData";
 import "./Darkhouses.css";
@@ -44,11 +46,68 @@ function DarkhousesPage() {
     const [managers, setManagers] = useState(MOCK_MANAGERS);
     const [assignedProducts, setAssignedProducts] = useState(MOCK_ASSIGNED_PRODUCTS);
 
+    React.useEffect(() => {
+        const fetchWarehouses = async () => {
+            try {
+                const res = await fetch("https://www.haatza.com/_functions/getWarehouses?page=1&limit=100");
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                const data = await res.json();
+                if (data.status && Array.isArray(data.data)) {
+                    const mapped = data.data.map(item => {
+                        const normType = (item.warehouseType === "DARK_STORE" || item.warehouseType === "Lite" || item.warehouseType === "DARK_HOUSE") ? "DARK_HOUSE" : "MAIN_WAREHOUSE";
+                        const normStatus = item.status ? item.status.toUpperCase() : "ACTIVE";
+                        return {
+                            ...item,
+                            id: item.warehouseId,
+                            warehouseId: item.warehouseId,
+                            name: item.warehouseName,
+                            warehouseName: item.warehouseName,
+                            type: normType,
+                            warehouseType: normType,
+                            capabilities: [normType],
+                            code: item.franchiseCode,
+                            franchiseCode: item.franchiseCode,
+                            ownerPhone: item.contactPhone,
+                            contactPhone: item.contactPhone,
+                            ownerEmail: item.contactEmail,
+                            contactEmail: item.contactEmail,
+                            serviceRadius: item.serviceRadiusKm,
+                            serviceRadiusKm: item.serviceRadiusKm,
+                            startTime: item.operatingStartTime ? item.operatingStartTime.substring(0, 5) : "08:00",
+                            operatingStartTime: item.operatingStartTime ? item.operatingStartTime.substring(0, 5) : "08:00",
+                            endTime: item.operatingEndTime ? item.operatingEndTime.substring(0, 5) : "22:00",
+                            operatingEndTime: item.operatingEndTime ? item.operatingEndTime.substring(0, 5) : "22:00",
+                            manager: item.accountManager || "N/A",
+                            accountManager: item.accountManager || "N/A",
+                            phone: item.managerPhone || "N/A",
+                            managerPhone: item.managerPhone || "N/A",
+                            address: `${item.addressLine1 || ""}${item.addressLine2 ? ', ' + item.addressLine2 : ''}, ${item.city || ""}, ${item.state || ""} - ${item.pincode || ""}`,
+                            status: normStatus,
+                            avatarColor: ["avatar-indigo", "avatar-teal", "avatar-purple", "avatar-cyan", "avatar-rose", "avatar-amber"][Math.floor(Math.random() * 6)]
+                        };
+                    });
+                    setDarkhouses(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to load warehouses from API", err);
+            }
+        };
+        fetchWarehouses();
+    }, []);
+
+    React.useEffect(() => {
+        localStorage.setItem("haatza_darkhouses", JSON.stringify(darkhouses));
+        refreshDarkhouses();
+    }, [darkhouses]);
+
     const [activeRowMenuId, setActiveRowMenuId] = useState(null);
 
     // Filters for Darkhouse List
     const [dhSearch, setDhSearch] = useState("");
     const [dhCity, setDhCity] = useState("All");
+    const [dhCapability, setDhCapability] = useState("All");
+    const [dhSortBy, setDhSortBy] = useState(null);
+    const [dhSortOrder, setDhSortOrder] = useState("asc");
     const [dhPage, setDhPage] = useState(1);
 
     // Filters for Managers
@@ -67,14 +126,40 @@ function DarkhousesPage() {
     const [modalType, setModalType] = useState(null); // 'dh-add' | 'dh-edit' | 'dh-view' | 'mgr-edit' | 'mgr-assign' | 'ap-assign' | 'ap-bulk'
     const [selectedItem, setSelectedItem] = useState(null);
 
-    // Form fields - Darkhouse List
+    // Submission loading state
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Form fields - Warehouse List (Refactored)
     const [formDhName, setFormDhName] = useState("");
+    const [formDhType, setFormDhType] = useState("MAIN_WAREHOUSE");
     const [formDhCode, setFormDhCode] = useState("");
+    const [formDhStatus, setFormDhStatus] = useState("ACTIVE");
+    
+    // Owner Info
+    const [formDhOwnerName, setFormDhOwnerName] = useState("");
+    const [formDhOwnerPhone, setFormDhOwnerPhone] = useState("");
+    const [formDhOwnerEmail, setFormDhOwnerEmail] = useState("");
+    
+    // Address Info
+    const [formDhAddressLine1, setFormDhAddressLine1] = useState("");
+    const [formDhAddressLine2, setFormDhAddressLine2] = useState("");
+    const [formDhState, setFormDhState] = useState("Karnataka");
     const [formDhCity, setFormDhCity] = useState("Bangalore");
-    const [formDhAddress, setFormDhAddress] = useState("");
+    const [formDhPincode, setFormDhPincode] = useState("");
+    
+    // Geo Location
+    const [formDhLatitude, setFormDhLatitude] = useState("");
+    const [formDhLongitude, setFormDhLongitude] = useState("");
+    
+    // Operations
+    const [formDhServiceRadius, setFormDhServiceRadius] = useState(10);
+    const [formDhStartTime, setFormDhStartTime] = useState("09:00");
+    const [formDhEndTime, setFormDhEndTime] = useState("22:00");
+    const [formDhOperatingDays, setFormDhOperatingDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+    
+    // Management
     const [formDhManager, setFormDhManager] = useState("");
     const [formDhPhone, setFormDhPhone] = useState("");
-    const [formDhStatus, setFormDhStatus] = useState("Active");
 
     // Form fields - Managers
     const [formMgrName, setFormMgrName] = useState("");
@@ -107,9 +192,21 @@ function DarkhousesPage() {
             setDhPage(1);
             setMPage(1);
             setApPage(1);
+            setDhCapability("All");
             setActiveRowMenuId(null);
         }, 0);
     }, [activeTab]);
+
+    // Lock scroll on body when modal is open
+    useEffect(() => {
+        if (isModalOpen) {
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = prevOverflow;
+            };
+        }
+    }, [isModalOpen]);
 
     const showToast = (msg) => {
         setToastMessage(msg);
@@ -126,23 +223,54 @@ function DarkhousesPage() {
     // ─── 1. Filtering Darkhouse List ──────────────────────────────────────────
     const filteredDarkhouses = useMemo(() => {
         return darkhouses.filter(d => {
-            const matchesSearch = d.name.toLowerCase().includes(dhSearch.toLowerCase()) || d.code.toLowerCase().includes(dhSearch.toLowerCase()) || d.manager.toLowerCase().includes(dhSearch.toLowerCase());
+            const matchesSearch = 
+                d.name.toLowerCase().includes(dhSearch.toLowerCase()) || 
+                d.code.toLowerCase().includes(dhSearch.toLowerCase()) || 
+                (d.ownerName || "").toLowerCase().includes(dhSearch.toLowerCase()) ||
+                d.city.toLowerCase().includes(dhSearch.toLowerCase()) ||
+                d.manager.toLowerCase().includes(dhSearch.toLowerCase()) ||
+                (d.type || "").toLowerCase().includes(dhSearch.toLowerCase());
             const matchesCity = dhCity === "All" || d.city === dhCity;
-            return matchesSearch && matchesCity;
+            const matchesCapability = dhCapability === "All" || d.type === dhCapability || (d.capabilities && d.capabilities.includes(dhCapability));
+            return matchesSearch && matchesCity && matchesCapability;
         });
-    }, [darkhouses, dhSearch, dhCity]);
+    }, [darkhouses, dhSearch, dhCity, dhCapability]);
+
+    const sortedDarkhouses = useMemo(() => {
+        let items = [...filteredDarkhouses];
+        if (dhSortBy) {
+            items.sort((a, b) => {
+                const valA = dhSortBy === "capabilities" ? (a.capabilities || []).join(", ") : (a[dhSortBy] || "");
+                const valB = dhSortBy === "capabilities" ? (b.capabilities || []).join(", ") : (b[dhSortBy] || "");
+                if (valA < valB) return dhSortOrder === "asc" ? -1 : 1;
+                if (valA > valB) return dhSortOrder === "asc" ? 1 : -1;
+                return 0;
+            });
+        }
+        return items;
+    }, [filteredDarkhouses, dhSortBy, dhSortOrder]);
 
     const paginatedDarkhouses = useMemo(() => {
         const start = (dhPage - 1) * ROWS_PER_PAGE;
-        return filteredDarkhouses.slice(start, start + ROWS_PER_PAGE);
-    }, [filteredDarkhouses, dhPage]);
+        return sortedDarkhouses.slice(start, start + ROWS_PER_PAGE);
+    }, [sortedDarkhouses, dhPage]);
+
+    const handleDhSort = (field) => {
+        if (dhSortBy === field) {
+            setDhSortOrder(prev => prev === "asc" ? "desc" : "asc");
+        } else {
+            setDhSortBy(field);
+            setDhSortOrder("asc");
+        }
+    };
 
     const dhStats = useMemo(() => {
         const total = darkhouses.length;
-        const active = darkhouses.filter(d => d.status === "Active").length;
-        const inactive = darkhouses.filter(d => d.status === "Inactive").length;
-        const todayOrders = darkhouses.reduce((acc, d) => acc + d.todayOrders, 0);
-        return { total, active, inactive, todayOrders };
+        const active = darkhouses.filter(d => (d.status || "").toUpperCase() === "ACTIVE").length;
+        const inactive = darkhouses.filter(d => (d.status || "").toUpperCase() === "INACTIVE" || (d.status || "").toUpperCase() === "UNDER_MAINTENANCE" || (d.status || "").toUpperCase() === "UNDER MAINTENANCE").length;
+        const main = darkhouses.filter(d => (d.warehouseType || d.type) === "MAIN_WAREHOUSE").length;
+        const darkHouse = darkhouses.filter(d => (d.warehouseType || d.type) === "DARK_HOUSE").length;
+        return { total, active, inactive, main, darkHouse };
     }, [darkhouses]);
 
     // ─── 2. Filtering Managers ────────────────────────────────────────────────
@@ -204,25 +332,51 @@ function DarkhousesPage() {
 
     const openDhAdd = () => {
         setFormDhName("");
+        setFormDhType("MAIN_WAREHOUSE");
         setFormDhCode("");
+        setFormDhStatus("ACTIVE");
+        setFormDhOwnerName("");
+        setFormDhOwnerPhone("");
+        setFormDhOwnerEmail("");
+        setFormDhAddressLine1("");
+        setFormDhAddressLine2("");
+        setFormDhState("Karnataka");
         setFormDhCity("Bangalore");
-        setFormDhAddress("");
-        setFormDhManager("Amit Sharma");
-        setFormDhPhone("");
-        setFormDhStatus("Active");
+        setFormDhPincode("");
+        setFormDhLatitude("");
+        setFormDhLongitude("");
+        setFormDhServiceRadius(10);
+        setFormDhStartTime("09:00");
+        setFormDhEndTime("22:00");
+        setFormDhOperatingDays(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+        setFormDhManager(managers[0]?.name || "");
+        setFormDhPhone(managers[0]?.phone || "");
         setModalType("dh-add");
         setIsModalOpen(true);
     };
 
     const openDhEdit = (dh) => {
         setSelectedItem(dh);
-        setFormDhName(dh.name);
-        setFormDhCode(dh.code);
-        setFormDhCity(dh.city);
-        setFormDhAddress(dh.address);
-        setFormDhManager(dh.manager);
-        setFormDhPhone(dh.phone);
-        setFormDhStatus(dh.status);
+        setFormDhName(dh.warehouseName || dh.name || "");
+        setFormDhType(dh.warehouseType || dh.type || (dh.capabilities && dh.capabilities[0]) || "MAIN_WAREHOUSE");
+        setFormDhCode(dh.franchiseCode || dh.code || "");
+        setFormDhStatus(dh.status || "ACTIVE");
+        setFormDhOwnerName(dh.ownerName || "");
+        setFormDhOwnerPhone(dh.contactPhone || dh.ownerPhone || dh.phone || "");
+        setFormDhOwnerEmail(dh.contactEmail || dh.ownerEmail || "");
+        setFormDhAddressLine1(dh.addressLine1 || dh.address || "");
+        setFormDhAddressLine2(dh.addressLine2 || "");
+        setFormDhState(dh.state || "Karnataka");
+        setFormDhCity(dh.city || "Bangalore");
+        setFormDhPincode(dh.pincode || "");
+        setFormDhLatitude(dh.latitude || "");
+        setFormDhLongitude(dh.longitude || "");
+        setFormDhServiceRadius(dh.serviceRadiusKm || dh.serviceRadius || 10);
+        setFormDhStartTime(dh.operatingStartTime || dh.startTime || "09:00");
+        setFormDhEndTime(dh.operatingEndTime || dh.endTime || "22:00");
+        setFormDhOperatingDays(dh.operatingDays || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+        setFormDhManager(dh.accountManager || dh.manager || "");
+        setFormDhPhone(dh.managerPhone || dh.phone || "");
         setModalType("dh-edit");
         setIsModalOpen(true);
         setActiveRowMenuId(null);
@@ -267,45 +421,271 @@ function DarkhousesPage() {
     };
 
     // ─── Modal Form Actions ───────────────────────────────────────────────────
-    const handleDhAddSubmit = (e) => {
-        e.preventDefault();
-        const colors = ["avatar-indigo", "avatar-teal", "avatar-purple", "avatar-cyan", "avatar-rose", "avatar-amber"];
-        const newDh = {
-            id: `DKH-${Math.floor(100 + Math.random() * 900)}`,
-            name: formDhName,
-            code: formDhCode,
-            city: formDhCity,
-            address: formDhAddress,
-            manager: formDhManager,
-            phone: formDhPhone,
-            status: formDhStatus,
-            todayOrders: 0,
-            avatarColor: colors[Math.floor(Math.random() * colors.length)]
-        };
-        setDarkhouses(prev => [newDh, ...prev]);
-        setIsModalOpen(false);
-        showToast(`Registered new hub ${formDhName}`);
+    // Geolocation capture handler
+    const handleCaptureLocation = () => {
+        if (!navigator.geolocation) {
+            showToast("Geolocation is not supported by this browser.");
+            setFormDhLatitude("12.9716");
+            setFormDhLongitude("77.5946");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setFormDhLatitude(position.coords.latitude.toFixed(6));
+                setFormDhLongitude(position.coords.longitude.toFixed(6));
+                showToast("Location captured successfully!");
+            },
+            (error) => {
+                setFormDhLatitude("12.9716");
+                setFormDhLongitude("77.5946");
+                showToast("Unable to retrieve location. Using Bangalore fallback coordinates.");
+            }
+        );
     };
 
-    const handleDhEditSubmit = (e) => {
+    const isValidEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
+    // ─── Modal Form Actions ───────────────────────────────────────────────────
+    const handleDhAddSubmit = async (e) => {
         e.preventDefault();
-        setDarkhouses(prev => prev.map(d => {
-            if (d.id === selectedItem.id) {
-                return {
-                    ...d,
-                    name: formDhName,
-                    code: formDhCode,
-                    city: formDhCity,
-                    address: formDhAddress,
-                    manager: formDhManager,
-                    phone: formDhPhone,
-                    status: formDhStatus
+        
+        if (!formDhName.trim()) {
+            showToast("Warehouse Name is required");
+            return;
+        }
+        if (!formDhType.trim()) {
+            showToast("Warehouse Type is required");
+            return;
+        }
+        if (!formDhOwnerName.trim()) {
+            showToast("Owner Name is required");
+            return;
+        }
+        const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
+        if (cleanPhone.length < 10) {
+            showToast("Owner Phone must be at least 10 digits");
+            return;
+        }
+        if (!formDhOwnerEmail.trim() || !isValidEmail(formDhOwnerEmail)) {
+            showToast("Please provide a valid contact email");
+            return;
+        }
+        if (!formDhCity.trim()) {
+            showToast("City is required");
+            return;
+        }
+        if (!formDhState.trim()) {
+            showToast("State is required");
+            return;
+        }
+        if (!formDhPincode.trim()) {
+            showToast("Pincode is required");
+            return;
+        }
+        if (!formDhStartTime) {
+            showToast("Operating Start Time is required");
+            return;
+        }
+        if (!formDhEndTime) {
+            showToast("Operating End Time is required");
+            return;
+        }
+        if (!formDhManager) {
+            showToast("Please assign a Manager");
+            return;
+        }
+        if (formDhOperatingDays.length === 0) {
+            showToast("Please select at least one operating day");
+            return;
+        }
+
+        if (isSubmitting) return;
+
+        const payload = {
+            warehouseName: formDhName,
+            warehouseType: formDhType,
+            franchiseCode: formDhCode,
+            ownerName: formDhOwnerName,
+            contactPhone: formDhOwnerPhone,
+            contactEmail: formDhOwnerEmail,
+            addressLine1: formDhAddressLine1,
+            addressLine2: formDhAddressLine2,
+            city: formDhCity,
+            state: formDhState,
+            pincode: formDhPincode,
+            latitude: parseFloat(formDhLatitude) || 0.0,
+            longitude: parseFloat(formDhLongitude) || 0.0,
+            serviceRadiusKm: parseInt(formDhServiceRadius) || 10,
+            status: formDhStatus,
+            operatingStartTime: formDhStartTime,
+            operatingEndTime: formDhEndTime,
+            accountManager: formDhManager,
+            managerPhone: formDhPhone
+        };
+
+        try {
+            setIsSubmitting(true);
+            const res = await fetch("https://www.haatza.com/_functions/createWarehouse", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.status) {
+                showToast("Warehouse created successfully");
+                const newWh = {
+                    ...data.data,
+                    // Keep compatibility properties for older components
+                    id: data.data.warehouseId,
+                    name: data.data.warehouseName,
+                    type: data.data.warehouseType,
+                    code: data.data.franchiseCode,
+                    ownerPhone: data.data.contactPhone,
+                    ownerEmail: data.data.contactEmail,
+                    serviceRadius: data.data.serviceRadiusKm,
+                    startTime: data.data.operatingStartTime,
+                    endTime: data.data.operatingEndTime,
+                    manager: data.data.accountManager,
+                    phone: data.data.managerPhone,
+                    address: `${data.data.addressLine1}${data.data.addressLine2 ? ', ' + data.data.addressLine2 : ''}, ${data.data.city}, ${data.data.state} - ${data.data.pincode}`,
+                    avatarColor: ["avatar-indigo", "avatar-teal", "avatar-purple", "avatar-cyan", "avatar-rose", "avatar-amber"][Math.floor(Math.random() * 6)]
                 };
+                setDarkhouses(prev => [newWh, ...prev]);
+                setIsModalOpen(false);
+            } else {
+                showToast(data.message || "Failed to create warehouse");
             }
-            return d;
-        }));
-        setIsModalOpen(false);
-        showToast(`Saved hub changes for ${formDhName}`);
+        } catch (error) {
+            showToast(error.message || "Network error occurred");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDhEditSubmit = async (e) => {
+        e.preventDefault();
+        if (!formDhName.trim()) {
+            showToast("Warehouse Name is required");
+            return;
+        }
+        if (!formDhCode.trim()) {
+            showToast("Franchise Code is required");
+            return;
+        }
+        if (!formDhOwnerName.trim()) {
+            showToast("Owner Name is required");
+            return;
+        }
+        const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
+        if (cleanPhone.length < 10) {
+            showToast("Owner Phone must be at least 10 digits");
+            return;
+        }
+        if (!formDhOwnerEmail.trim() || !isValidEmail(formDhOwnerEmail)) {
+            showToast("Please provide a valid Owner Email address");
+            return;
+        }
+        if (!formDhAddressLine1.trim()) {
+            showToast("Address Line 1 is required");
+            return;
+        }
+        if (!formDhState.trim()) {
+            showToast("State is required");
+            return;
+        }
+        if (!formDhCity.trim()) {
+            showToast("City is required");
+            return;
+        }
+        if (!formDhPincode.trim() || formDhPincode.length < 5) {
+            showToast("Please provide a valid Pincode");
+            return;
+        }
+        if (!formDhManager) {
+            showToast("Please assign a Manager");
+            return;
+        }
+        if (formDhOperatingDays.length === 0) {
+            showToast("Please select at least one operating day");
+            return;
+        }
+
+        if (isSubmitting) return;
+
+        const payload = {
+            tableId: selectedItem.tableId || selectedItem.id,
+            warehouseId: selectedItem.warehouseId,
+            addressLine1: formDhAddressLine1,
+            city: formDhCity,
+            managerPhone: formDhPhone,
+            latitude: parseFloat(formDhLatitude) || 0.0,
+            state: formDhState,
+            warehouseName: formDhName,
+            warehouseType: formDhType,
+            longitude: parseFloat(formDhLongitude) || 0.0,
+            accountManager: formDhManager,
+            contactEmail: formDhOwnerEmail,
+            franchiseCode: formDhCode,
+            status: formDhStatus,
+            addressLine2: formDhAddressLine2,
+            ownerName: formDhOwnerName,
+            operatingStartTime: formDhStartTime,
+            operatingEndTime: formDhEndTime,
+            contactPhone: formDhOwnerPhone,
+            pincode: formDhPincode,
+            serviceRadiusKm: parseInt(formDhServiceRadius) || 10
+        };
+
+        try {
+            setIsSubmitting(true);
+            const res = await fetch("https://www.haatza.com/_functions/updateWarehouse", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.status) {
+                showToast("Warehouse updated successfully");
+                const updatedWh = {
+                    ...data.data,
+                    // Keep compatibility properties for older components
+                    id: data.data.warehouseId,
+                    name: data.data.warehouseName,
+                    type: data.data.warehouseType,
+                    code: data.data.franchiseCode,
+                    ownerPhone: data.data.contactPhone,
+                    ownerEmail: data.data.contactEmail,
+                    serviceRadius: data.data.serviceRadiusKm,
+                    startTime: data.data.operatingStartTime,
+                    endTime: data.data.operatingEndTime,
+                    manager: data.data.accountManager,
+                    phone: data.data.managerPhone,
+                    address: `${data.data.addressLine1}${data.data.addressLine2 ? ', ' + data.data.addressLine2 : ''}, ${data.data.city}, ${data.data.state} - ${data.data.pincode}`,
+                    avatarColor: selectedItem.avatarColor || "avatar-indigo"
+                };
+
+                setDarkhouses(prev => prev.map(d => {
+                    if (d.id === selectedItem.id || d.warehouseId === selectedItem.warehouseId || d.tableId === selectedItem.tableId) {
+                        return updatedWh;
+                    }
+                    return d;
+                }));
+                setIsModalOpen(false);
+            } else {
+                showToast(data.message || "Failed to update warehouse");
+            }
+        } catch (error) {
+            showToast(error.message || "Network error occurred");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleMgrEditSubmit = (e) => {
@@ -386,16 +766,76 @@ function DarkhousesPage() {
         showToast(`Bulk mapped all ${MOCK_PRODUCTS.length} catalog products to ${formApDh}`);
     };
 
-    // ─── Inline State Toggles ─────────────────────────────────────────────────
-    const handleToggleDhStatus = (id) => {
-        setDarkhouses(prev => prev.map(d => {
-            if (d.id === id) {
-                const nextStatus = d.status === "Active" ? "Inactive" : "Active";
-                showToast(`Toggled ${d.name} state to ${nextStatus}`);
-                return { ...d, status: nextStatus };
+    const handleToggleDhStatus = async (id) => {
+        const warehouse = darkhouses.find(d => d.id === id || d.warehouseId === id);
+        if (!warehouse) return;
+
+        const nextStatus = (warehouse.status || "").toUpperCase() === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+        const payload = {
+            tableId: warehouse.tableId || warehouse.id,
+            warehouseId: warehouse.warehouseId,
+            addressLine1: warehouse.addressLine1 || "",
+            city: warehouse.city || "",
+            managerPhone: warehouse.managerPhone || warehouse.phone || "",
+            latitude: warehouse.latitude || 0.0,
+            state: warehouse.state || "",
+            warehouseName: warehouse.warehouseName || warehouse.name || "",
+            warehouseType: warehouse.warehouseType || warehouse.type || "MAIN_WAREHOUSE",
+            longitude: warehouse.longitude || 0.0,
+            accountManager: warehouse.accountManager || warehouse.manager || "",
+            contactEmail: warehouse.contactEmail || warehouse.ownerEmail || "",
+            franchiseCode: warehouse.franchiseCode || warehouse.code || "",
+            status: nextStatus,
+            addressLine2: warehouse.addressLine2 || "",
+            ownerName: warehouse.ownerName || "",
+            operatingStartTime: warehouse.operatingStartTime || warehouse.startTime || "09:00",
+            operatingEndTime: warehouse.operatingEndTime || warehouse.endTime || "22:00",
+            contactPhone: warehouse.contactPhone || warehouse.ownerPhone || "",
+            pincode: warehouse.pincode || "",
+            serviceRadiusKm: warehouse.serviceRadiusKm || warehouse.serviceRadius || 10
+        };
+
+        try {
+            const res = await fetch("https://www.haatza.com/_functions/updateWarehouse", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.status) {
+                showToast(`Toggled ${warehouse.warehouseName || warehouse.name} status to ${nextStatus}`);
+                const updatedWh = {
+                    ...data.data,
+                    // Keep compatibility properties for older components
+                    id: data.data.warehouseId,
+                    name: data.data.warehouseName,
+                    type: data.data.warehouseType,
+                    code: data.data.franchiseCode,
+                    ownerPhone: data.data.contactPhone,
+                    ownerEmail: data.data.contactEmail,
+                    serviceRadius: data.data.serviceRadiusKm,
+                    startTime: data.data.operatingStartTime,
+                    endTime: data.data.operatingEndTime,
+                    manager: data.data.accountManager,
+                    phone: data.data.managerPhone,
+                    address: `${data.data.addressLine1}${data.data.addressLine2 ? ', ' + data.data.addressLine2 : ''}, ${data.data.city}, ${data.data.state} - ${data.data.pincode}`,
+                    avatarColor: warehouse.avatarColor || "avatar-indigo"
+                };
+                setDarkhouses(prev => prev.map(d => {
+                    if (d.id === id || d.warehouseId === id || d.tableId === warehouse.tableId) {
+                        return updatedWh;
+                    }
+                    return d;
+                }));
+            } else {
+                showToast(data.message || "Failed to update warehouse status");
             }
-            return d;
-        }));
+        } catch (error) {
+            showToast(error.message || "Network error occurred");
+        }
         setActiveRowMenuId(null);
     };
 
@@ -418,17 +858,31 @@ function DarkhousesPage() {
         }
     };
 
+    // Type badge mapping helper
+    const getTypeBadgeClass = (type) => {
+        const normType = (type || "").toUpperCase();
+        if (normType === "MAIN_WAREHOUSE") {
+            return "dkh-type-badge dkh-type-badge--main";
+        } else if (normType === "DARK_HOUSE" || normType === "DARK_STORE") {
+            return "dkh-type-badge dkh-type-badge--darkhouse";
+        }
+        return "dkh-type-badge";
+    };
+
     // UI badges helper
     const getStatusClass = (status) => {
-        switch (status) {
-            case "Active":
-            case "In Stock":
+        const normStatus = (status || "").toUpperCase();
+        switch (normStatus) {
+            case "ACTIVE":
+            case "IN STOCK":
                 return "dkh-badge dkh-badge-active";
-            case "Low Stock":
+            case "LOW STOCK":
+            case "UNDER_MAINTENANCE":
+            case "UNDER MAINTENANCE":
                 return "dkh-badge dkh-badge-warning";
-            case "Inactive":
-            case "On Leave":
-            case "Out of Stock":
+            case "INACTIVE":
+            case "ON LEAVE":
+            case "OUT OF STOCK":
                 return "dkh-badge dkh-badge-inactive";
             default:
                 return "dkh-badge";
@@ -458,7 +912,7 @@ function DarkhousesPage() {
             <div className="dkh-header">
                 <div className="dkh-header__title-block">
                     <h1 className="dkh-header__title">
-                        {activeTab === "list" && "HAATZA Darkhouse Hubs"}
+                        {activeTab === "list" && "HAATZA Warehouse Hubs"}
                         {activeTab === "managers" && "Hub Managers Management"}
                         {activeTab === "assign" && "Regional Product Mapping"}
                     </h1>
@@ -472,7 +926,7 @@ function DarkhousesPage() {
                     {activeTab === "list" && (
                         <button className="dkh-action-btn-primary" onClick={openDhAdd}>
                             <Plus size={15} />
-                            <span>Add New Darkhouse</span>
+                            <span>Create Warehouse</span>
                         </button>
                     )}
                     {activeTab === "assign" && (
@@ -495,11 +949,29 @@ function DarkhousesPage() {
                     <>
                         <div className="dkh-summary-card">
                             <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--info">
-                                <Building size={20} />
+                                <Warehouse size={20} />
                             </div>
                             <div className="dkh-summary-card__body">
                                 <span className="dkh-summary-card__value">{dhStats.total}</span>
-                                <span className="dkh-summary-card__label">Total Hubs</span>
+                                <span className="dkh-summary-card__label">Total Warehouses</span>
+                            </div>
+                        </div>
+                        <div className="dkh-summary-card">
+                            <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--success">
+                                <Building size={20} />
+                            </div>
+                            <div className="dkh-summary-card__body">
+                                <span className="dkh-summary-card__value">{dhStats.main}</span>
+                                <span className="dkh-summary-card__label">Main Warehouses</span>
+                            </div>
+                        </div>
+                        <div className="dkh-summary-card">
+                            <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--danger">
+                                <Warehouse size={20} />
+                            </div>
+                            <div className="dkh-summary-card__body">
+                                <span className="dkh-summary-card__value">{dhStats.darkHouse}</span>
+                                <span className="dkh-summary-card__label">Dark Houses</span>
                             </div>
                         </div>
                         <div className="dkh-summary-card">
@@ -508,25 +980,16 @@ function DarkhousesPage() {
                             </div>
                             <div className="dkh-summary-card__body">
                                 <span className="dkh-summary-card__value">{dhStats.active}</span>
-                                <span className="dkh-summary-card__label">Active Hubs</span>
+                                <span className="dkh-summary-card__label">Active</span>
                             </div>
                         </div>
                         <div className="dkh-summary-card">
-                            <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--danger">
+                            <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--warning">
                                 <XCircle size={20} />
                             </div>
                             <div className="dkh-summary-card__body">
                                 <span className="dkh-summary-card__value">{dhStats.inactive}</span>
-                                <span className="dkh-summary-card__label">Inactive Hubs</span>
-                            </div>
-                        </div>
-                        <div className="dkh-summary-card">
-                            <div className="dkh-summary-card__icon-wrap dkh-summary-card__icon-wrap--info">
-                                <ShoppingBag size={20} />
-                            </div>
-                            <div className="dkh-summary-card__body">
-                                <span className="dkh-summary-card__value">{dhStats.todayOrders}</span>
-                                <span className="dkh-summary-card__label">Today's Orders</span>
+                                <span className="dkh-summary-card__label">Inactive</span>
                             </div>
                         </div>
                     </>
@@ -617,7 +1080,7 @@ function DarkhousesPage() {
                             className={`dkh-tab ${activeTab === "list" ? "dkh-tab--active" : ""}`}
                             onClick={() => handleTabClick("list")}
                         >
-                            Darkhouse List
+                            Warehouse List
                         </button>
                         <button
                             role="tab"
@@ -658,6 +1121,16 @@ function DarkhousesPage() {
                                     <option value="All">All Cities</option>
                                     {CITIES.filter(c => c !== "All").map(c => (
                                         <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    className="dkh-toolbar-select"
+                                    value={dhCapability}
+                                    onChange={(e) => { setDhCapability(e.target.value); setDhPage(1); }}
+                                >
+                                    <option value="All">All Types</option>
+                                    {WAREHOUSE_CAPABILITIES.map(cap => (
+                                        <option key={cap} value={cap}>{cap}</option>
                                     ))}
                                 </select>
                             </>
@@ -732,12 +1205,17 @@ function DarkhousesPage() {
                             <>
                                 <thead>
                                     <tr>
-                                        <th>Hub Name</th>
-                                        <th>Hub Code</th>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th 
+                                            onClick={() => handleDhSort('warehouseType')} 
+                                            className="sortable-header" 
+                                            style={{ cursor: "pointer", userSelect: "none" }}
+                                        >
+                                            Type <ArrowUpDown size={12} className="sort-icon" />
+                                        </th>
                                         <th>City</th>
-                                        <th>Address</th>
-                                        <th>Manager Assigned</th>
-                                        <th>Today Orders</th>
+                                        <th>Account Manager</th>
                                         <th>Status</th>
                                         <th style={{ textAlign: "right" }}>Actions</th>
                                     </tr>
@@ -745,30 +1223,45 @@ function DarkhousesPage() {
                                 <tbody>
                                     {paginatedDarkhouses.length === 0 ? (
                                         <tr>
-                                            <td colSpan={8} className="dkh-empty">
-                                                No darkhouse hubs found matching filters.
+                                            <td colSpan={7} className="dkh-empty">
+                                                No warehouse hubs found matching filters.
                                             </td>
                                         </tr>
                                     ) : (
                                         paginatedDarkhouses.map((dh, index) => (
-                                            <tr key={dh.id} className="darkhouse-row-hover">
-                                                <td className="dkh-td--name">{dh.name}</td>
-                                                <td className="dkh-td--code">{dh.code}</td>
-                                                <td><span className="dkh-city-badge">{dh.city}</span></td>
-                                                <td className="dkh-td--address">{dh.address}</td>
-                                                <td className="dkh-td--manager">
-                                                    <span className="dkh-manager-initials-pill">
-                                                        {getInitials(dh.manager)}
-                                                    </span>
-                                                    {dh.manager}
+                                            <tr key={dh.warehouseId || dh.id} className="darkhouse-row-hover">
+                                                <td className="dkh-td--code font-mono">{dh.warehouseId || dh.id}</td>
+                                                <td className="dkh-td--name">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{dh.warehouseName || dh.name}</span>
+                                                        <div className="dkh-tooltip-content">{dh.warehouseName || dh.name}</div>
+                                                    </div>
                                                 </td>
-                                                <td className="dkh-td--orders">{dh.todayOrders} orders</td>
+                                                <td>
+                                                    <span className={getTypeBadgeClass(dh.warehouseType || dh.type)}>
+                                                        {(dh.warehouseType || dh.type) === "MAIN_WAREHOUSE" ? "Main Warehouse" :
+                                                         (dh.warehouseType || dh.type) === "DARK_HOUSE" ? "Dark House" :
+                                                         (dh.warehouseType || dh.type)}
+                                                    </span>
+                                                </td>
+                                                <td><span className="dkh-city-badge">{dh.city}</span></td>
+                                                <td className="dkh-td--manager">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">
+                                                            <span className="dkh-manager-initials-pill">
+                                                                {getInitials(dh.accountManager || dh.manager)}
+                                                            </span>
+                                                            {dh.accountManager || dh.manager}
+                                                        </span>
+                                                        <div className="dkh-tooltip-content">{dh.accountManager || dh.manager}</div>
+                                                    </div>
+                                                </td>
                                                 <td><span className={getStatusClass(dh.status)}>{dh.status}</span></td>
                                                 <td style={{ position: "relative" }}>
-                                                    <button className="dkh-row-action-btn" onClick={(e) => toggleRowMenu(dh.id, e)}>
+                                                    <button className="dkh-row-action-btn" onClick={(e) => toggleRowMenu(dh.warehouseId || dh.id, e)}>
                                                         <MoreVertical size={14} />
                                                     </button>
-                                                    {activeRowMenuId === dh.id && (
+                                                    {activeRowMenuId === (dh.warehouseId || dh.id) && (
                                                         <>
                                                             <div className="global-dropdown-overlay" onClick={() => setActiveRowMenuId(null)} />
                                                             <div 
@@ -784,9 +1277,9 @@ function DarkhousesPage() {
                                                                     <span>Edit Hub</span>
                                                                 </button>
                                                                 <div className="global-dropdown-divider"></div>
-                                                                <button className="global-dropdown-item" onClick={() => handleToggleDhStatus(dh.id)}>
+                                                                <button className="global-dropdown-item" onClick={() => handleToggleDhStatus(dh.warehouseId || dh.id)}>
                                                                     <CheckCircle size={13} />
-                                                                    <span>{dh.status === "Active" ? "Deactivate" : "Activate"}</span>
+                                                                    <span>{dh.status === "ACTIVE" ? "Deactivate" : "Activate"}</span>
                                                                 </button>
                                                             </div>
                                                         </>
@@ -828,12 +1321,20 @@ function DarkhousesPage() {
                                                         {mgr.initials}
                                                     </div>
                                                 </td>
-                                                <td className="dkh-td--name">{mgr.name}</td>
+                                                <td className="dkh-td--name">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{mgr.name}</span>
+                                                        <div className="dkh-tooltip-content">{mgr.name}</div>
+                                                    </div>
+                                                </td>
                                                 <td>
-                                                    <span className="dkh-manager-detail-tag">
-                                                        <Mail size={12} />
-                                                        {mgr.email}
-                                                    </span>
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate dkh-manager-detail-tag">
+                                                            <Mail size={12} />
+                                                            {mgr.email}
+                                                        </span>
+                                                        <div className="dkh-tooltip-content">{mgr.email}</div>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span className="dkh-manager-detail-tag">
@@ -841,7 +1342,12 @@ function DarkhousesPage() {
                                                         {mgr.phone}
                                                     </span>
                                                 </td>
-                                                <td className="dkh-td--manager">{mgr.darkhouse}</td>
+                                                <td className="dkh-td--manager">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{mgr.darkhouse}</span>
+                                                        <div className="dkh-tooltip-content">{mgr.darkhouse}</div>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <span className="dkh-shift-pill">
                                                         <Clock size={12} />
@@ -908,10 +1414,25 @@ function DarkhousesPage() {
                                     ) : (
                                         paginatedAssignedProducts.map(item => (
                                             <tr key={item.id} className="darkhouse-row-hover">
-                                                <td className="dkh-td--name">{item.product}</td>
-                                                <td className="dkh-td--code">{item.sku}</td>
+                                                <td className="dkh-td--name">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{item.product}</span>
+                                                        <div className="dkh-tooltip-content">{item.product}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="dkh-td--code">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{item.sku}</span>
+                                                        <div className="dkh-tooltip-content font-mono">{item.sku}</div>
+                                                    </div>
+                                                </td>
                                                 <td><span className="dkh-city-badge">{item.category}</span></td>
-                                                <td className="dkh-td--manager">{item.darkhouse}</td>
+                                                <td className="dkh-td--manager">
+                                                    <div className="dkh-tooltip-wrapper">
+                                                        <span className="dkh-truncate">{item.darkhouse}</span>
+                                                        <div className="dkh-tooltip-content">{item.darkhouse}</div>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <span className={`inv-stock-number ${item.stock === 0 ? "out" : item.stock <= item.reorder ? "low" : ""}`}>
                                                         {item.stock} items
@@ -1017,29 +1538,34 @@ function DarkhousesPage() {
             </div>
 
             {/* ─── MODAL GLASSMORPHIC BACKDROP ─────────────────────────────────────────── */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className="dkh-modal-backdrop fade-in" onClick={() => setIsModalOpen(false)}>
                     <div className="dkh-modal-container scale-up" onClick={(e) => e.stopPropagation()}>
                         
                         {/* Modal Header */}
                         <div className="dkh-modal-header">
-                            <div className="dkh-modal-header__icon-wrap">
-                                {modalType.startsWith("dh") ? <Building size={18} /> : modalType.startsWith("mgr") ? <Users size={18} /> : <PackagePlus size={18} />}
+                            <div className="dkh-modal-header__left">
+                                <div className="dkh-modal-header__icon-wrap">
+                                    {modalType.startsWith("dh") ? <Building size={18} /> : modalType.startsWith("mgr") ? <Users size={18} /> : <PackagePlus size={18} />}
+                                </div>
+                                <div className="dkh-modal-header__text-block">
+                                    <h3 className="dkh-modal-title">
+                                        {modalType === "dh-view" && "Warehouse Hub Overview"}
+                                        {modalType === "dh-add" && "Create Warehouse"}
+                                        {modalType === "dh-edit" && "Modify Warehouse Details"}
+                                        {modalType === "mgr-edit" && "Modify Manager Contacts"}
+                                        {modalType === "mgr-assign" && "Assign Hub Linkage"}
+                                        {modalType === "ap-assign" && "Allocate Product Stock"}
+                                        {modalType === "ap-bulk" && "Bulk Allocation Parameters"}
+                                    </h3>
+                                    <span className="dkh-modal-subtitle">
+                                        {modalType === "dh-add" || modalType === "dh-edit" ? "Warehouse Registration & Allocation Operations" : (selectedItem?.id || selectedItem?.name || "Allocation Operations")}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="dkh-modal-header__text-block">
-                                <h3 className="dkh-modal-title">
-                                    {modalType === "dh-view" && "Darkhouse Hub Overview"}
-                                    {modalType === "dh-add" && "Register New Fronting Darkhouse"}
-                                    {modalType === "dh-edit" && "Modify Darkhouse Details"}
-                                    {modalType === "mgr-edit" && "Modify Manager Contacts"}
-                                    {modalType === "mgr-assign" && "Assign Hub Linkage"}
-                                    {modalType === "ap-assign" && "Allocate Product Stock"}
-                                    {modalType === "ap-bulk" && "Bulk Allocation Parameters"}
-                                </h3>
-                                <span className="dkh-modal-subtitle">
-                                    {selectedItem?.id || selectedItem?.name || "Allocation Operations"}
-                                </span>
-                            </div>
+                            <button className="dkh-modal-close" onClick={() => setIsModalOpen(false)}>
+                                <X size={18} />
+                            </button>
                         </div>
 
                         {/* Modal Body */}
@@ -1047,83 +1573,200 @@ function DarkhousesPage() {
                             
                             {/* 1. View Darkhouse details */}
                             {modalType === "dh-view" && selectedItem && (
-                                <div className="dkh-details-sheet">
-                                    <div className="details-row"><span className="details-label">Darkhouse Name:</span><span className="details-val">{selectedItem.name}</span></div>
-                                    <div className="details-row"><span className="details-label">Hub Code:</span><span className="details-val font-mono">{selectedItem.code}</span></div>
-                                    <div className="details-row"><span className="details-label">City Region:</span><span className="details-val">{selectedItem.city}</span></div>
-                                    <div className="details-row"><span className="details-label">Physical Address:</span><span className="details-val">{selectedItem.address}</span></div>
-                                    <div className="details-row"><span className="details-label">Manager assigned:</span><span className="details-val">{selectedItem.manager}</span></div>
-                                    <div className="details-row"><span className="details-label">Phone Contacts:</span><span className="details-val">{selectedItem.phone}</span></div>
-                                    <div className="details-row"><span className="details-label">Capacity status:</span><span className="details-val"><span className={getStatusClass(selectedItem.status)}>{selectedItem.status}</span></span></div>
+                                <div className="dkh-details-sheet" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                    {/* Section 1 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase" }}>Warehouse Info</div>
+                                    <div><span className="details-label">Warehouse Name</span><span className="details-val">{selectedItem.warehouseName || selectedItem.name}</span></div>
+                                    <div><span className="details-label">Warehouse Type</span><span className="details-val"><span className={getTypeBadgeClass(selectedItem.warehouseType || selectedItem.type)}>{(selectedItem.warehouseType || selectedItem.type) === "MAIN_WAREHOUSE" ? "Main Warehouse" : (selectedItem.warehouseType || selectedItem.type) === "DARK_HOUSE" ? "Dark House" : (selectedItem.warehouseType || selectedItem.type)}</span></span></div>
+                                    <div><span className="details-label">Franchise Code</span><span className="details-val font-mono">{selectedItem.franchiseCode || selectedItem.code}</span></div>
+                                    <div><span className="details-label">Status</span><span className="details-val"><span className={getStatusClass(selectedItem.status)}>{selectedItem.status}</span></span></div>
+
+                                    {/* Section 2 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Owner Info</div>
+                                    <div><span className="details-label">Owner Name</span><span className="details-val">{selectedItem.ownerName || "N/A"}</span></div>
+                                    <div><span className="details-label">Owner Phone</span><span className="details-val">{selectedItem.ownerPhone || "N/A"}</span></div>
+                                    <div style={{ gridColumn: "span 2" }}><span className="details-label">Owner Email</span><span className="details-val">{selectedItem.ownerEmail || "N/A"}</span></div>
+
+                                    {/* Section 3 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Address Info</div>
+                                    <div style={{ gridColumn: "span 2" }}><span className="details-label">Address Line 1</span><span className="details-val">{selectedItem.addressLine1 || selectedItem.address || "N/A"}</span></div>
+                                    <div style={{ gridColumn: "span 2" }}><span className="details-label">Address Line 2</span><span className="details-val">{selectedItem.addressLine2 || "N/A"}</span></div>
+                                    <div><span className="details-label">State</span><span className="details-val">{selectedItem.state || "N/A"}</span></div>
+                                    <div><span className="details-label">City</span><span className="details-val">{selectedItem.city}</span></div>
+                                    <div><span className="details-label">Pincode</span><span className="details-val">{selectedItem.pincode || "N/A"}</span></div>
+
+                                    {/* Section 4 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Geo Location</div>
+                                    <div><span className="details-label">Latitude</span><span className="details-val">{selectedItem.latitude || "N/A"}</span></div>
+                                    <div><span className="details-label">Longitude</span><span className="details-val">{selectedItem.longitude || "N/A"}</span></div>
+
+                                    {/* Section 5 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Operations</div>
+                                    <div><span className="details-label">Service Radius</span><span className="details-val">{selectedItem.serviceRadius ? `${selectedItem.serviceRadius} km` : "N/A"}</span></div>
+                                    <div><span className="details-label">Operating Hours</span><span className="details-val">{selectedItem.startTime && selectedItem.endTime ? `${selectedItem.startTime} - ${selectedItem.endTime}` : "N/A"}</span></div>
+                                    <div style={{ gridColumn: "span 2" }}>
+                                        <span className="details-label">Operating Days</span>
+                                        <span className="details-val" style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+                                            {selectedItem.operatingDays?.map(day => (
+                                                <span key={day} className="dkh-city-badge" style={{ margin: 0 }}>{day}</span>
+                                            )) || "N/A"}
+                                        </span>
+                                    </div>
+
+                                    {/* Section 6 */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Management</div>
+                                    <div><span className="details-label">Manager Assigned</span><span className="details-val">{selectedItem.manager || "N/A"}</span></div>
+                                    <div><span className="details-label">Phone Contacts</span><span className="details-val">{selectedItem.phone || "N/A"}</span></div>
                                 </div>
                             )}
 
-                            {/* 2. Add Darkhouse */}
+                            {/* 2. Add Warehouse */}
                             {modalType === "dh-add" && (
                                 <form id="dh-add-form" onSubmit={handleDhAddSubmit} className="dkh-modal-form">
+                                    {/* Section 1: Warehouse Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "8px" }}>Section 1: Warehouse Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhName">Darkhouse Hub Name</label>
+                                        <label htmlFor="formDhName">Warehouse Name</label>
                                         <input type="text" id="formDhName" placeholder="e.g. HAATZA Koramangala Hub" value={formDhName} onChange={(e) => setFormDhName(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCode">Hub Code</label>
+                                        <label htmlFor="formDhType">Warehouse Type</label>
+                                        <select id="formDhType" value={formDhType} onChange={(e) => setFormDhType(e.target.value)} required>
+                                            <option value="MAIN_WAREHOUSE">Main Warehouse</option>
+                                            <option value="DARK_HOUSE">Dark House</option>
+                                        </select>
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhCode">Franchise Code</label>
                                         <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCity">City Region</label>
-                                        <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)}>
-                                            <option value="Bangalore">Bangalore</option>
-                                            <option value="Mumbai">Mumbai</option>
-                                            <option value="Delhi">Delhi</option>
+                                        <label htmlFor="formDhStatus">Status</label>
+                                        <select id="formDhStatus" value={formDhStatus} onChange={(e) => setFormDhStatus(e.target.value)} required>
+                                            <option value="ACTIVE">Active</option>
+                                            <option value="INACTIVE">Inactive</option>
+                                            <option value="UNDER_MAINTENANCE">Under Maintenance</option>
                                         </select>
                                     </div>
-                                    <div className="dkh-form-group">
-                                        <label htmlFor="formDhAddress">Physical Address</label>
-                                        <input type="text" id="formDhAddress" placeholder="12th Main Road, Koramangala..." value={formDhAddress} onChange={(e) => setFormDhAddress(e.target.value)} required />
-                                    </div>
-                                    <div className="dkh-form-group">
-                                        <label htmlFor="formDhManager">Manager Assigned</label>
-                                        <select id="formDhManager" value={formDhManager} onChange={(e) => setFormDhManager(e.target.value)}>
-                                            {managers.map(m => (
-                                                <option key={m.id} value={m.name}>{m.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="dkh-form-group">
-                                        <label htmlFor="formDhPhone">Phone Contacts</label>
-                                        <input type="text" id="formDhPhone" placeholder="+91 98765 01234" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} required />
-                                    </div>
-                                </form>
-                            )}
 
-                            {/* 3. Edit Darkhouse */}
-                            {modalType === "dh-edit" && (
-                                <form id="dh-edit-form" onSubmit={handleDhEditSubmit} className="dkh-modal-form">
+                                    {/* Section 2: Owner Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 2: Owner Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhName">Darkhouse Hub Name</label>
-                                        <input type="text" id="formDhName" value={formDhName} onChange={(e) => setFormDhName(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerName">Owner Name</label>
+                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCode">Hub Code</label>
-                                        <input type="text" id="formDhCode" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerPhone">Owner Phone</label>
+                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhOwnerEmail">Owner Email</label>
+                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} required />
+                                    </div>
+
+                                    {/* Section 3: Address Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 3: Address Info</div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhAddressLine1">Address Line 1</label>
+                                        <input type="text" id="formDhAddressLine1" placeholder="e.g. 12th Main Road, Koramangala 3rd Block" value={formDhAddressLine1} onChange={(e) => setFormDhAddressLine1(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhAddressLine2">Address Line 2 (Optional)</label>
+                                        <input type="text" id="formDhAddressLine2" placeholder="e.g. Suite 101" value={formDhAddressLine2} onChange={(e) => setFormDhAddressLine2(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCity">City Region</label>
-                                        <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)}>
+                                        <label htmlFor="formDhState">State</label>
+                                        <input type="text" id="formDhState" placeholder="e.g. Karnataka" value={formDhState} onChange={(e) => setFormDhState(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhCity">City</label>
+                                        <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)} required>
                                             <option value="Bangalore">Bangalore</option>
                                             <option value="Mumbai">Mumbai</option>
                                             <option value="Delhi">Delhi</option>
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhAddress">Physical Address</label>
-                                        <input type="text" id="formDhAddress" value={formDhAddress} onChange={(e) => setFormDhAddress(e.target.value)} required />
+                                        <label htmlFor="formDhPincode">Pincode</label>
+                                        <input type="text" id="formDhPincode" placeholder="e.g. 560034" value={formDhPincode} onChange={(e) => setFormDhPincode(e.target.value)} required />
+                                    </div>
+
+                                    {/* Section 4: Geo Location */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 4: Geo Location</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhLatitude">Latitude</label>
+                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
+                                        <label htmlFor="formDhLongitude">Longitude</label>
+                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width" style={{ display: "flex", justifyContent: "flex-end" }}>
+                                        <button type="button" className="dkh-action-btn-secondary" style={{ padding: "8px 16px", cursor: "pointer" }} onClick={handleCaptureLocation}>
+                                            Capture Current Location
+                                        </button>
+                                    </div>
+
+                                    {/* Section 5: Operations */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 5: Operations</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhServiceRadius">Service Radius (km)</label>
+                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} required min="1" />
+                                    </div>
+                                    <div className="dkh-form-group" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label htmlFor="formDhStartTime">Start Time</label>
+                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} required />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label htmlFor="formDhEndTime">End Time</label>
+                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} required />
+                                        </div>
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label>Operating Days</label>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "4px" }}>
+                                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
+                                                <label key={day} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formDhOperatingDays.includes(day)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setFormDhOperatingDays(prev => [...prev, day]);
+                                                            } else {
+                                                                setFormDhOperatingDays(prev => prev.filter(d => d !== day));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span>{day}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 6: Management */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 6: Management</div>
+                                    <div className="dkh-form-group">
                                         <label htmlFor="formDhManager">Manager Assigned</label>
-                                        <select id="formDhManager" value={formDhManager} onChange={(e) => setFormDhManager(e.target.value)}>
+                                        <select
+                                            id="formDhManager"
+                                            value={formDhManager}
+                                            onChange={(e) => {
+                                                const selectedName = e.target.value;
+                                                setFormDhManager(selectedName);
+                                                const mObj = managers.find(m => m.name === selectedName);
+                                                if (mObj) {
+                                                    setFormDhPhone(mObj.phone);
+                                                }
+                                            }}
+                                            required
+                                        >
+                                            <option value="">Select Manager</option>
                                             {managers.map(m => (
-                                                <option key={m.id} value={m.name}>{m.name}</option>
+                                                <option key={m.id} value={m.name}>
+                                                    [{m.id}] {m.name} ({m.phone})
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
@@ -1131,12 +1774,162 @@ function DarkhousesPage() {
                                         <label htmlFor="formDhPhone">Phone Contacts</label>
                                         <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} required />
                                     </div>
+                                </form>
+                            )}
+
+                            {/* 3. Edit Warehouse */}
+                            {modalType === "dh-edit" && (
+                                <form id="dh-edit-form" onSubmit={handleDhEditSubmit} className="dkh-modal-form">
+                                    {/* Section 1: Warehouse Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "8px" }}>Section 1: Warehouse Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhStatus">Hub Capacity Status</label>
-                                        <select id="formDhStatus" value={formDhStatus} onChange={(e) => setFormDhStatus(e.target.value)}>
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
+                                        <label htmlFor="formDhName">Warehouse Name</label>
+                                        <input type="text" id="formDhName" placeholder="e.g. HAATZA Koramangala Hub" value={formDhName} onChange={(e) => setFormDhName(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhType">Warehouse Type</label>
+                                        <select id="formDhType" value={formDhType} onChange={(e) => setFormDhType(e.target.value)} required>
+                                            <option value="MAIN_WAREHOUSE">Main Warehouse</option>
+                                            <option value="DARK_HOUSE">Dark House</option>
                                         </select>
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhCode">Franchise Code</label>
+                                        <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhStatus">Status</label>
+                                        <select id="formDhStatus" value={formDhStatus} onChange={(e) => setFormDhStatus(e.target.value)} required>
+                                            <option value="ACTIVE">Active</option>
+                                            <option value="INACTIVE">Inactive</option>
+                                            <option value="UNDER_MAINTENANCE">Under Maintenance</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Section 2: Owner Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 2: Owner Info</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhOwnerName">Owner Name</label>
+                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhOwnerPhone">Owner Phone</label>
+                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhOwnerEmail">Owner Email</label>
+                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} required />
+                                    </div>
+
+                                    {/* Section 3: Address Info */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 3: Address Info</div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhAddressLine1">Address Line 1</label>
+                                        <input type="text" id="formDhAddressLine1" placeholder="e.g. 12th Main Road, Koramangala 3rd Block" value={formDhAddressLine1} onChange={(e) => setFormDhAddressLine1(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label htmlFor="formDhAddressLine2">Address Line 2 (Optional)</label>
+                                        <input type="text" id="formDhAddressLine2" placeholder="e.g. Suite 101" value={formDhAddressLine2} onChange={(e) => setFormDhAddressLine2(e.target.value)} />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhState">State</label>
+                                        <input type="text" id="formDhState" placeholder="e.g. Karnataka" value={formDhState} onChange={(e) => setFormDhState(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhCity">City</label>
+                                        <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)} required>
+                                            <option value="Bangalore">Bangalore</option>
+                                            <option value="Mumbai">Mumbai</option>
+                                            <option value="Delhi">Delhi</option>
+                                        </select>
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhPincode">Pincode</label>
+                                        <input type="text" id="formDhPincode" placeholder="e.g. 560034" value={formDhPincode} onChange={(e) => setFormDhPincode(e.target.value)} required />
+                                    </div>
+
+                                    {/* Section 4: Geo Location */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 4: Geo Location</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhLatitude">Latitude</label>
+                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhLongitude">Longitude</label>
+                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} required />
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width" style={{ display: "flex", justifyContent: "flex-end" }}>
+                                        <button type="button" className="dkh-action-btn-secondary" style={{ padding: "8px 16px", cursor: "pointer" }} onClick={handleCaptureLocation}>
+                                            Capture Current Location
+                                        </button>
+                                    </div>
+
+                                    {/* Section 5: Operations */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 5: Operations</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhServiceRadius">Service Radius (km)</label>
+                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} required min="1" />
+                                    </div>
+                                    <div className="dkh-form-group" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label htmlFor="formDhStartTime">Start Time</label>
+                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} required />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label htmlFor="formDhEndTime">End Time</label>
+                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} required />
+                                        </div>
+                                    </div>
+                                    <div className="dkh-form-group dkh-form-group--full-width">
+                                        <label>Operating Days</label>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "4px" }}>
+                                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
+                                                <label key={day} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formDhOperatingDays.includes(day)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setFormDhOperatingDays(prev => [...prev, day]);
+                                                            } else {
+                                                                setFormDhOperatingDays(prev => prev.filter(d => d !== day));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span>{day}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 6: Management */}
+                                    <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 6: Management</div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhManager">Manager Assigned</label>
+                                        <select
+                                            id="formDhManager"
+                                            value={formDhManager}
+                                            onChange={(e) => {
+                                                const selectedName = e.target.value;
+                                                setFormDhManager(selectedName);
+                                                const mObj = managers.find(m => m.name === selectedName);
+                                                if (mObj) {
+                                                    setFormDhPhone(mObj.phone);
+                                                }
+                                            }}
+                                            required
+                                        >
+                                            <option value="">Select Manager</option>
+                                            {managers.map(m => (
+                                                <option key={m.id} value={m.name}>
+                                                    [{m.id}] {m.name} ({m.phone})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="dkh-form-group">
+                                        <label htmlFor="formDhPhone">Phone Contacts</label>
+                                        <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} required />
                                     </div>
                                 </form>
                             )}
@@ -1187,7 +1980,7 @@ function DarkhousesPage() {
                             {modalType === "mgr-assign" && (
                                 <form id="mgr-assign-form" onSubmit={handleMgrAssignSubmit} className="dkh-modal-form">
                                     <p className="adjust-explainer">Associate active managers to fronting regional hubs. This automatically overrides current manager labels of the hub.</p>
-                                    <div className="dkh-form-group">
+                                    <div className="dkh-form-group dkh-form-group--full-width">
                                         <label htmlFor="formMgrAssignDh">Assigned Darkhouse</label>
                                         <select id="formMgrAssignDh" value={formMgrDh} onChange={(e) => setFormMgrDh(e.target.value)}>
                                             {darkhouses.map(d => (
@@ -1232,7 +2025,7 @@ function DarkhousesPage() {
                             {modalType === "ap-bulk" && (
                                 <form id="ap-bulk-form" onSubmit={handleApBulkSubmit} className="dkh-modal-form">
                                     <p className="adjust-explainer font-semibold">Bulk allocate all active product lines in your catalog to a designated regional darkhouse hub at once.</p>
-                                    <div className="dkh-form-group">
+                                    <div className="dkh-form-group dkh-form-group--full-width">
                                         <label htmlFor="formApDhBulk">Regional Hub Destination</label>
                                         <select id="formApDhBulk" value={formApDh} onChange={(e) => setFormApDh(e.target.value)}>
                                             {darkhouses.map(d => (
@@ -1260,14 +2053,14 @@ function DarkhousesPage() {
                             </button>
 
                             {modalType === "dh-add" && (
-                                <button type="submit" form="dh-add-form" className="dkh-modal-submit-btn">
-                                    Save Darkhouse
+                                <button type="submit" form="dh-add-form" className="dkh-modal-submit-btn" disabled={isSubmitting}>
+                                    {isSubmitting ? "Creating..." : "Save Warehouse"}
                                 </button>
                             )}
 
                             {modalType === "dh-edit" && (
-                                <button type="submit" form="dh-edit-form" className="dkh-modal-submit-btn">
-                                    Save Changes
+                                <button type="submit" form="dh-edit-form" className="dkh-modal-submit-btn" disabled={isSubmitting}>
+                                    {isSubmitting ? "Saving..." : "Save Changes"}
                                 </button>
                             )}
 
@@ -1297,7 +2090,8 @@ function DarkhousesPage() {
                         </div>
 
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

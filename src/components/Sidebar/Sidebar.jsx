@@ -310,6 +310,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Inventory", path: "/catalogue/darkhouse/inventory" },
                     { label: "Find Product to Sell", path: "/catalogue/darkhouse/find-product-to-sell" }
                 ];
+                item.path = "/catalogue/darkhouse/products";
             } else if (moduleName === "Orders") {
                 item.submenu = [
                     { label: "Order Management", path: "/orders?tab=management" },
@@ -321,6 +322,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Delivery Management", path: "/orders?tab=board&step=delivery" },
                     { label: "Cancelled Orders", path: "/orders?tab=cancelled" }
                 ];
+                item.path = "/orders?tab=management";
             } else if (moduleName === "Admin") {
                 item.submenu = [
                     { label: "Manage Users", path: "/admin/users" },
@@ -330,6 +332,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Manage Categories", path: "/admin/categories" },
                     { label: "Manage Products", path: "/admin/products" }
                 ];
+                item.path = "/admin/users";
             } else if (moduleName === "Reports") {
                 item.submenu = [
                     { label: "Inventory Summary Report", path: "/reports/inventory-summary" },
@@ -343,6 +346,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Top Selling Products", path: "/reports/top-selling" },
                     { label: "Order Status Report", path: "/reports/order-status" }
                 ];
+                item.path = "/reports/inventory-summary";
             } else if (moduleName === "Dispatch Management") {
                 item.submenu = [
                     { label: "Dispatch List", path: "/dispatch?tab=list" },
@@ -350,6 +354,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Dispatch Details", path: "/dispatch?tab=details" },
                     { label: "Dispatch Tracking", path: "/dispatch?tab=tracking" }
                 ];
+                item.path = "/dispatch?tab=list";
             } else if (moduleName === "Indent Management") {
                 item.submenu = [
                     { label: "Indent List", path: "/indent?tab=list" },
@@ -359,12 +364,14 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
                     { label: "Rejected Indents", path: "/indent?tab=list&status=Rejected" }
                 ];
+                item.path = "/indent?tab=list";
             } else if (moduleName === "GRN (Goods Receipt Note)") {
                 item.submenu = [
                     { label: "GRN List", path: "/grn?tab=list" },
                     { label: "Create GRN", path: "/grn?tab=create" },
                     { label: "GRN Details", path: "/grn?tab=details" }
                 ];
+                item.path = "/grn?tab=list";
             } else if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
                 item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
@@ -375,6 +382,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                         path: getRouteForPage(page.pageId, page.pageName)
                     };
                 });
+                if (item.submenu.length > 0) {
+                    item.path = item.submenu[0].path;
+                }
             }
 
             if (BOTTOM_MODULES.includes(moduleName)) {
@@ -421,6 +431,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 id: "receiving-management",
                 label: "Receiving Management",
                 icon: getIconForModule("Receiving Management"),
+                path: "/receiving?tab=pending",
                 submenu: [
                     { label: "Pending Receipts", path: "/receiving?tab=pending" },
                     { label: "Receive Dispatch", path: "/receiving?tab=receive" },
@@ -436,6 +447,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 id: "dispatch-management",
                 label: "Dispatch Management",
                 icon: getIconForModule("Dispatch Management"),
+                path: "/dispatch?tab=list",
                 submenu: [
                     { label: "Dispatch List", path: "/dispatch?tab=list" },
                     { label: "Create Dispatch", path: "/dispatch?tab=create" },
@@ -452,6 +464,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 id: "indent-management",
                 label: "Indent Management",
                 icon: getIconForModule("Indent Management"),
+                path: "/indent?tab=list",
                 submenu: [
                     { label: "Indent List", path: "/indent?tab=list" },
                     { label: "Create Indent", path: "/indent?tab=create" },
@@ -470,6 +483,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 id: "grn-management",
                 label: "GRN (Goods Receipt Note)",
                 icon: getIconForModule("GRN (Goods Receipt Note)"),
+                path: "/grn?tab=list",
                 submenu: [
                     { label: "GRN List", path: "/grn?tab=list" },
                     { label: "Create GRN", path: "/grn?tab=create" },
@@ -594,11 +608,6 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     <ChevronRight 
                         size={14} 
                         className="submenu-indicator-arrow" 
-                        style={{
-                            transform: isMobile && isExpanded ? "rotate(90deg)" : "none",
-                            transition: "transform 0.2s ease",
-                            color: isMobile && isExpanded ? "#ffffff" : undefined
-                        }}
                     />
                 )}
             </>
@@ -628,55 +637,6 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     >
                         {content}
                     </div>
-                )}
-
-                {/* Inline submenu accordion for mobile */}
-                {isMobile && item.submenu && isExpanded && (
-                    <ul className="mobile-submenu-list" style={{
-                        listStyle: "none",
-                        paddingLeft: "30px",
-                        marginTop: "4px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px"
-                    }}>
-                        {item.submenu.map((sub, idx) => {
-                            const currentPath = location.pathname + location.search;
-
-
-
-                            const isSubActive = sub.path.includes("?") 
-                                ? currentPath === sub.path 
-                                : location.pathname === sub.path;
-                            return (
-                                <li key={idx}>
-                                    <Link
-                                        to={sub.path}
-                                        className={`nav-link ${isSubActive ? "active" : ""}`}
-                                        onClick={handleSubmenuItemClick}
-                                        style={{
-                                            padding: "8px 12px",
-                                            fontSize: "13px",
-                                            minHeight: "36px",
-                                            borderRadius: "10px",
-                                            backgroundColor: isSubActive ? "#ffffff" : "transparent",
-                                            color: isSubActive ? "#020079" : "rgba(255, 255, 255, 0.85)"
-                                        }}
-                                    >
-                                        <span className="mobile-submenu-bullet" style={{
-                                            width: "5px",
-                                            height: "5px",
-                                            borderRadius: "50%",
-                                            backgroundColor: isSubActive ? "#020079" : "rgba(255, 255, 255, 0.5)",
-                                            marginRight: "8px",
-                                            flexShrink: 0
-                                        }}></span>
-                                        {sub.label}
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
                 )}
             </li>
         );
