@@ -68,6 +68,7 @@ function CategoriesPage() {
     const validateForm = () => {
         const errors = {};
         if (!formData.name.trim()) errors.name = "Category name is required";
+        if (formData.displayOrder <= 0) errors.displayOrder = "Display order must be greater than 0";
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -94,7 +95,17 @@ function CategoriesPage() {
             ...formData
         };
 
-        setCategories(prev => [...prev, newCat]);
+        const updated = [...categories, newCat];
+        setCategories(updated);
+        saveCategories(updated);
+        addAuditLog(
+            sessionStorage.getItem("username") || "PIM Manager",
+            "Category Created",
+            "Category Management",
+            null,
+            newCat,
+            `Created new category: ${newCat.name}`
+        );
         setIsAddModalOpen(false);
     };
 
@@ -115,9 +126,23 @@ function CategoriesPage() {
         e.preventDefault();
         if (!validateForm()) return;
 
-        setCategories(prev => 
-            prev.map(c => c.id === selectedCategory.id ? { ...c, ...formData } : c)
-        );
+        const updated = categories.map(c => {
+            if (c.id === selectedCategory.id) {
+                const newCat = { ...c, ...formData };
+                addAuditLog(
+                    sessionStorage.getItem("username") || "PIM Manager",
+                    "Category Updated",
+                    "Category Management",
+                    c,
+                    newCat,
+                    `Updated category: ${c.name}`
+                );
+                return newCat;
+            }
+            return c;
+        });
+        setCategories(updated);
+        saveCategories(updated);
         setIsEditModalOpen(false);
     };
 

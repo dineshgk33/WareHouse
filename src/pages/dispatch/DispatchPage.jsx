@@ -20,72 +20,8 @@ import {
 import { useToast } from "../../hooks/useToast";
 import "./Dispatch.css";
 
-const MOCK_PACKED_ORDERS = [
-    { id: "ORD-8824", customer: "Sophia Bennett", destination: "HAATZA Koramangala Hub", items: "3 items", weight: "1.2 kg" },
-    { id: "ORD-8825", customer: "Marcus Johnson", destination: "HAATZA Powai Depot", items: "1 item", weight: "0.5 kg" },
-    { id: "ORD-8826", customer: "Aanya Sharma", destination: "HAATZA Indiranagar Hub", items: "5 items", weight: "2.4 kg" },
-    { id: "ORD-8827", customer: "David Müller", destination: "HAATZA GK-1 Warehouse", items: "2 items", weight: "1.0 kg" }
-];
-
-const MOCK_DISPATCHES = [
-    {
-        id: "DSP-4001",
-        poNumber: "DSP-MANIFEST-1080",
-        destination: "HAATZA Koramangala Hub",
-        carrier: "Delhivery Logistics",
-        weight: "12.4 kg",
-        vehicleNo: "KA-03-MJ-2201",
-        driverName: "Ramesh Kumar",
-        status: "In Transit",
-        ordersCount: 3,
-        ordersList: ["ORD-8818", "ORD-8819", "ORD-8820"],
-        checkpoints: [
-            { name: "Packed & Manifested", time: "10:00 AM", done: true },
-            { name: "Dispatched from Central Hub", time: "10:30 AM", done: true },
-            { name: "In Transit (Koramangala Route)", time: "11:15 AM", done: true },
-            { name: "Out for Delivery to Darkhouse", time: "Pending", done: false },
-            { name: "Delivered & Received", time: "Pending", done: false }
-        ]
-    },
-    {
-        id: "DSP-4002",
-        poNumber: "DSP-MANIFEST-1081",
-        destination: "HAATZA Powai Depot",
-        carrier: "Blue Dart Express",
-        weight: "8.5 kg",
-        vehicleNo: "MH-02-AT-9081",
-        driverName: "Sanjay Singh",
-        status: "Manifested",
-        ordersCount: 2,
-        ordersList: ["ORD-8821", "ORD-8822"],
-        checkpoints: [
-            { name: "Packed & Manifested", time: "11:00 AM", done: true },
-            { name: "Dispatched from Central Hub", time: "Pending", done: false },
-            { name: "In Transit", time: "Pending", done: false },
-            { name: "Out for Delivery to Darkhouse", time: "Pending", done: false },
-            { name: "Delivered & Received", time: "Pending", done: false }
-        ]
-    },
-    {
-        id: "DSP-4003",
-        poNumber: "DSP-MANIFEST-1082",
-        destination: "HAATZA GK-1 Warehouse",
-        carrier: "Shadowfax Local",
-        weight: "15.0 kg",
-        vehicleNo: "DL-01-SH-4491",
-        driverName: "Amit Sharma",
-        status: "Delivered",
-        ordersCount: 4,
-        ordersList: ["ORD-8814", "ORD-8815", "ORD-8816", "ORD-8817"],
-        checkpoints: [
-            { name: "Packed & Manifested", time: "08:30 AM", done: true },
-            { name: "Dispatched from Central Hub", time: "09:00 AM", done: true },
-            { name: "In Transit", time: "09:30 AM", done: true },
-            { name: "Out for Delivery to Darkhouse", time: "10:00 AM", done: true },
-            { name: "Delivered & Received", time: "10:15 AM", done: true }
-        ]
-    }
-];
+import { getIndents, dispatchReplenishmentIndent } from "../../services/indentService";
+import "./Dispatch.css";
 
 const CARRIERS = ["Delhivery Logistics", "Blue Dart Express", "Shadowfax Local", "DHL Express", "Zepto In-house Rider", "HAATZA Fleet"];
 
@@ -97,8 +33,52 @@ function DispatchPage() {
     const activeTab = searchParams.get("tab") || "list";
     
     // Core Databases States
-    const [dispatches, setDispatches] = useState(MOCK_DISPATCHES);
-    const [packedOrders, setPackedOrders] = useState(MOCK_PACKED_ORDERS);
+    const [indentsList, setIndentsList] = useState(() => getIndents());
+
+    const refreshData = () => {
+        setIndentsList(getIndents());
+    };
+
+    const dispatches = useMemo(() => {
+        return indentsList
+            .filter(i => ["Dispatched", "In Transit", "Closed", "Exception Closed", "Damaged", "Short Received", "GRN Completed"].includes(i.status))
+            .map(i => {
+                const checkpoints = i.history.map(h => ({
+                    name: h.status + (h.remarks ? ` - ${h.remarks}` : ""),
+                    time: new Date(h.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    done: true
+                }));
+                if (["Dispatched", "In Transit"].includes(i.status)) {
+                    checkpoints.push({ name: "In Transit", time: "Pending", done: i.status === "In Transit" });
+                    checkpoints.push({ name: "Delivered & Received", time: "Pending", done: false });
+                }
+                return {
+                    id: i.id,
+                    poNumber: i.grnNumber || `DSP-${i.id.replace("IND-", "")}`,
+                    destination: i.requestedBy,
+                    carrier: i.carrier || "HAATZA Fleet",
+                    weight: (i.approvedQty * 0.5).toFixed(1) + " kg",
+                    vehicleNo: i.vehicleNumber || "N/A",
+                    driverName: i.driverName || "N/A",
+                    status: ["Closed", "Exception Closed", "Damaged", "Short Received", "GRN Completed"].includes(i.status) ? "Delivered" : i.status,
+                    ordersCount: 1,
+                    ordersList: [i.sku],
+                    checkpoints: checkpoints
+                };
+            });
+    }, [indentsList]);
+
+    const packedOrders = useMemo(() => {
+        return indentsList
+            .filter(i => i.status === "Approved" || i.status === "Partially Approved")
+            .map(i => ({
+                id: i.id,
+                customer: i.productName + ` (${i.sku})`,
+                destination: i.requestedBy,
+                items: i.approvedQty + " " + i.uom,
+                weight: (i.approvedQty * 0.5).toFixed(1) + " kg"
+            }));
+    }, [indentsList]);
     
     // Active Dispatch Details State
     const [activeDispatchId, setActiveDispatchId] = useState(searchParams.get("id") || "");
@@ -145,7 +125,7 @@ function DispatchPage() {
     const handleCreateDispatch = (e) => {
         e.preventDefault();
         if (selectedOrders.length === 0) {
-            showToast("Please select at least one packed order to dispatch.", "error");
+            showToast("Please select at least one packed indent to dispatch.", "error");
             return;
         }
         if (!vehicleNo || !driverName) {
@@ -153,44 +133,31 @@ function DispatchPage() {
             return;
         }
 
-        const dspId = "DSP-" + Math.floor(4004 + Math.random() * 100);
-        const poNumber = "DSP-MANIFEST-" + Math.floor(1083 + Math.random() * 100);
-        const totalWeight = (selectedOrders.length * 1.5).toFixed(1) + " kg";
+        try {
+            selectedOrders.forEach(indentId => {
+                dispatchReplenishmentIndent({
+                    indentId,
+                    vehicleNumber: vehicleNo,
+                    driverName: driverName,
+                    remarks: `Dispatched carrier: ${carrier}`,
+                    userName: sessionStorage.getItem("username") || "Warehouse Dispatcher"
+                });
+            });
 
-        const newDispatch = {
-            id: dspId,
-            poNumber,
-            destination,
-            carrier,
-            weight: totalWeight,
-            vehicleNo,
-            driverName,
-            status: "Manifested",
-            ordersCount: selectedOrders.length,
-            ordersList: [...selectedOrders],
-            checkpoints: [
-                { name: "Packed & Manifested", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), done: true },
-                { name: "Dispatched from Central Hub", time: "Pending", done: false },
-                { name: "In Transit", time: "Pending", done: false },
-                { name: "Out for Delivery to Darkhouse", time: "Pending", done: false },
-                { name: "Delivered & Received", time: "Pending", done: false }
-            ]
-        };
+            // Reset form
+            setSelectedOrders([]);
+            setVehicleNo("");
+            setDriverName("");
 
-        // Add to active dispatches
-        setDispatches(prev => [newDispatch, ...prev]);
-        // Remove orders from packed checklist
-        setPackedOrders(prev => prev.filter(o => !selectedOrders.includes(o.id)));
-        
-        // Reset form
-        setSelectedOrders([]);
-        setVehicleNo("");
-        setDriverName("");
+            refreshData();
 
-        // Navigate to list
-        handleSelectDispatch("list", dspId);
-        showToast(`Dispatch shipment ${poNumber} created successfully!`, "success");
-    };
+            // Navigate to list
+            handleSelectDispatch("list", selectedOrders[0]);
+            showToast(`Shipment dispatched successfully!`, "success");
+        } catch (err) {
+            showToast(err.message, "error");
+        }
+    };;
 
     // Filtered Pool
     const filteredDispatches = useMemo(() => {

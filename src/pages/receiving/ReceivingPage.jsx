@@ -18,100 +18,8 @@ import {
 import { useToast } from "../../hooks/useToast";
 import "./Receiving.css";
 
-const MOCK_PENDING_RECEIPTS = [
-    {
-        id: "REC-PO-9821",
-        poNumber: "PO-2026-4401",
-        supplier: "Harvest Fresh Farms Ltd.",
-        origin: "Pune Agro Hub",
-        expectedDate: "15 Jun 2026",
-        itemsCount: 3,
-        totalQty: 250,
-        status: "Pending",
-        items: [
-            { id: "itm-1", productName: "Farm Fresh Milk 1L", expectedQty: 100, unit: "units" },
-            { id: "itm-2", productName: "Brown Whole Wheat Bread 400g", expectedQty: 80, unit: "units" },
-            { id: "itm-3", productName: "Organic Free-Range Eggs 12pk", expectedQty: 70, unit: "packs" }
-        ]
-    },
-    {
-        id: "REC-PO-9822",
-        poNumber: "PO-2026-4402",
-        supplier: "Heritage Dairy Products",
-        origin: "Bengaluru Cold Chain",
-        expectedDate: "16 Jun 2026",
-        itemsCount: 2,
-        totalQty: 150,
-        status: "In Transit",
-        items: [
-            { id: "itm-4", productName: "Salted Butter 500g", expectedQty: 50, unit: "units" },
-            { id: "itm-5", productName: "Fresh Paneer 200g", expectedQty: 100, unit: "units" }
-        ]
-    },
-    {
-        id: "REC-PO-9823",
-        poNumber: "PO-2026-4403",
-        supplier: "Global Foods Import Group",
-        origin: "Mumbai Port Warehouse",
-        expectedDate: "18 Jun 2026",
-        itemsCount: 4,
-        totalQty: 400,
-        status: "Pending",
-        items: [
-            { id: "itm-6", productName: "Premium Basmati Rice 5kg", expectedQty: 100, unit: "bags" },
-            { id: "itm-7", productName: "Refined Sunflower Oil 1L", expectedQty: 150, unit: "bottles" },
-            { id: "itm-8", productName: "Iodized Table Salt 1kg", expectedQty: 100, unit: "packets" },
-            { id: "itm-9", productName: "Fine White Sugar 1kg", expectedQty: 50, unit: "packets" }
-        ]
-    },
-    {
-        id: "REC-PO-9824",
-        poNumber: "PO-2026-4404",
-        supplier: "Western Poultry Cooperative",
-        origin: "Nashik Hatchery Hub",
-        expectedDate: "19 Jun 2026",
-        itemsCount: 1,
-        totalQty: 120,
-        status: "In Transit",
-        items: [
-            { id: "itm-10", productName: "Frozen Chicken Breast 1kg", expectedQty: 120, unit: "packs" }
-        ]
-    }
-];
-
-const MOCK_RECEIPT_HISTORY = [
-    {
-        grnNumber: "GRN-2026-1180",
-        poNumber: "PO-2026-4395",
-        supplier: "Harvest Fresh Farms Ltd.",
-        origin: "Pune Agro Hub",
-        receivedDate: "12 Jun 2026",
-        receivedBy: "Rahul Kumar",
-        itemsCount: 2,
-        totalQty: 120,
-        status: "Posted",
-        items: [
-            { id: "itm-h1", productName: "Organic Tomatoes 1kg", expectedQty: 60, receivedQty: 60, qc: "Pass", bin: "BIN-A12" },
-            { id: "itm-h2", productName: "Fresh Green Capsicum 500g", expectedQty: 60, receivedQty: 58, qc: "Pass", bin: "BIN-A15" }
-        ]
-    },
-    {
-        grnNumber: "GRN-2026-1181",
-        poNumber: "PO-2026-4396",
-        supplier: "Metro Beverage Distributors",
-        origin: "Koramangala Bottling Plant",
-        receivedDate: "14 Jun 2026",
-        receivedBy: "Rahul Kumar",
-        itemsCount: 3,
-        totalQty: 300,
-        status: "Posted",
-        items: [
-            { id: "itm-h3", productName: "Sparkling Cola Can 330ml", expectedQty: 100, receivedQty: 100, qc: "Pass", bin: "BIN-B02" },
-            { id: "itm-h4", productName: "Lemon Soda Can 330ml", expectedQty: 100, receivedQty: 98, qc: "Pass", bin: "BIN-B03" },
-            { id: "itm-h5", productName: "Mineral Water Bottle 500ml", expectedQty: 100, receivedQty: 100, qc: "Pass", bin: "BIN-B09" }
-        ]
-    }
-];
+import { getIndents, processReceivingVerification } from "../../services/indentService";
+import "./Receiving.css";
 
 const BINS_LIST = ["BIN-A01", "BIN-A02", "BIN-A03", "BIN-A04", "BIN-A12", "BIN-A15", "BIN-B01", "BIN-B02", "BIN-B03", "BIN-B09", "BIN-C01", "BIN-C02"];
 
@@ -123,8 +31,52 @@ function ReceivingPage() {
     const activeTab = searchParams.get("tab") || "pending";
     
     // Core Databases States
-    const [pendingReceipts, setPendingReceipts] = useState(MOCK_PENDING_RECEIPTS);
-    const [receiptHistory, setReceiptHistory] = useState(MOCK_RECEIPT_HISTORY);
+    const [indentsList, setIndentsList] = useState(() => getIndents());
+
+    const refreshData = () => {
+        setIndentsList(getIndents());
+    };
+
+    const pendingReceipts = useMemo(() => {
+        return indentsList
+            .filter(i => i.status === "Dispatched" || i.status === "In Transit")
+            .map(i => ({
+                id: i.id,
+                poNumber: i.grnNumber || `DSP-${i.id.replace("IND-", "")}`,
+                supplier: i.requestedTo,
+                origin: i.requestedTo,
+                expectedDate: new Date(i.expectedDeliveryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+                itemsCount: 1,
+                totalQty: i.approvedQty,
+                status: i.status,
+                items: [
+                    { id: i.id, productName: i.productName + ` (${i.sku})`, expectedQty: i.approvedQty, unit: i.uom }
+                ],
+                indent: i
+            }));
+    }, [indentsList]);
+
+    const receiptHistory = useMemo(() => {
+        return indentsList
+            .filter(i => ["Closed", "Exception Closed", "Damaged", "Short Received", "GRN Completed"].includes(i.status))
+            .map(i => {
+                const totalReceived = i.receivedQty || 0;
+                return {
+                    grnNumber: i.grnNumber || `GRN-${i.id.replace("IND-", "")}`,
+                    poNumber: `DSP-${i.id.replace("IND-", "")}`,
+                    supplier: i.requestedTo,
+                    origin: i.requestedTo,
+                    receivedDate: i.grnDate ? new Date(i.grnDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A",
+                    receivedBy: i.receivedBy || "System",
+                    itemsCount: 1,
+                    totalQty: totalReceived,
+                    status: "Posted",
+                    items: [
+                        { id: i.id, productName: i.productName + ` (${i.sku})`, expectedQty: i.approvedQty, receivedQty: totalReceived, qc: i.shortQty > 0 ? "Short Received" : i.damagedQty > 0 ? "Rejected (Damaged)" : "Pass", bin: "BIN-A01" }
+                    ]
+                };
+            });
+    }, [indentsList]);
     
     // Active Receiving PO State
     const [activePOId, setActivePOId] = useState(searchParams.get("po") || "");
@@ -200,46 +152,55 @@ function ReceivingPage() {
 
         if (hasErrors) return;
 
-        const grnNumber = "GRN-2026-" + Math.floor(1182 + Math.random() * 200);
-        const receivedItems = selectedPO.items.map(item => {
-            const formData = receiveItemsData[item.id];
-            return {
-                id: item.id,
-                productName: item.productName,
-                expectedQty: item.expectedQty,
-                receivedQty: parseInt(formData.receivedQty),
-                qc: formData.qc,
-                bin: formData.bin,
-                batchNo: formData.batchNo,
-                expiryDate: formData.expiryDate
-            };
+        let recVal = 0;
+        let shVal = 0;
+        let dmgVal = 0;
+        let rejVal = 0;
+
+        selectedPO.items.forEach(item => {
+            const formData = receiveItemsData[item.id] || {};
+            const rQty = parseInt(formData.receivedQty) || 0;
+            const expected = item.expectedQty;
+            
+            recVal += rQty;
+            if (formData.qc === "Pass") {
+                if (rQty < expected) {
+                    shVal += (expected - rQty);
+                }
+            } else if (formData.qc === "Rejected (Damaged)") {
+                if (rQty < expected) {
+                    dmgVal += (expected - rQty);
+                }
+            } else if (formData.qc === "Rejected (Expired)") {
+                if (rQty < expected) {
+                    rejVal += (expected - rQty);
+                }
+            }
         });
 
-        const totalQty = receivedItems.reduce((sum, itm) => sum + itm.receivedQty, 0);
+        try {
+            processReceivingVerification({
+                indentId: selectedPO.indent.id,
+                receivedQty: recVal,
+                shortQty: shVal,
+                damagedQty: dmgVal,
+                rejectedQty: rejVal,
+                remarks: `Bay: ${unloadingBay}. Temp Logger: ${tempLoggerReading}°C. Checked in by Rahul Kumar.`,
+                userName: sessionStorage.getItem("username") || "Rahul Kumar",
+                attachments: [],
+                isOverReceiptApproved: true
+            });
 
-        const newReceipt = {
-            grnNumber,
-            poNumber: selectedPO.poNumber,
-            supplier: selectedPO.supplier,
-            origin: selectedPO.origin,
-            receivedDate: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-            receivedBy: "Rahul Kumar",
-            itemsCount: selectedPO.itemsCount,
-            totalQty,
-            status: "Posted",
-            items: receivedItems
-        };
+            refreshData();
 
-        // Remove PO from pending list
-        setPendingReceipts(prev => prev.filter(po => po.id !== selectedPO.id));
-        // Add to history
-        setReceiptHistory(prev => [newReceipt, ...prev]);
+            // Clean active PO state
+            setActivePOId("");
+            setSearchParams({ tab: "history" });
 
-        // Clean active PO state
-        setActivePOId("");
-        setSearchParams({ tab: "history" });
-
-        showToast(`Goods Receipt Note ${grnNumber} posted successfully! Inventory allocated to bins.`, "success");
+            showToast(`Goods Receipt Note posted successfully! Inventory allocated to bins.`, "success");
+        } catch (err) {
+            showToast(err.message, "error");
+        }
     };
 
     // Filtered Pools

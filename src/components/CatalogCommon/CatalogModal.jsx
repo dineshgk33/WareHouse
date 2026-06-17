@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import "./CatalogCommon.css";
 
@@ -14,7 +15,7 @@ function CatalogModal({
 }) {
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div className="cat-modal-backdrop fade-in" onClick={onClose}>
             <div 
                 className={`cat-modal-container ${sizeClass}`} 
@@ -55,7 +56,8 @@ function CatalogModal({
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

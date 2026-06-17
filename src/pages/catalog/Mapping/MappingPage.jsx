@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Eye, Edit2, Trash2, Map, CheckCircle2, Warehouse, AlertCircle } from "lucide-react";
+import { Plus, Eye, Edit2, Trash2, Map, CheckCircle2, Warehouse, AlertCircle, AlertTriangle } from "lucide-react";
 import PageHeader from "../../../components/CatalogCommon/PageHeader";
 import DataTable from "../../../components/CatalogCommon/DataTable";
 import SearchFilterBar from "../../../components/CatalogCommon/SearchFilterBar";
 import StatusBadge from "../../../components/CatalogCommon/StatusBadge";
 import CatalogModal from "../../../components/CatalogCommon/CatalogModal";
 import StatCard from "../../../components/StatCard/StatCard";
-import { MOCK_MAPPING, MOCK_CATEGORIES } from "../../../data/catalogData";
+import { MOCK_MAPPING, MOCK_PRODUCTS } from "../../../data/catalogData";
 import { INITIAL_DARKHOUSES } from "../../../data/darkhouses";
 import "./MappingPage.css";
 
@@ -22,6 +22,7 @@ function MappingPage() {
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const [selectedMapping, setSelectedMapping] = useState(null);
     const [selectedDarkhouses, setSelectedDarkhouses] = useState([]);
+    const [formErrors, setFormErrors] = useState({});
 
     // ─── Filters configuration ───────────────────────────────────────────────
     const filters = [
@@ -69,11 +70,18 @@ function MappingPage() {
     const handleOpenMapModal = (mapping, closeMenu) => {
         setSelectedMapping(mapping);
         setSelectedDarkhouses([...mapping.mappedDarkhouses]);
+        setFormErrors({});
         setIsMapModalOpen(true);
         if (closeMenu) closeMenu();
     };
 
-    const handleCheckboxChange = (dhName) => {
+    const handleCheckboxChange = (dhName, isInactive) => {
+        if (isInactive) {
+            setFormErrors({ modal: "Error: Cannot assign stock to Inactive/Offline darkhouse nodes." });
+            return;
+        }
+
+        setFormErrors({});
         setSelectedDarkhouses(prev => {
             if (prev.includes(dhName)) {
                 return prev.filter(name => name !== dhName);
@@ -85,17 +93,22 @@ function MappingPage() {
 
     const handleSaveMapping = (e) => {
         e.preventDefault();
+        
+        // Find mapped product and check PIM status
+        const productInfo = MOCK_PRODUCTS.find(p => p.sku === selectedMapping.sku);
+        const isProductPublished = productInfo && productInfo.status === "Published";
+
         setMappingList(prev => 
             prev.map(m => {
                 if (m.id === selectedMapping.id) {
                     const status = selectedDarkhouses.length > 0 ? "Active" : "Inactive";
-                    // Simulate random stock allocation per mapped darkhouse
-                    const allocatedStock = selectedDarkhouses.length * (Math.floor(Math.random() * 50) + 15);
+                    const allocatedStock = selectedDarkhouses.length * 60;
                     return {
                         ...m,
                         mappedDarkhouses: selectedDarkhouses,
                         availableStock: allocatedStock,
-                        status
+                        status: isProductPublished ? status : "Inactive", // Cannot be active if product isn't published
+                        syncAlert: !isProductPublished
                     };
                 }
                 return m;
@@ -107,7 +120,7 @@ function MappingPage() {
     const handleRemoveAllMappings = (mapping, closeMenu) => {
         if (window.confirm(`Are you sure you want to remove all darkhouse mappings for ${mapping.productName}?`)) {
             setMappingList(prev => 
-                prev.map(m => m.id === mapping.id ? { ...m, mappedDarkhouses: [], availableStock: 0, status: "Inactive" } : m)
+                prev.map(m => m.id === mapping.id ? { ...m, mappedDarkhouses: [], availableStock: 0, status: "Inactive", syncAlert: false } : m)
             );
         }
         if (closeMenu) closeMenu();
@@ -115,25 +128,38 @@ function MappingPage() {
 
     const columns = [
         {
-            header: "Product Info",
-            render: (row) => (
-                <div className="map-prod-cell">
-                    <span className="map-box-icon">📦</span>
-                    <div className="map-prod-text">
-                        <span className="map-prod-name">{row.productName}</span>
-                        <span className="map-prod-sku">SKU: {row.sku}</span>
+            header: "Product SKU & Name",
+            render: (row) => {
+                const prod = MOCK_PRODUCTS.find(p => p.sku === row.sku);
+                const isDraft = prod && prod.status !== "Published";
+                
+                return (
+                    <div className="map-prod-cell">
+                        <span className="map-box-icon">📦</span>
+                        <div className="map-prod-text">
+                            <span className="map-prod-name">{row.productName}</span>
+                            <div className="map-prod-sub-row">
+                                <span className="map-prod-sku">SKU: {row.sku}</span>
+                                {isDraft && (
+                                    <span className="pim-alert-badge">
+                                        <AlertTriangle size={10} />
+                                        <span>Draft/Pending</span>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )
+                );
+            }
         },
         {
-            header: "Mapped Darkhouses",
+            header: "Regional Allocations",
             render: (row) => (
                 <div className="mapped-hubs-list">
                     {row.mappedDarkhouses.length === 0 ? (
                         <span className="unmapped-alert">
                             <AlertCircle size={12} />
-                            <span>Unmapped</span>
+                            <span>Unallocated</span>
                         </span>
                     ) : (
                         row.mappedDarkhouses.map((dh, idx) => (
@@ -144,50 +170,65 @@ function MappingPage() {
             )
         },
         {
-            header: "Total Stock Available",
+            header: "Aggregated Stock Pool",
             render: (row) => (
                 <span className={`map-stock-badge ${row.availableStock === 0 ? "out" : ""}`}>
-                    {row.availableStock} Units
+                    {row.availableStock} Units Mapped
                 </span>
             )
         },
         {
-            header: "Status",
-            render: (row) => <StatusBadge status={row.status} />
+            header: "Linkage Status",
+            render: (row) => {
+                const prod = MOCK_PRODUCTS.find(p => p.sku === row.sku);
+                const isOutofSync = (prod && prod.status !== "Published" && row.mappedDarkhouses.length > 0) || row.syncAlert;
+
+                return (
+                    <div className="flex flex-col gap-1">
+                        <StatusBadge status={row.status} />
+                        {isOutofSync && (
+                            <span className="pim-warning-text-alert">
+                                ⚠ Inventory Out of Sync (Not Published)
+                            </span>
+                        )}
+                    </div>
+                );
+            }
         }
     ];
 
     return (
         <div className="mapping-view fade-in">
             <PageHeader
-                title="Product Mapping"
-                description="Link stock items to regional darkhouse distribution hubs to trigger quick-commerce deliveries"
+                title="Product Mapping & Linkages"
+                description="Link catalog SKUs to active regional warehouses and zones to synchronize stock levels"
             />
 
+            {/* Stats */}
             <div className="map-stats-grid">
                 <StatCard
-                    title="Total SKU Pool"
-                    value={String(stats.total)}
-                    icon={Map}
-                    trend="+10%"
-                    trendType="success"
-                    defaultPeriod="Last 30 days"
-                />
-                <StatCard
-                    title="Active Hub Linkages"
+                    title="Active Mapped SKUs"
                     value={String(stats.mapped)}
-                    icon={CheckCircle2}
+                    icon={Map}
                     trend="+15%"
                     trendType="success"
-                    defaultPeriod="Last 30 days"
+                    defaultPeriod="Linked to nodes"
                 />
                 <StatCard
                     title="Unmapped SKUs"
                     value={String(stats.unmapped)}
                     icon={Warehouse}
-                    trend="-8%"
-                    trendType="danger"
-                    defaultPeriod="Last 30 days"
+                    trend="-2%"
+                    trendType="success"
+                    defaultPeriod="No nodes assigned"
+                />
+                <StatCard
+                    title="Total SKU Pool"
+                    value={String(stats.total)}
+                    icon={CheckCircle2}
+                    trend="0%"
+                    trendType="neutral"
+                    defaultPeriod="Active mappings"
                 />
             </div>
 
@@ -219,12 +260,13 @@ function MappingPage() {
                     )}
                 />
 
+                {/* Pagination */}
                 {filteredMappings.length > 0 && (
                     <div className="prod-pagination">
                         <span className="prod-pagination-info">
                             Showing <strong>{Math.min(filteredMappings.length, (safePage - 1) * PAGE_SIZE + 1)}</strong> to{" "}
                             <strong>{Math.min(filteredMappings.length, safePage * PAGE_SIZE)}</strong> of{" "}
-                            <strong>{filteredMappings.length}</strong> mappings
+                            <strong>{filteredMappings.length}</strong> SKU assignments
                         </span>
                         
                         <div className="prod-pagination-controls">
@@ -264,8 +306,8 @@ function MappingPage() {
             <CatalogModal
                 isOpen={isMapModalOpen}
                 onClose={() => setIsMapModalOpen(false)}
-                title="Assign Darkhouses"
-                description={`Choose local hubs for ${selectedMapping?.productName}`}
+                title="Assign Darkhouse Hubs"
+                description={`Map SKU: ${selectedMapping?.sku} (${selectedMapping?.productName})`}
                 icon={Warehouse}
                 footer={(
                     <>
@@ -273,31 +315,45 @@ function MappingPage() {
                             Cancel
                         </button>
                         <button type="submit" form="map-hub-form" className="btn-submit">
-                            Save Mappings
+                            Save Linkages
                         </button>
                     </>
                 )}
             >
                 <form id="map-hub-form" onSubmit={handleSaveMapping} className="dh-mapping-form">
                     <p className="dh-map-instruction">
-                        Select which regional hubs this quick-commerce stock pool should be active in:
+                        Select which regional quick-commerce hubs this SKU is active in. Inactive nodes are locked out:
                     </p>
+
+                    {formErrors.modal && (
+                        <div className="pim-error-banner-alert">
+                            <AlertCircle size={16} />
+                            <span>{formErrors.modal}</span>
+                        </div>
+                    )}
                     
                     <div className="dh-list-checkbox-grid">
                         {INITIAL_DARKHOUSES.map((dh) => {
                             const isChecked = selectedDarkhouses.includes(dh.name);
+                            const isOffline = dh.status === "INACTIVE";
+
                             return (
-                                <label key={dh.id} className={`dh-checkbox-card ${isChecked ? "checked" : ""}`}>
+                                <label key={dh.id} className={`dh-checkbox-card ${isChecked ? "checked" : ""} ${isOffline ? "offline" : ""}`}>
                                     <input
                                         type="checkbox"
                                         checked={isChecked}
-                                        onChange={() => handleCheckboxChange(dh.name)}
+                                        disabled={isOffline}
+                                        onChange={() => handleCheckboxChange(dh.name, isOffline)}
                                         className="dh-real-checkbox"
                                     />
                                     <div className="dh-checkbox-body">
                                         <div className="dh-header-group">
                                             <span className="dh-map-name">{dh.name}</span>
-                                            <span className="dh-map-code">{dh.code}</span>
+                                            {isOffline ? (
+                                                <span className="dh-inactive-pill">Offline</span>
+                                            ) : (
+                                                <span className="dh-map-code">{dh.code}</span>
+                                            )}
                                         </div>
                                         <span className="dh-map-city">{dh.city}</span>
                                     </div>

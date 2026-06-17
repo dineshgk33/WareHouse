@@ -18,125 +18,8 @@ import {
     Check
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
+import { getIndents, processReceivingVerification } from "../../services/indentService";
 import "./GRN.css";
-
-const MOCK_PENDING_POS = [
-    {
-        id: "PO-2026-9801",
-        supplier: "Harvest Fresh Farms Ltd.",
-        origin: "Pune Agro Hub",
-        expectedDate: "15 Jun 2026",
-        itemsCount: 3,
-        totalQty: 250,
-        items: [
-            { id: "itm-1", productName: "Farm Fresh Milk 1L", expectedQty: 100 },
-            { id: "itm-2", productName: "Whole Wheat Bread 400g", expectedQty: 80 },
-            { id: "itm-3", productName: "Organic Eggs 12pk", expectedQty: 70 }
-        ]
-    },
-    {
-        id: "PO-2026-9802",
-        supplier: "Metro Beverage Distributors",
-        origin: "Koramangala Bottling Plant",
-        expectedDate: "16 Jun 2026",
-        itemsCount: 2,
-        totalQty: 200,
-        items: [
-            { id: "itm-4", productName: "Sparkling Cola Can 330ml", expectedQty: 100 },
-            { id: "itm-5", productName: "Lemon Soda Can 330ml", expectedQty: 100 }
-        ]
-    },
-    {
-        id: "PO-2026-9803",
-        supplier: "Apple Distribution Hub",
-        origin: "Mumbai Customs Depot",
-        expectedDate: "17 Jun 2026",
-        itemsCount: 2,
-        totalQty: 50,
-        items: [
-            { id: "itm-6", productName: "iPhone 15 Pro Max 256GB", expectedQty: 20 },
-            { id: "itm-7", productName: "USB-C Charger Adapter 20W", expectedQty: 30 }
-        ]
-    }
-];
-
-const MOCK_GRNS = [
-    {
-        id: "GRN-2026-8542",
-        poNumber: "PO-2026-9790",
-        supplier: "Ingram Micro India Ltd.",
-        origin: "Delhi Hub Warehouse",
-        receivedDate: "15 Jun 2026",
-        receivedBy: "Ramesh Lal",
-        unloadingBay: "BAY-1",
-        vehicleNo: "DL-01-GB-2291",
-        tempReading: "4.5",
-        status: "Verified",
-        itemsCount: 3,
-        totalQty: 240,
-        checkpoints: [
-            { name: "Purchase Order Released", time: "10 Jun, 09:00 AM", done: true },
-            { name: "Gate Entry & Temp Logged", time: "15 Jun, 08:30 AM", done: true },
-            { name: "Unloaded & Count Checked", time: "15 Jun, 09:15 AM", done: true },
-            { name: "QC Verdict Passed", time: "15 Jun, 10:00 AM", done: true },
-            { name: "Stock Allocated to Bins (Completed)", time: "15 Jun, 10:30 AM", done: true }
-        ],
-        items: [
-            { productName: "Wireless Mouse M220", expectedQty: 100, receivedQty: 100, qc: "Pass", bin: "BIN-A12", batch: "BAT-9082", expiry: "2030-12-01" },
-            { productName: "Mechanical Keyboard K84", expectedQty: 80, receivedQty: 80, qc: "Pass", bin: "BIN-A15", batch: "BAT-9083", expiry: "2030-12-01" },
-            { productName: "Noise Cancelling Headphones", expectedQty: 60, receivedQty: 60, qc: "Pass", bin: "BIN-B02", batch: "BAT-9084", expiry: "2030-12-01" }
-        ]
-    },
-    {
-        id: "GRN-2026-8540",
-        poNumber: "PO-2026-9788",
-        supplier: "Samsung India Pvt. Ltd.",
-        origin: "Noida Production Plant",
-        receivedDate: "14 Jun 2026",
-        receivedBy: "Suresh Kumar",
-        unloadingBay: "BAY-3",
-        vehicleNo: "UP-16-AM-4091",
-        tempReading: "6.2",
-        status: "Verified",
-        itemsCount: 1,
-        totalQty: 85,
-        checkpoints: [
-            { name: "Purchase Order Released", time: "08 Jun, 11:00 AM", done: true },
-            { name: "Gate Entry & Temp Logged", time: "14 Jun, 01:00 PM", done: true },
-            { name: "Unloaded & Count Checked", time: "14 Jun, 01:45 PM", done: true },
-            { name: "QC Verdict Passed", time: "14 Jun, 02:15 PM", done: true },
-            { name: "Stock Allocated to Bins (Completed)", time: "14 Jun, 03:00 PM", done: true }
-        ],
-        items: [
-            { productName: "Samsung Galaxy Tab S9", expectedQty: 85, receivedQty: 85, qc: "Pass", bin: "BIN-B09", batch: "BAT-1109", expiry: "2029-06-01" }
-        ]
-    },
-    {
-        id: "GRN-2026-8538",
-        poNumber: "PO-2026-9785",
-        supplier: "Redington Logistics Ltd.",
-        origin: "Chennai Main Depot",
-        receivedDate: "13 Jun 2026",
-        receivedBy: "Suresh Kumar",
-        unloadingBay: "BAY-2",
-        vehicleNo: "TN-02-ZZ-8891",
-        tempReading: "4.8",
-        status: "Damages Found",
-        itemsCount: 2,
-        totalQty: 300,
-        checkpoints: [
-            { name: "Purchase Order Released", time: "05 Jun, 02:00 PM", done: true },
-            { name: "Gate Entry & Temp Logged", time: "13 Jun, 10:00 AM", done: true },
-            { name: "Unloaded & Count Checked", time: "13 Jun, 11:00 AM", done: true },
-            { name: "QC Verdict Passed (Damages Tagged)", time: "13 Jun, 11:30 AM", done: true },
-            { name: "Stock Allocated to Bins (Completed)", time: "13 Jun, 12:15 PM", done: true }
-        ],
-        items: [
-            { productName: "External Hard Drive 2TB", expectedQty: 200, receivedQty: 200, qc: "Pass", bin: "BIN-C01", batch: "BAT-3091", expiry: "2031-01-01" },
-            { productName: "Foil Protected HDMI Cable", expectedQty: 110, receivedQty: 100, qc: "Failed (Damaged)", bin: "BIN-C02", batch: "BAT-3092", expiry: "2031-01-01" }
-        ]
-    }
-];
 
 const BINS_LIST = ["BIN-A01", "BIN-A02", "BIN-A12", "BIN-A15", "BIN-B02", "BIN-B03", "BIN-B09", "BIN-C01", "BIN-C02"];
 
@@ -146,14 +29,68 @@ function GRNPage() {
     
     const activeTab = searchParams.get("tab") || "list";
 
-    // Dynamic Database State
-    const [grns, setGrns] = useState(MOCK_GRNS);
-    const [pendingPOs, setPendingPOs] = useState(MOCK_PENDING_POS);
+    // Core Databases States
+    const [indentsList, setIndentsList] = useState(() => getIndents());
+
+    const refreshData = () => {
+        setIndentsList(getIndents());
+    };
+
+    const grns = useMemo(() => {
+        return indentsList
+            .filter(i => ["Closed", "Exception Closed", "Damaged", "Short Received", "GRN Completed"].includes(i.status))
+            .map(i => {
+                const totalReceived = i.receivedQty || 0;
+                const checkpoints = i.history.map(h => ({
+                    name: h.status + (h.remarks ? ` - ${h.remarks}` : ""),
+                    time: new Date(h.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + ", " + new Date(h.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    done: true
+                }));
+                return {
+                    id: i.grnNumber || `GRN-${i.id.replace("IND-", "")}`,
+                    poNumber: i.id,
+                    supplier: i.requestedTo,
+                    origin: i.requestedTo,
+                    receivedDate: i.grnDate ? new Date(i.grnDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A",
+                    receivedBy: i.receivedBy || "System",
+                    unloadingBay: "BAY-1",
+                    vehicleNo: i.vehicleNumber || "N/A",
+                    tempReading: "4.2",
+                    status: i.status === "Closed" ? "Verified" : i.status === "Damaged" ? "Damages Found" : i.status,
+                    itemsCount: 1,
+                    totalQty: totalReceived,
+                    checkpoints: checkpoints,
+                    items: [
+                        { productName: i.productName + ` (${i.sku})`, expectedQty: i.approvedQty, receivedQty: totalReceived, qc: i.shortQty > 0 ? "Shortage" : i.damagedQty > 0 ? "Damaged" : "Pass", bin: "BIN-A12", batch: "BAT-9082", expiry: "2030-12-01" }
+                    ],
+                    indent: i
+                };
+            });
+    }, [indentsList]);
+
+    const pendingPOs = useMemo(() => {
+        return indentsList
+            .filter(i => i.status === "Dispatched" || i.status === "In Transit")
+            .map(i => ({
+                id: i.id,
+                poNumber: i.grnNumber || `DSP-${i.id.replace("IND-", "")}`,
+                supplier: i.requestedTo,
+                origin: i.requestedTo,
+                expectedDate: new Date(i.expectedDeliveryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+                itemsCount: 1,
+                totalQty: i.approvedQty,
+                status: i.status,
+                items: [
+                    { id: i.id, productName: i.productName + ` (${i.sku})`, expectedQty: i.approvedQty, unit: i.uom }
+                ],
+                indent: i
+            }));
+    }, [indentsList]);
 
     // Selected GRN details state
     const [selectedGrnId, setSelectedGrnId] = useState(searchParams.get("id") || "");
     const selectedGrn = useMemo(() => {
-        return grns.find(g => g.id === selectedGrnId) || grns[0];
+        return grns.find(g => g.id === selectedGrnId) || grns[0] || null;
     }, [grns, selectedGrnId]);
 
     // Create GRN Form state
@@ -218,21 +155,12 @@ function GRNPage() {
 
         // Quantities verification
         let hasQuantityError = false;
-        const mappedItems = selectedPO.items.map(itm => {
+        selectedPO.items.forEach(itm => {
             const formVal = formItems[itm.id] || {};
             const rQty = parseInt(formVal.receivedQty);
             if (isNaN(rQty) || rQty < 0) {
                 hasQuantityError = true;
             }
-            return {
-                productName: itm.productName,
-                expectedQty: itm.expectedQty,
-                receivedQty: rQty,
-                qc: formVal.qc === "Pass" ? "Pass" : `Failed (${formVal.qc})`,
-                bin: formVal.bin,
-                batch: formVal.batch,
-                expiry: formVal.expiry
-            };
         });
 
         if (hasQuantityError) {
@@ -240,46 +168,56 @@ function GRNPage() {
             return;
         }
 
-        const newGrnId = "GRN-2026-" + Math.floor(8543 + Math.random() * 500);
-        const totalReceived = mappedItems.reduce((sum, item) => sum + item.receivedQty, 0);
-        const hasDamages = mappedItems.some(item => item.qc.includes("Failed"));
+        let recVal = 0;
+        let shVal = 0;
+        let dmgVal = 0;
+        let rejVal = 0;
 
-        const newGrn = {
-            id: newGrnId,
-            poNumber: selectedPO.id,
-            supplier: selectedPO.supplier,
-            origin: selectedPO.origin,
-            receivedDate: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-            receivedBy: officerName,
-            unloadingBay,
-            vehicleNo,
-            tempReading,
-            status: hasDamages ? "Damages Found" : "Verified",
-            itemsCount: selectedPO.itemsCount,
-            totalQty: totalReceived,
-            checkpoints: [
-                { name: "Purchase Order Released", time: "12 Jun, 09:00 AM", done: true },
-                { name: "Gate Entry & Temp Logged", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), done: true },
-                { name: "Unloaded & Count Checked", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), done: true },
-                { name: "QC Verdict Passed", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), done: true },
-                { name: "Stock Allocated to Bins (Completed)", time: "Pending", done: false }
-            ],
-            items: mappedItems
-        };
+        selectedPO.items.forEach(itm => {
+            const formVal = formItems[itm.id] || {};
+            const rQty = parseInt(formVal.receivedQty) || 0;
+            const expected = itm.expectedQty;
 
-        // Prepend GRN
-        setGrns(prev => [newGrn, ...prev]);
-        // Remove PO from pending list
-        setPendingPOs(prev => prev.filter(po => po.id !== selectedPO.id));
+            recVal += rQty;
+            if (formVal.qc === "Pass") {
+                if (rQty < expected) {
+                    shVal += (expected - rQty);
+                }
+            } else if (formVal.qc === "Damaged") {
+                if (rQty < expected) {
+                    dmgVal += (expected - rQty);
+                }
+            } else if (formVal.qc === "Expired" || formVal.qc === "Shortage") {
+                if (rQty < expected) {
+                    rejVal += (expected - rQty);
+                }
+            }
+        });
 
-        // Clean form states
-        setSelectedPoId("");
-        setVehicleNo("");
+        try {
+            const res = processReceivingVerification({
+                indentId: selectedPO.indent.id,
+                receivedQty: recVal,
+                shortQty: shVal,
+                damagedQty: dmgVal,
+                rejectedQty: rejVal,
+                remarks: `Bay: ${unloadingBay}. Temp Logger: ${tempReading}°C. Verified by: ${officerName}.`,
+                userName: officerName || "Ramesh Lal",
+                attachments: [],
+                isOverReceiptApproved: true
+            });
 
-        // Switch to details of new GRN
-        setSelectedGrnId(newGrnId);
-        setSearchParams({ tab: "list" });
-        showToast(`Goods Receipt Note ${newGrnId} posted successfully!`, "success");
+            refreshData();
+
+            // Clean form states
+            setSelectedPoId("");
+            setVehicleNo("");
+            setSearchParams({ tab: "list", id: res.grnNumber || `GRN-${selectedPO.indent.id.replace("IND-", "")}` });
+
+            showToast(`Goods Receipt Note posted successfully!`, "success");
+        } catch (err) {
+            showToast(err.message, "error");
+        }
     };
 
     const handleSelectDetails = (grnId) => {

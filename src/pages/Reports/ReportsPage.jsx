@@ -225,9 +225,176 @@ function ReportsPage() {
 
     const templates = useMemo(() => {
         const list = [...REPORT_TEMPLATES];
+        
+        // Load live data
+        const indents = JSON.parse(localStorage.getItem("haatza_indent_requests") || "[]");
+        const ledger = JSON.parse(localStorage.getItem("haatza_inventory_ledger") || "[]");
+        const products = JSON.parse(localStorage.getItem("haatza_products") || "[]");
+        const transactions = JSON.parse(localStorage.getItem("haatza_inventory_transactions") || "[]");
+
+        // 1. Inventory Summary Report
+        const invSummaryIdx = list.findIndex(r => r.id === "inventory-summary");
+        if (invSummaryIdx !== -1) {
+            const totalSKUs = ledger.length;
+            const totalValuation = ledger.reduce((acc, item) => {
+                const prod = products.find(p => p.sku === item.sku);
+                const price = prod ? prod.sellingPrice : 50;
+                return acc + (item.available * price);
+            }, 0);
+            
+            const dataRows = ledger.map(l => ({
+                col1: l.sku,
+                col2: l.productName,
+                col3: l.category,
+                col4: `${l.available} units`,
+                col5: `₹${products.find(p => p.sku === l.sku)?.sellingPrice || 50}`,
+                col6: `₹${l.available * (products.find(p => p.sku === l.sku)?.sellingPrice || 50)}`,
+                col7: l.status,
+                col7Class: l.status === "In Stock" ? "status-active" : "status-suspended"
+            }));
+
+            list[invSummaryIdx] = {
+                ...list[invSummaryIdx],
+                stats: [
+                    { label: "Total SKUs", value: totalSKUs.toString(), badge: "Active Master", color: "blue" },
+                    { label: "Total Valuation", value: `₹${totalValuation.toLocaleString("en-IN")}`, badge: "Live Ledger", color: "green" },
+                    { label: "Ledger Entries", value: ledger.length.toString(), badge: "Optimal", color: "purple" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 2. Low Stock Report
+        const lowStockIdx = list.findIndex(r => r.id === "low-stock");
+        if (lowStockIdx !== -1) {
+            const lowItems = ledger.filter(l => l.available <= l.reorderPoint);
+            const dataRows = lowItems.map(l => ({
+                col1: l.sku,
+                col2: l.productName,
+                col3: `${l.available} units`,
+                col4: `${l.reorderPoint} units`,
+                col5: `${l.reorderPoint} units`,
+                col6: "Primary Mother Hub",
+                col7: l.available === 0 ? "Depleted" : "Low Stock",
+                col7Class: l.available === 0 ? "status-suspended" : "status-pending"
+            }));
+
+            list[lowStockIdx] = {
+                ...list[lowStockIdx],
+                stats: [
+                    { label: "Low Stock SKUs", value: `${lowItems.length} SKUs`, badge: "Alert Active", color: "red" },
+                    { label: "Critical Alerts", value: `${lowItems.filter(l => l.available === 0).length} SKUs`, badge: "Out of Stock", color: "red" },
+                    { label: "Safety Level", value: "85%", badge: "Safety Buffer", color: "blue" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 3. Inventory Movement Report
+        const movementIdx = list.findIndex(r => r.id === "inventory-movement");
+        if (movementIdx !== -1) {
+            const dataRows = transactions.map(t => ({
+                col1: t.transactionId,
+                col2: t.sku,
+                col3: t.productName,
+                col4: t.type,
+                col5: `${t.quantity > 0 ? "+" : ""}${t.quantity} units`,
+                col6: new Date(t.timestamp).toLocaleDateString(),
+                col7: t.user,
+                col7Class: "status-active"
+            }));
+
+            list[movementIdx] = {
+                ...list[movementIdx],
+                stats: [
+                    { label: "Total Transactions", value: `${transactions.length} logs`, badge: "Audit Trail", color: "green" },
+                    { label: "Inward Actions", value: `${transactions.filter(t => t.type.includes("Received")).length} logs`, color: "blue" },
+                    { label: "Outward Actions", value: `${transactions.filter(t => t.type.includes("Dispatched")).length} logs`, color: "purple" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 4. Indent Report
+        const indentIdx = list.findIndex(r => r.id === "indent");
+        if (indentIdx !== -1) {
+            const dataRows = indents.map(i => ({
+                col1: i.id,
+                col2: i.requestedBy.replace("HAATZA ", ""),
+                col3: i.requestedTo.replace("HAATZA ", ""),
+                col4: `${i.requestedQty} units`,
+                col5: new Date(i.requestedDate).toLocaleDateString(),
+                col6: i.priority,
+                col7: i.status,
+                col7Class: ["Closed", "Exception Closed"].includes(i.status) ? "status-inactive" : "status-active"
+            }));
+
+            list[indentIdx] = {
+                ...list[indentIdx],
+                stats: [
+                    { label: "Total Indents", value: indents.length.toString(), badge: "All Requests", color: "blue" },
+                    { label: "Pending Review", value: indents.filter(i => i.status === "Pending" || i.status === "Submitted").length.toString(), color: "red" },
+                    { label: "Closed Indents", value: indents.filter(i => ["Closed", "Exception Closed"].includes(i.status)).length.toString(), color: "green" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 5. Dispatch Report
+        const dispatchIdx = list.findIndex(r => r.id === "dispatch");
+        if (dispatchIdx !== -1) {
+            const dispatches = indents.filter(i => ["Dispatched", "In Transit", "Closed", "Exception Closed", "Damaged", "Short Received"].includes(i.status));
+            const dataRows = dispatches.map(d => ({
+                col1: d.dispatchNumber || `DSP-${d.id.replace("IND-", "")}`,
+                col2: d.id,
+                col3: d.vehicleNumber || "KA-03-HA-8821",
+                col4: d.requestedBy.replace("HAATZA ", ""),
+                col5: `${d.approvedQty} units`,
+                col6: d.driverName || "Ramesh Kumar",
+                col7: d.status === "Closed" ? "Delivered" : d.status,
+                col7Class: "status-active"
+            }));
+
+            list[dispatchIdx] = {
+                ...list[dispatchIdx],
+                stats: [
+                    { label: "Total Dispatches", value: dispatches.length.toString(), badge: "Outbound", color: "green" },
+                    { label: "In Transit", value: indents.filter(i => i.status === "In Transit").length.toString(), color: "blue" },
+                    { label: "Delivered", value: indents.filter(i => ["Closed", "Exception Closed"].includes(i.status)).length.toString(), color: "green" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 6. Receiving Report (GRN)
+        const receivingIdx = list.findIndex(r => r.id === "receiving");
+        if (receivingIdx !== -1) {
+            const grns = indents.filter(i => i.grnNumber);
+            const dataRows = grns.map(g => ({
+                col1: g.grnNumber,
+                col2: g.id,
+                col3: g.requestedTo.replace("HAATZA ", ""),
+                col4: `${g.receivedQty} units`,
+                col5: new Date(g.grnDate).toLocaleDateString(),
+                col6: g.verifiedBy || "Auditor",
+                col7: g.status,
+                col7Class: g.status === "Closed" ? "status-active" : "status-suspended"
+            }));
+
+            list[receivingIdx] = {
+                ...list[receivingIdx],
+                stats: [
+                    { label: "Total GRNs Posted", value: grns.length.toString(), badge: "Verified", color: "green" },
+                    { label: "Full Clearances", value: grns.filter(g => g.status === "Closed").length.toString(), color: "green" },
+                    { label: "Exceptions Recorded", value: grns.filter(g => g.status !== "Closed").length.toString(), color: "red" }
+                ],
+                data: dataRows
+            };
+        }
+
+        // 7. Orders by Dark House Report
         const darkhouseIndex = list.findIndex(r => r.id === "orders-by-darkhouse");
         if (darkhouseIndex !== -1) {
-            // Dynamically construct based on INITIAL_DARKHOUSES
             const dhRows = INITIAL_DARKHOUSES.map((dh, idx) => {
                 const total = dh.todayOrders || (100 + (idx * 50));
                 const fulfilled = Math.floor(total * 0.95);
@@ -256,6 +423,7 @@ function ReportsPage() {
                 data: dhRows
             };
         }
+
         return list;
     }, []);
 

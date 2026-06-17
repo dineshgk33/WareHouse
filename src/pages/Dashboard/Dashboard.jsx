@@ -230,18 +230,46 @@ function Dashboard() {
         return new Date().toLocaleDateString("en-US", options);
     });
 
-    // Live Simulated Metrics States
-    const [totalOrders, setTotalOrders] = useState(1742);
-    const [revenue, setRevenue] = useState(108000);
-    const [newCustomers, setNewCustomers] = useState(1182);
-    const [lowStockCount, setLowStockCount] = useState(23);
-
     // Table States
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("All"); // "All", "Delivered", "Processing"
     const [ordersList, setOrdersList] = useState(allOrders);
     const [activeOrderDropdownId, setActiveOrderDropdownId] = useState(null);
     const [activeActivityDropdownOpen, setActiveActivityDropdownOpen] = useState(false);
+
+    // Live Database Calculations
+    const liveStats = useMemo(() => {
+        const indents = JSON.parse(localStorage.getItem("haatza_indent_requests") || "[]");
+        const ledger = JSON.parse(localStorage.getItem("haatza_inventory_ledger") || "[]");
+
+        const openIndents = indents.filter(i => i.status === "Pending" || i.status === "Submitted").length;
+        const approvedIndents = indents.filter(i => i.status === "Approved" || i.status === "Partially Approved").length;
+        const pendingDispatches = indents.filter(i => ["Approved", "Partially Approved", "Allocated", "Ready For Dispatch"].includes(i.status)).length;
+        const inTransit = indents.filter(i => i.status === "In Transit").length;
+        const pendingGRN = indents.filter(i => i.status === "Dispatched" || i.status === "In Transit").length;
+        const shortReceipts = indents.filter(i => i.shortQty > 0).length;
+        const damagedReceipts = indents.filter(i => i.damagedQty > 0).length;
+        const stockOutSKUs = ledger.filter(l => l.available === 0).length;
+        const criticalInventory = ledger.filter(l => l.available <= l.reorderPoint && l.available > 0).length;
+        
+        // Warehouse Utilization
+        const totalCentralStock = ledger.filter(l => l.location === "HAATZA Central Warehouse").reduce((acc, l) => acc + l.available, 0);
+        const maxCapacity = 5000; 
+        const warehouseUtilization = Math.min(100, Math.round((totalCentralStock / maxCapacity) * 100));
+
+        return {
+            openIndents,
+            approvedIndents,
+            pendingDispatches,
+            inTransit,
+            pendingGRN,
+            shortReceipts,
+            damagedReceipts,
+            stockOutSKUs,
+            criticalInventory,
+            warehouseUtilization
+        };
+    }, [isRefreshing]);
 
     // Recent Activities State
     const [activities, setActivities] = useState([
@@ -254,10 +282,7 @@ function Dashboard() {
     // Metric tick — used by both manual button and the auto-interval
     // Uses functional setState form to avoid stale closures.
     const tickMetrics = () => {
-        setTotalOrders(prev => prev + Math.floor(Math.random() * 3));
-        setRevenue(prev => prev + Math.floor(Math.random() * 150));
-        if (Math.random() > 0.6) setNewCustomers(prev => prev + 1);
-        if (Math.random() > 0.7) setLowStockCount(prev => Math.max(15, prev + (Math.random() > 0.5 ? 1 : -1)));
+        // No-op in live DB mode
     };
 
     const handleRefresh = () => {
@@ -531,52 +556,124 @@ function Dashboard() {
     // current user does not have access to (prevents reaching /403 from the dashboard).
     const cardConfigs = [
         {
-            title: "Total Orders",
-            value: totalOrders.toLocaleString("en-US"),
+            title: "Open Indents",
+            value: liveStats.openIndents.toString(),
             icon: ShoppingCart,
-            trend: "+12.5%",
+            trend: "+4.5%",
             isUp: true,
-            route: "/orders",
-            pageId: "ORDERS",
-            sparkData: statSparklineData["Total Orders"],
+            route: "/indent",
+            pageId: "INDENT",
+            sparkData: [{ val: 5 }, { val: liveStats.openIndents }],
             stroke: "#2563EB",
             fill: "#DBEAFE"
         },
         {
-            title: "Revenue",
-            value: "₹" + revenue.toLocaleString("en-IN"),
-            icon: IndianRupee,
-            trend: "+8.23%",
+            title: "Approved Indents",
+            value: liveStats.approvedIndents.toString(),
+            icon: Check,
+            trend: "+8.2%",
             isUp: true,
-            route: "/analytics",
-            pageId: "ANALYTICS",
-            sparkData: statSparklineData["Revenue"],
+            route: "/indent",
+            pageId: "INDENT",
+            sparkData: [{ val: 2 }, { val: liveStats.approvedIndents }],
             stroke: "#10B981",
             fill: "#D1FAE5"
         },
         {
-            title: "New Customers",
-            value: newCustomers.toLocaleString("en-US"),
-            icon: Users,
-            trend: "+15.21%",
+            title: "Pending Dispatches",
+            value: liveStats.pendingDispatches.toString(),
+            icon: Warehouse,
+            trend: "+2.1%",
             isUp: true,
-            route: "/customers",
-            pageId: "CUSTOMERS",
-            sparkData: statSparklineData["New Customers"],
+            route: "/dispatch",
+            pageId: "DISPATCH",
+            sparkData: [{ val: 4 }, { val: liveStats.pendingDispatches }],
+            stroke: "#F59E0B",
+            fill: "#FEF3C7"
+        },
+        {
+            title: "In Transit Shipments",
+            value: liveStats.inTransit.toString(),
+            icon: Activity,
+            trend: "+12.3%",
+            isUp: true,
+            route: "/receiving",
+            pageId: "RECEIVING",
+            sparkData: [{ val: 3 }, { val: liveStats.inTransit }],
             stroke: "#8B5CF6",
             fill: "#EDE9FE"
         },
         {
-            title: "Low Stock Items",
-            value: lowStockCount.toString(),
+            title: "Pending GRNs",
+            value: liveStats.pendingGRN.toString(),
+            icon: RefreshCw,
+            trend: "-5.0%",
+            isUp: false,
+            route: "/grn",
+            pageId: "GRN",
+            sparkData: [{ val: 6 }, { val: liveStats.pendingGRN }],
+            stroke: "#EC4899",
+            fill: "#FCE7F3"
+        },
+        {
+            title: "Short Receipts",
+            value: liveStats.shortReceipts.toString(),
             icon: AlertTriangle,
-            trend: "+5.22%",
+            trend: "-2.4%",
+            isUp: false,
+            route: "/indent",
+            pageId: "INDENT",
+            sparkData: [{ val: 1 }, { val: liveStats.shortReceipts }],
+            stroke: "#EF4444",
+            fill: "#FEE2E2"
+        },
+        {
+            title: "Damaged Receipts",
+            value: liveStats.damagedReceipts.toString(),
+            icon: AlertTriangle,
+            trend: "-1.2%",
+            isUp: false,
+            route: "/indent",
+            pageId: "INDENT",
+            sparkData: [{ val: 1 }, { val: liveStats.damagedReceipts }],
+            stroke: "#EF4444",
+            fill: "#FEE2E2"
+        },
+        {
+            title: "Stock Out SKUs",
+            value: liveStats.stockOutSKUs.toString(),
+            icon: AlertTriangle,
+            trend: "-8.5%",
             isUp: false,
             route: "/catalogue/warehouse",
             pageId: "WAREHOUSE_INVENTORY",
-            sparkData: statSparklineData["Low Stock Items"],
+            sparkData: [{ val: 4 }, { val: liveStats.stockOutSKUs }],
             stroke: "#EF4444",
             fill: "#FEE2E2"
+        },
+        {
+            title: "Critical Inventory",
+            value: liveStats.criticalInventory.toString(),
+            icon: AlertTriangle,
+            trend: "+3.2%",
+            isUp: true,
+            route: "/catalogue/warehouse",
+            pageId: "WAREHOUSE_INVENTORY",
+            sparkData: [{ val: 8 }, { val: liveStats.criticalInventory }],
+            stroke: "#F59E0B",
+            fill: "#FEF3C7"
+        },
+        {
+            title: "Warehouse Utilization",
+            value: liveStats.warehouseUtilization.toString() + "%",
+            icon: TrendingUp,
+            trend: "+0.8%",
+            isUp: true,
+            route: "/analytics",
+            pageId: "ANALYTICS",
+            sparkData: [{ val: 75 }, { val: liveStats.warehouseUtilization }],
+            stroke: "#10B981",
+            fill: "#D1FAE5"
         }
     ];
 

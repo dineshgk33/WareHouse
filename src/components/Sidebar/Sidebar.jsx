@@ -230,9 +230,13 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
                 mod = "Catalogue";
             }
-            if (page.pageId === "INDENT") {
+            const pageIdUpper = (page.pageId || "").toUpperCase();
+            const pageModUpper = (page.moduleName || "").toUpperCase();
+            if (pageIdUpper === "INDENT" || pageModUpper === "INDENT" || pageModUpper === "INDENT MANAGEMENT") {
                 mod = "Indent Management";
-                pName = "Indent Management";
+                if (pageIdUpper === "INDENT") {
+                    pName = "Indent Management";
+                }
             }
 
             // Map page labels to Catalogue names
@@ -360,7 +364,6 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             } else if (moduleName === "Indent Management") {
                 item.submenu = [
                     { label: "Indent List", path: "/indent?tab=list" },
-                    { label: "Create Indent", path: "/indent?tab=create" },
                     { label: "Indent Details", path: "/indent?tab=details" },
                     { label: "Pending Indents", path: "/indent?tab=list&status=Pending" },
                     { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
@@ -469,7 +472,6 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 path: "/indent?tab=list",
                 submenu: [
                     { label: "Indent List", path: "/indent?tab=list" },
-                    { label: "Create Indent", path: "/indent?tab=create" },
                     { label: "Indent Details", path: "/indent?tab=details" },
                     { label: "Pending Indents", path: "/indent?tab=list&status=Pending" },
                     { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
