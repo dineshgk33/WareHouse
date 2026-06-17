@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
     Download,
     AlertTriangle,
@@ -37,7 +37,9 @@ import {
     rejectIndent,
     dispatchIndent,
     receiveIndent,
-    getLowStockAlerts
+    getLowStockAlerts,
+    getWarehouseStockForLocation,
+    getFulfillmentRecommendation
 } from "../../../services/indentService";
 import "../Catalogue.css";
 
@@ -60,7 +62,6 @@ function IndentPage() {
     const [darkhouseStock, setDarkhouseStock] = useState([]);
     const [lowStockAlerts, setLowStockAlerts] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
     const activeTab = searchParams.get("tab") || "list";
     const statusParam = searchParams.get("status") || "";
 
@@ -76,7 +77,7 @@ function IndentPage() {
     };
 
     useEffect(() => {
-        refreshData();
+        Promise.resolve().then(() => refreshData());
     }, [selectedWarehouseName]);
 
     // ─── Toast Notification State ──────────────────────────────────────────────
@@ -95,9 +96,9 @@ function IndentPage() {
 
     useEffect(() => {
         if (statusParam) {
-            setStatusFilter(statusParam);
+            Promise.resolve().then(() => setStatusFilter(statusParam));
         } else {
-            setStatusFilter("All");
+            Promise.resolve().then(() => setStatusFilter("All"));
         }
     }, [statusParam]);
 
@@ -111,7 +112,7 @@ function IndentPage() {
     // Set initial tracked indent on load
     useEffect(() => {
         if (indents.length > 0 && !trackedIndentId) {
-            setTrackedIndentId(indents[0].id);
+            Promise.resolve().then(() => setTrackedIndentId(indents[0].id));
         }
     }, [indents, trackedIndentId]);
 
@@ -142,26 +143,37 @@ function IndentPage() {
     // Auto load first product in creation form
     useEffect(() => {
         if (modalType === "create" && warehouseStock.length > 0) {
-            setSelectedProductSku(warehouseStock[0]?.sku || "");
-            setRequestedQty("");
-            setRequestPriority("Medium");
-            setRequestRemarks("");
+            Promise.resolve().then(() => {
+                setSelectedProductSku(warehouseStock[0]?.sku || "");
+                setRequestedQty("");
+                setRequestPriority("Medium");
+                setRequestRemarks("");
+            });
         }
     }, [modalType, warehouseStock]);
 
     // Approve Form State
     const [approvedQty, setApprovedQty] = useState("");
     const [approvalRemarks, setApprovalRemarks] = useState("");
+    const [sourcedFrom, setSourcedFrom] = useState(null);
+
     const availableMainStock = useMemo(() => {
         if (!selectedIndent) return 0;
-        const entry = warehouseStock.find(item => item.sku === selectedIndent.sku);
-        return entry ? entry.stock : 0;
-    }, [selectedIndent, warehouseStock]);
+        return getWarehouseStockForLocation(selectedIndent.requestedTo, selectedIndent.sku);
+    }, [selectedIndent]);
+
+    const recommendation = useMemo(() => {
+        if (!selectedIndent || modalType !== "approve") return null;
+        return getFulfillmentRecommendation(selectedIndent.id);
+    }, [selectedIndent, modalType]);
 
     useEffect(() => {
         if (modalType === "approve" && selectedIndent) {
-            setApprovedQty(selectedIndent.requestedQty);
-            setApprovalRemarks("");
+            Promise.resolve().then(() => {
+                setApprovedQty(selectedIndent.requestedQty);
+                setApprovalRemarks("");
+                setSourcedFrom(null);
+            });
         }
     }, [modalType, selectedIndent]);
 
@@ -172,9 +184,11 @@ function IndentPage() {
 
     useEffect(() => {
         if (modalType === "dispatch" && selectedIndent) {
-            setVehicleNumber("");
-            setDriverName("");
-            setDispatchRemarks("");
+            Promise.resolve().then(() => {
+                setVehicleNumber("");
+                setDriverName("");
+                setDispatchRemarks("");
+            });
         }
     }, [modalType, selectedIndent]);
 
@@ -185,9 +199,11 @@ function IndentPage() {
 
     useEffect(() => {
         if (modalType === "receive" && selectedIndent) {
-            setReceivedQty(selectedIndent.approvedQty);
-            setDamagedQty("0");
-            setReceiveRemarks("");
+            Promise.resolve().then(() => {
+                setReceivedQty(selectedIndent.approvedQty);
+                setDamagedQty("0");
+                setReceiveRemarks("");
+            });
         }
     }, [modalType, selectedIndent]);
 
@@ -300,18 +316,19 @@ function IndentPage() {
     const handleApproveSubmit = (e) => {
         e.preventDefault();
         const qty = parseInt(approvedQty);
+        const maxQty = sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock;
         if (isNaN(qty) || qty <= 0) {
             alert("Please enter a valid approved quantity.");
             return;
         }
 
-        if (qty > availableMainStock) {
-            alert(`Insufficient Main Warehouse stock. Available: ${availableMainStock}`);
+        if (qty > maxQty) {
+            alert(`Insufficient stock. Available: ${maxQty}`);
             return;
         }
 
         try {
-            approveIndent(selectedIndent.id, qty, approvalRemarks, `${userName} (Central)`);
+            approveIndent(selectedIndent.id, qty, approvalRemarks, `${userName} (Central)`, sourcedFrom);
             setIsModalOpen(false);
             refreshData();
             showToast(`Request approved for ${qty} units.`);
@@ -764,7 +781,7 @@ function IndentPage() {
                                         <div style={{ textAlign: "right" }}>
                                             <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)" }}>Hub Route</span>
                                             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-main)", marginTop: 2 }}>{trackedIndent.requestedBy.replace("HAATZA ", "")}</div>
-                                            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>➔ Central Warehouse</div>
+                                            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>➔ {trackedIndent.requestedTo?.replace("HAATZA ", "") || "Central Warehouse"}</div>
                                         </div>
                                     </div>
 
@@ -988,7 +1005,7 @@ function IndentPage() {
                                                         title="Track Timeline"
                                                         onClick={() => {
                                                             setTrackedIndentId(indent.id);
-                                                            setActiveTab("dashboard");
+                                                            setSearchParams({ tab: "dashboard" });
                                                         }}
                                                     >
                                                         <Clock size={13} />
@@ -1635,15 +1652,15 @@ function IndentPage() {
                                                 <input type="text" value={`${selectedIndent.requestedQty} units`} disabled style={{ backgroundColor: "var(--bg-app)" }} />
                                             </div>
                                             <div className="inv-form-group">
-                                                <label>Main Warehouse Stock</label>
+                                                <label>Warehouse Sourced Stock</label>
                                                 <input 
                                                     type="text" 
-                                                    value={`${availableMainStock} units`} 
+                                                    value={`${sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock} units${sourcedFrom ? ' (Sourced: ' + sourcedFrom.replace("HAATZA ", "") + ')' : ' (' + selectedIndent.requestedTo.replace("HAATZA ", "") + ')'}`} 
                                                     disabled 
                                                     style={{ 
                                                         backgroundColor: "var(--bg-app)",
                                                         fontWeight: "bold",
-                                                        color: availableMainStock === 0 ? "var(--color-danger)" : availableMainStock < selectedIndent.requestedQty ? "var(--color-warning)" : "var(--color-success)"
+                                                        color: (sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock) === 0 ? "var(--color-danger)" : (sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock) < selectedIndent.requestedQty ? "var(--color-warning)" : "var(--color-success)"
                                                     }} 
                                                 />
                                             </div>
@@ -1659,17 +1676,70 @@ function IndentPage() {
                                                     onChange={(e) => setApprovedQty(parseInt(e.target.value) || "")}
                                                     required 
                                                     min="1" 
-                                                    max={availableMainStock}
+                                                    max={sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock}
                                                 />
                                                 <span className="unit-label">units</span>
                                             </div>
-                                            {availableMainStock < selectedIndent.requestedQty && (
+                                            {(sourcedFrom ? (recommendation?.availableStock ?? 0) : availableMainStock) < selectedIndent.requestedQty && (
                                                 <div style={{ display: "flex", gap: 6, alignItems: "center", color: "var(--color-warning)", marginTop: 4 }}>
                                                     <AlertTriangle size={12} />
-                                                    <span style={{ fontSize: 11, fontWeight: 600 }}>Main warehouse stock is lower than requested quantity!</span>
+                                                    <span style={{ fontSize: 11, fontWeight: 600 }}>Warehouse stock is lower than requested quantity!</span>
                                                 </div>
                                             )}
                                         </div>
+
+                                        {recommendation && (recommendation.status === "recommend_fallback" || recommendation.status === "insufficient_but_better") && (
+                                            <div style={{ 
+                                                gridColumn: "span 2",
+                                                backgroundColor: "rgba(59, 130, 246, 0.05)", 
+                                                border: "1.5px dashed var(--primary)", 
+                                                borderRadius: "var(--radius-md)", 
+                                                padding: 12, 
+                                                marginTop: 4,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 6,
+                                                textAlign: "left"
+                                            }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--primary)", fontWeight: "bold", fontSize: 12 }}>
+                                                    <TrendingUp size={14} />
+                                                    <span>Fulfillment Recommendation:</span>
+                                                </div>
+                                                <p style={{ margin: 0, fontSize: 11.5, color: "var(--text-main)", lineHeight: 1.4 }}>
+                                                     {recommendation.message}
+                                                </p>
+                                                {sourcedFrom !== recommendation.sourceWarehouse && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSourcedFrom(recommendation.sourceWarehouse);
+                                                            setApprovedQty(Math.min(selectedIndent.requestedQty, recommendation.availableStock));
+                                                            showToast(`Applied: Source from fallback ${recommendation.sourceWarehouse}`);
+                                                        }}
+                                                        className="inv-action-btn-primary"
+                                                        style={{ 
+                                                            padding: "6px 10px", 
+                                                            fontSize: 11, 
+                                                            borderRadius: "4px", 
+                                                            alignSelf: "flex-start", 
+                                                            marginTop: 4,
+                                                            background: "var(--primary)",
+                                                            color: "#fff",
+                                                            border: "none",
+                                                            cursor: "pointer"
+                                                        }}
+                                                    >
+                                                        Reroute to Fallback Warehouse
+                                                    </button>
+                                                )}
+                                                {sourcedFrom === recommendation.sourceWarehouse && (
+                                                    <div style={{ display: "flex", gap: 4, alignItems: "center", color: "var(--color-success)", fontSize: 11.5, fontWeight: "bold", marginTop: 4 }}>
+                                                        <CheckCircle size={14} className="text-emerald-500" />
+                                                        <span>Sourcing set to: {recommendation.sourceWarehouse}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         <div className="inv-form-group">
                                             <label htmlFor="approvalRemarks">Remarks (Optional)</label>

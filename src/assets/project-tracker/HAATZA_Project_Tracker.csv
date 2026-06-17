@@ -1,0 +1,23 @@
+Model ID,Model Name,Sub Model,Description,Open Date,Close Date,Development Status,Development Time,Development Test Case
+M1,Authentication & Authorization,Login,Implement Email/Password Login Form. Build a secure login interface with validation and API integration for user authentication.,2026-06-01,2026-06-03,Completed,12h,"TC-LG-01, TC-LG-02, TC-LG-03, TC-LG-04, TC-LG-05, TC-LG-06, TC-LG-07, TC-LG-08, TC-LG-09, TC-LG-10, TC-LG-11, TC-LG-12, TC-LG-13, TC-LG-14, TC-LG-15, TC-LG-16"
+M1,Authentication & Authorization,Workspace Selection,Dynamic Workspace Dropdown from API. Create a dynamic dropdown that fetches and displays workspaces.,2026-06-02,2026-06-03,Completed,6h,"TC-WH-01, TC-WH-02, TC-WH-03"
+M1,Authentication & Authorization,Role Selection,Filter and display roles dynamically based on the selected workspace.,2026-06-02,2026-06-03,Completed,6h,"TC-RL-01, TC-RL-02"
+M1,Authentication & Authorization,Session Management,Manage user sessions across the application efficiently using context.,2026-06-03,2026-06-03,Completed,4h,TC-AUTH-04
+M2,Dashboard,Overview Metrics,Implement StatCards for key metrics to provide a snapshot of operations.,2026-06-04,,In Progress,8h,TC-DASH-01
+M2,Dashboard,Recent Activity,Show a real-time feed of recent inventory and order activities.,2026-06-04,,In Progress,8h,TC-DASH-02
+M3,Inventory & Catalog,Inventory List,Display all inventory items with pagination and advanced filtering.,2026-06-05,,Pending,16h,TC-INV-01
+M3,Inventory & Catalog,Products Management,CRUD operations for Products in the warehouse catalog.,2026-06-06,,Pending,24h,TC-INV-02
+M3,Inventory & Catalog,Label Generation,Generate scannable labels for items for tracking.,2026-06-08,,Pending,12h,"TC-LB-01, TC-LB-02"
+M3,Inventory & Catalog,Print Labels,Bulk print functionality for generated labels.,2026-06-09,,Pending,8h,TC-LB-03
+M4,Order Management,Order Processing,List and filter incoming orders with advanced options.,2026-06-10,,Pending,16h,"TC-OR-01, TC-OR-02, TC-OR-03"
+M4,Order Management,Order Fulfillment,Workflow to update order statuses from processing to packed and shipped.,2026-06-12,,Pending,20h,TC-OR-04
+M5,Customers,Customer List,CRM-style list of customers with contact details and order history.,2026-06-15,,Pending,12h,TC-CUS-01
+M6,Operations & Darkhouses,Darkhouse Management,Manage logistics and inventory for decentralized darkhouses.,2026-06-16,,Pending,16h,TC-DRK-01
+M6,Operations & Darkhouses,Operations Tracking,Track day-to-day fulfillment operations and flag bottlenecks.,2026-06-18,,Pending,12h,TC-DRK-02
+M7,Analytics & Reports,Business Analytics,Integrate Recharts to display interactive graphs for sales and inventory.,2026-06-20,,Pending,24h,TC-ANA-01
+M7,Analytics & Reports,Export Reports,Allow users to export customized business reports into downloadable formats.,2026-06-22,,Pending,8h,TC-RPT-01
+M8,Billing,Invoicing,Automatically generate invoices for orders and track billing statuses.,2026-06-24,,Pending,16h,TC-BIL-01
+M9,Settings & Profile,User Roles,Configure system-wide roles and associate permissions.,2026-06-25,,Pending,12h,TC-USR-01
+M9,Settings & Profile,Profile Management,"Allow users to update their personal information, password, and UI preferences.",2026-06-26,,Pending,8h,TC-PRF-01
+M10,Core Infrastructure,API Services,Unified Axios instance with interceptors for robust error handling.,2026-05-25,2026-05-30,Completed,16h,TC-COR-01
+M10,Core Infrastructure,Navigation,Responsive topbar and sidebar reflecting the authenticated user’s context and role.,2026-05-31,2026-06-02,Completed,12h,TC-COR-02

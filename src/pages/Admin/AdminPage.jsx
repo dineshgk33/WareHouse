@@ -23,7 +23,9 @@ import {
     Layers,
     ShoppingBag,
     Edit,
-    Trash2
+    Trash2,
+    Map,
+    GitMerge
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import avatarImg from "../../assets/dinesh.png";
@@ -45,6 +47,7 @@ import { authService } from "../../services/authService";
 import DarkhousesPage from "../Darkhouses/DarkhousesPage";
 import CategoriesPage from "../catalog/Categories/CategoriesPage";
 import ProductsPage from "../catalog/Products/ProductsPage";
+import WarehouseMappingPage from "./WarehouseMappingPage";
 import "../Settings/Settings.css";
 
 // Helper to resolve URLs dynamically, routing through the Vite proxy on localhost to avoid CORS errors
@@ -66,10 +69,11 @@ function AdminPage() {
     // Determine active tab from URL path
     const pathParts = location.pathname.split('/');
     const tabFromPath = pathParts[pathParts.length - 1];
-    const validTabs = ["users", "permissions", "rolemaster", "warehouses", "categories", "products"];
+    const validTabs = ["users", "permissions", "rolemaster", "warehouses", "warehouse-mapping", "categories", "products"];
     const initialTab = validTabs.includes(tabFromPath) ? tabFromPath : "users";
 
     const [activeTab, setActiveTab] = useState(initialTab);
+    const [showHeader, setShowHeader] = useState(true);
     const { toast, showToast } = useToast(3000);
     
     // Table states
@@ -98,13 +102,23 @@ function AdminPage() {
         localStorage.setItem("haatza_custom_employee_permissions", JSON.stringify(customPermissions));
     }, [customPermissions]);
 
+    // Reset showHeader to true and reset scroll to top when activeTab changes
+    useEffect(() => {
+        setShowHeader(true);
+        const scrollContainer = document.querySelector(".admin-content-area");
+        if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+        }
+    }, [activeTab]);
+
+    // Kept header stable to prevent layout-shifting feedback loops and scroll shaking.
+
 
 
     // Sync activeTab state when URL changes
     useEffect(() => {
-        const pathParts = location.pathname.split('/');
         const tabFromPath = pathParts[pathParts.length - 1];
-        const validTabs = ["users", "permissions", "rolemaster", "warehouses", "categories", "products"];
+        const validTabs = ["users", "permissions", "rolemaster", "warehouses", "warehouse-mapping", "categories", "products"];
         const currentTab = validTabs.includes(tabFromPath) ? tabFromPath : "users";
         setTimeout(() => {
             setActiveTab(currentTab);
@@ -127,6 +141,7 @@ function AdminPage() {
         { id: "permissions", label: "Role & Page Permissions", icon: ShieldCheck },
         { id: "rolemaster", label: "Role Master", icon: Shield },
         { id: "warehouses", label: "Manage Warehouses & Dark Houses", icon: Warehouse },
+        { id: "warehouse-mapping", label: "Warehouse Mapping", icon: Map },
         { id: "categories", label: "Manage Categories", icon: Layers },
         { id: "products", label: "Manage Products", icon: ShoppingBag }
     ];
@@ -1808,6 +1823,8 @@ function AdminPage() {
             );
         } else if (activeTab === "warehouses") {
             return <div style={{ marginTop: '0', padding: '12px' }}><DarkhousesPage /></div>;
+        } else if (activeTab === "warehouse-mapping") {
+            return <div style={{ marginTop: '0', padding: '12px' }}><WarehouseMappingPage /></div>;
         } else if (activeTab === "categories") {
             return <div style={{ marginTop: '0', padding: '12px' }}><CategoriesPage /></div>;
         } else if (activeTab === "products") {
@@ -1943,6 +1960,21 @@ function AdminPage() {
                     background: #ffffff;
                     padding: 24px 32px 0 32px;
                     flex-shrink: 0;
+                    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
+                    transform-origin: top;
+                    opacity: 1;
+                    max-height: 120px;
+                    overflow: hidden;
+                }
+                
+                .admin-page-header.header-hidden {
+                    transform: translateY(-24px);
+                    opacity: 0;
+                    max-height: 0;
+                    padding-top: 0 !important;
+                    padding-bottom: 0 !important;
+                    margin-bottom: 0 !important;
+                    pointer-events: none;
                 }
                 
                 .admin-page-title {
@@ -3034,7 +3066,7 @@ function AdminPage() {
             {/* Full-width container with top tabs */}
             <div className="admin-page-container">
                 {/* Top Header Block */}
-                <div className="admin-page-header">
+                <div className={`admin-page-header ${showHeader ? "header-visible" : "header-hidden"}`}>
                     <div className="admin-tabs-container">
                         {tabs.map((tab) => {
                             return (

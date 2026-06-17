@@ -34,6 +34,7 @@ import { INITIAL_DARKHOUSES, CITIES, WAREHOUSE_CAPABILITIES, refreshDarkhouses }
 import { MOCK_MANAGERS, MOCK_ASSIGNED_PRODUCTS } from "../../data/darkhousesData";
 import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "../../data/catalogData";
 import "./Darkhouses.css";
+import { authService } from "../../services/authService";
 
 const ROWS_PER_PAGE = 6;
 
@@ -49,9 +50,7 @@ function DarkhousesPage() {
     React.useEffect(() => {
         const fetchWarehouses = async () => {
             try {
-                const res = await fetch("https://www.haatza.com/_functions/getWarehouses?page=1&limit=100");
-                if (!res.ok) throw new Error("HTTP error " + res.status);
-                const data = await res.json();
+                const data = await authService.getWarehouses(1, 100);
                 if (data.status && Array.isArray(data.data)) {
                     const mapped = data.data.map(item => {
                         const normType = (item.warehouseType === "DARK_STORE" || item.warehouseType === "Lite" || item.warehouseType === "DARK_HOUSE") ? "DARK_HOUSE" : "MAIN_WAREHOUSE";
@@ -435,7 +434,7 @@ function DarkhousesPage() {
                 setFormDhLongitude(position.coords.longitude.toFixed(6));
                 showToast("Location captured successfully!");
             },
-            (error) => {
+            () => {
                 setFormDhLatitude("12.9716");
                 setFormDhLongitude("77.5946");
                 showToast("Unable to retrieve location. Using Bangalore fallback coordinates.");
@@ -460,16 +459,31 @@ function DarkhousesPage() {
             showToast("Warehouse Type is required");
             return;
         }
-        if (!formDhOwnerName.trim()) {
-            showToast("Owner Name is required");
+
+        // Duplicate name check
+        const nameExists = darkhouses.some(d => (d.warehouseName || d.name || "").toLowerCase().trim() === formDhName.trim().toLowerCase());
+        if (nameExists) {
+            showToast("A warehouse with this name already exists");
             return;
         }
-        const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
-        if (cleanPhone.length < 10) {
-            showToast("Owner Phone must be at least 10 digits");
-            return;
+
+        // Duplicate code check
+        if (formDhCode.trim()) {
+            const codeExists = darkhouses.some(d => (d.franchiseCode || d.code || "").toLowerCase().trim() === formDhCode.trim().toLowerCase());
+            if (codeExists) {
+                showToast("A warehouse with this franchise code already exists");
+                return;
+            }
         }
-        if (!formDhOwnerEmail.trim() || !isValidEmail(formDhOwnerEmail)) {
+
+        if (formDhOwnerPhone.trim()) {
+            const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
+            if (cleanPhone.length < 10) {
+                showToast("Owner Phone must be at least 10 digits");
+                return;
+            }
+        }
+        if (formDhOwnerEmail.trim() && !isValidEmail(formDhOwnerEmail)) {
             showToast("Please provide a valid contact email");
             return;
         }
@@ -481,8 +495,8 @@ function DarkhousesPage() {
             showToast("State is required");
             return;
         }
-        if (!formDhPincode.trim()) {
-            showToast("Pincode is required");
+        if (!formDhPincode.trim() || formDhPincode.trim().length < 5) {
+            showToast("Pincode must be at least 5 digits");
             return;
         }
         if (!formDhStartTime) {
@@ -491,14 +505,6 @@ function DarkhousesPage() {
         }
         if (!formDhEndTime) {
             showToast("Operating End Time is required");
-            return;
-        }
-        if (!formDhManager) {
-            showToast("Please assign a Manager");
-            return;
-        }
-        if (formDhOperatingDays.length === 0) {
-            showToast("Please select at least one operating day");
             return;
         }
 
@@ -528,15 +534,8 @@ function DarkhousesPage() {
 
         try {
             setIsSubmitting(true);
-            const res = await fetch("https://www.haatza.com/_functions/createWarehouse", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok && data.status) {
+            const data = await authService.createWarehouse(payload);
+            if (data.status) {
                 showToast("Warehouse created successfully");
                 const newWh = {
                     ...data.data,
@@ -573,20 +572,37 @@ function DarkhousesPage() {
             showToast("Warehouse Name is required");
             return;
         }
-        if (!formDhCode.trim()) {
-            showToast("Franchise Code is required");
+
+        // Duplicate name check (excluding self)
+        const nameExists = darkhouses.some(d => 
+            (d.id !== selectedItem.id && d.warehouseId !== selectedItem.warehouseId && d.tableId !== selectedItem.tableId) &&
+            (d.warehouseName || d.name || "").toLowerCase().trim() === formDhName.trim().toLowerCase()
+        );
+        if (nameExists) {
+            showToast("A warehouse with this name already exists");
             return;
         }
-        if (!formDhOwnerName.trim()) {
-            showToast("Owner Name is required");
-            return;
+
+        // Duplicate code check (excluding self)
+        if (formDhCode.trim()) {
+            const codeExists = darkhouses.some(d => 
+                (d.id !== selectedItem.id && d.warehouseId !== selectedItem.warehouseId && d.tableId !== selectedItem.tableId) &&
+                (d.franchiseCode || d.code || "").toLowerCase().trim() === formDhCode.trim().toLowerCase()
+            );
+            if (codeExists) {
+                showToast("A warehouse with this franchise code already exists");
+                return;
+            }
         }
-        const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
-        if (cleanPhone.length < 10) {
-            showToast("Owner Phone must be at least 10 digits");
-            return;
+
+        if (formDhOwnerPhone.trim()) {
+            const cleanPhone = formDhOwnerPhone.replace(/\D/g, "");
+            if (cleanPhone.length < 10) {
+                showToast("Owner Phone must be at least 10 digits");
+                return;
+            }
         }
-        if (!formDhOwnerEmail.trim() || !isValidEmail(formDhOwnerEmail)) {
+        if (formDhOwnerEmail.trim() && !isValidEmail(formDhOwnerEmail)) {
             showToast("Please provide a valid Owner Email address");
             return;
         }
@@ -604,14 +620,6 @@ function DarkhousesPage() {
         }
         if (!formDhPincode.trim() || formDhPincode.length < 5) {
             showToast("Please provide a valid Pincode");
-            return;
-        }
-        if (!formDhManager) {
-            showToast("Please assign a Manager");
-            return;
-        }
-        if (formDhOperatingDays.length === 0) {
-            showToast("Please select at least one operating day");
             return;
         }
 
@@ -643,15 +651,8 @@ function DarkhousesPage() {
 
         try {
             setIsSubmitting(true);
-            const res = await fetch("https://www.haatza.com/_functions/updateWarehouse", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok && data.status) {
+            const data = await authService.updateWarehouse(payload);
+            if (data.status) {
                 showToast("Warehouse updated successfully");
                 const updatedWh = {
                     ...data.data,
@@ -692,6 +693,19 @@ function DarkhousesPage() {
         e.preventDefault();
         setManagers(prev => prev.map(m => {
             if (m.id === selectedItem.id) {
+                // Update darkhouses manager info if manager details changed
+                setDarkhouses(prevDhs => prevDhs.map(d => {
+                    if (d.accountManager === m.name || d.manager === m.name) {
+                        return {
+                            ...d,
+                            accountManager: formMgrName,
+                            manager: formMgrName,
+                            managerPhone: formMgrPhone,
+                            phone: formMgrPhone
+                        };
+                    }
+                    return d;
+                }));
                 return {
                     ...m,
                     name: formMgrName,
@@ -722,7 +736,7 @@ function DarkhousesPage() {
         // Auto update Darkhouse manager field too
         setDarkhouses(prev => prev.map(d => {
             if (d.name === formMgrDh) {
-                return { ...d, manager: selectedItem.name };
+                return { ...d, manager: selectedItem.name, accountManager: selectedItem.name, managerPhone: selectedItem.phone, phone: selectedItem.phone };
             }
             return d;
         }));
@@ -733,10 +747,19 @@ function DarkhousesPage() {
     const handleApAssignSubmit = (e) => {
         e.preventDefault();
         const selectedProdInfo = MOCK_PRODUCTS.find(p => p.name === formApProduct);
+        const sku = selectedProdInfo ? selectedProdInfo.sku : "FRT-NEW-SKU";
+        
+        // Duplicate product mapping check
+        const duplicate = assignedProducts.some(ap => ap.darkhouse === formApDh && ap.sku === sku);
+        if (duplicate) {
+            showToast(`Product "${formApProduct}" is already mapped to ${formApDh}`);
+            return;
+        }
+
         const newMap = {
             id: `MAP-${Math.floor(10000 + Math.random() * 90000)}`,
             product: formApProduct,
-            sku: selectedProdInfo ? selectedProdInfo.sku : "FRT-NEW-SKU",
+            sku: sku,
             category: selectedProdInfo ? selectedProdInfo.category : "Fruits & Vegetables",
             darkhouse: formApDh,
             stock: formApStock,
@@ -750,20 +773,28 @@ function DarkhousesPage() {
 
     const handleApBulkSubmit = (e) => {
         e.preventDefault();
-        // Allocate all catalog products to this darkhouse
-        const newAllocations = MOCK_PRODUCTS.map(p => ({
-            id: `MAP-${Math.floor(10000 + Math.random() * 90000)}`,
-            product: p.name,
-            sku: p.sku,
-            category: p.category,
-            darkhouse: formApDh,
-            stock: formApStock,
-            reorder: formApReorder,
-            status: formApStock === 0 ? "Out of Stock" : formApStock <= formApReorder ? "Low Stock" : "In Stock"
-        }));
+        // Allocate all catalog products to this darkhouse (filtered by already mapped)
+        const currentSkus = new Set(assignedProducts.filter(ap => ap.darkhouse === formApDh).map(ap => ap.sku));
+        const newAllocations = MOCK_PRODUCTS
+            .filter(p => !currentSkus.has(p.sku))
+            .map(p => ({
+                id: `MAP-${Math.floor(10000 + Math.random() * 90000)}`,
+                product: p.name,
+                sku: p.sku,
+                category: p.category,
+                darkhouse: formApDh,
+                stock: formApStock,
+                reorder: formApReorder,
+                status: formApStock === 0 ? "Out of Stock" : formApStock <= formApReorder ? "Low Stock" : "In Stock"
+            }));
+        if (newAllocations.length === 0) {
+            showToast(`All products are already mapped to ${formApDh}`);
+            setIsModalOpen(false);
+            return;
+        }
         setAssignedProducts(prev => [...newAllocations, ...prev]);
         setIsModalOpen(false);
-        showToast(`Bulk mapped all ${MOCK_PRODUCTS.length} catalog products to ${formApDh}`);
+        showToast(`Bulk mapped ${newAllocations.length} new catalog products to ${formApDh}`);
     };
 
     const handleToggleDhStatus = async (id) => {
@@ -797,15 +828,8 @@ function DarkhousesPage() {
         };
 
         try {
-            const res = await fetch("https://www.haatza.com/_functions/updateWarehouse", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok && data.status) {
+            const data = await authService.updateWarehouse(payload);
+            if (data.status) {
                 showToast(`Toggled ${warehouse.warehouseName || warehouse.name} status to ${nextStatus}`);
                 const updatedWh = {
                     ...data.data,
@@ -839,11 +863,31 @@ function DarkhousesPage() {
         setActiveRowMenuId(null);
     };
 
+    const handleDeleteDh = (id, name) => {
+        if (window.confirm(`Are you sure you want to delete warehouse/darkhouse "${name}"?`)) {
+            setDarkhouses(prev => prev.filter(d => d.id !== id && d.warehouseId !== id));
+            showToast(`Warehouse "${name}" deleted successfully`);
+        }
+        setActiveRowMenuId(null);
+    };
+
     const handleToggleMgrStatus = (id) => {
         setManagers(prev => prev.map(m => {
             if (m.id === id) {
                 const nextStatus = m.status === "Active" ? "On Leave" : "Active";
                 showToast(`Toggled ${m.name} status to ${nextStatus}`);
+                
+                // Sync status to darkhouse manager field
+                setDarkhouses(prevDhs => prevDhs.map(d => {
+                    if (d.accountManager === m.name || d.manager === m.name) {
+                        return {
+                            ...d,
+                            managerPhone: nextStatus === "Active" ? m.phone : "N/A (On Leave)"
+                        };
+                    }
+                    return d;
+                }));
+
                 return { ...m, status: nextStatus };
             }
             return m;
@@ -1281,6 +1325,11 @@ function DarkhousesPage() {
                                                                     <CheckCircle size={13} />
                                                                     <span>{dh.status === "ACTIVE" ? "Deactivate" : "Activate"}</span>
                                                                 </button>
+                                                                <div className="global-dropdown-divider"></div>
+                                                                <button className="global-dropdown-item text-red-600" onClick={() => handleDeleteDh(dh.warehouseId || dh.id, dh.warehouseName || dh.name)}>
+                                                                    <Trash2 size={13} className="text-red-600" />
+                                                                    <span className="text-red-600">Delete Hub</span>
+                                                                </button>
                                                             </div>
                                                         </>
                                                     )}
@@ -1626,22 +1675,22 @@ function DarkhousesPage() {
                                     {/* Section 1: Warehouse Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "8px" }}>Section 1: Warehouse Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhName">Warehouse Name</label>
+                                        <label htmlFor="formDhName">Warehouse Name <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhName" placeholder="e.g. HAATZA Koramangala Hub" value={formDhName} onChange={(e) => setFormDhName(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhType">Warehouse Type</label>
+                                        <label htmlFor="formDhType">Warehouse Type <span className="dkh-required-star">*</span></label>
                                         <select id="formDhType" value={formDhType} onChange={(e) => setFormDhType(e.target.value)} required>
                                             <option value="MAIN_WAREHOUSE">Main Warehouse</option>
                                             <option value="DARK_HOUSE">Dark House</option>
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCode">Franchise Code</label>
-                                        <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} required />
+                                        <label htmlFor="formDhCode">Franchise Code <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhStatus">Status</label>
+                                        <label htmlFor="formDhStatus">Status <span className="dkh-required-star">*</span></label>
                                         <select id="formDhStatus" value={formDhStatus} onChange={(e) => setFormDhStatus(e.target.value)} required>
                                             <option value="ACTIVE">Active</option>
                                             <option value="INACTIVE">Inactive</option>
@@ -1652,34 +1701,34 @@ function DarkhousesPage() {
                                     {/* Section 2: Owner Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 2: Owner Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhOwnerName">Owner Name</label>
-                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerName">Owner Name <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhOwnerPhone">Owner Phone</label>
-                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerPhone">Owner Phone <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhOwnerEmail">Owner Email</label>
-                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerEmail">Owner Email <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} />
                                     </div>
 
                                     {/* Section 3: Address Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 3: Address Info</div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhAddressLine1">Address Line 1</label>
+                                        <label htmlFor="formDhAddressLine1">Address Line 1 <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhAddressLine1" placeholder="e.g. 12th Main Road, Koramangala 3rd Block" value={formDhAddressLine1} onChange={(e) => setFormDhAddressLine1(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhAddressLine2">Address Line 2 (Optional)</label>
+                                        <label htmlFor="formDhAddressLine2">Address Line 2 <span className="dkh-optional-label">(Optional)</span></label>
                                         <input type="text" id="formDhAddressLine2" placeholder="e.g. Suite 101" value={formDhAddressLine2} onChange={(e) => setFormDhAddressLine2(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhState">State</label>
+                                        <label htmlFor="formDhState">State <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhState" placeholder="e.g. Karnataka" value={formDhState} onChange={(e) => setFormDhState(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCity">City</label>
+                                        <label htmlFor="formDhCity">City <span className="dkh-required-star">*</span></label>
                                         <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)} required>
                                             <option value="Bangalore">Bangalore</option>
                                             <option value="Mumbai">Mumbai</option>
@@ -1687,19 +1736,19 @@ function DarkhousesPage() {
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhPincode">Pincode</label>
+                                        <label htmlFor="formDhPincode">Pincode <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhPincode" placeholder="e.g. 560034" value={formDhPincode} onChange={(e) => setFormDhPincode(e.target.value)} required />
                                     </div>
 
                                     {/* Section 4: Geo Location */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 4: Geo Location</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhLatitude">Latitude</label>
-                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} required />
+                                        <label htmlFor="formDhLatitude">Latitude <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhLongitude">Longitude</label>
-                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} required />
+                                        <label htmlFor="formDhLongitude">Longitude <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width" style={{ display: "flex", justifyContent: "flex-end" }}>
                                         <button type="button" className="dkh-action-btn-secondary" style={{ padding: "8px 16px", cursor: "pointer" }} onClick={handleCaptureLocation}>
@@ -1710,21 +1759,21 @@ function DarkhousesPage() {
                                     {/* Section 5: Operations */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 5: Operations</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhServiceRadius">Service Radius (km)</label>
-                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} required min="1" />
+                                        <label htmlFor="formDhServiceRadius">Service Radius (km) <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} min="1" />
                                     </div>
                                     <div className="dkh-form-group" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                                         <div style={{ flex: 1 }}>
-                                            <label htmlFor="formDhStartTime">Start Time</label>
-                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} required />
+                                            <label htmlFor="formDhStartTime">Start Time <span className="dkh-optional-label">(Optional)</span></label>
+                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <label htmlFor="formDhEndTime">End Time</label>
-                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} required />
+                                            <label htmlFor="formDhEndTime">End Time <span className="dkh-optional-label">(Optional)</span></label>
+                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label>Operating Days</label>
+                                        <label>Operating Days <span className="dkh-optional-label">(Optional)</span></label>
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "4px" }}>
                                             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
                                                 <label key={day} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
@@ -1748,7 +1797,7 @@ function DarkhousesPage() {
                                     {/* Section 6: Management */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 6: Management</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhManager">Manager Assigned</label>
+                                        <label htmlFor="formDhManager">Manager Assigned <span className="dkh-optional-label">(Optional)</span></label>
                                         <select
                                             id="formDhManager"
                                             value={formDhManager}
@@ -1760,8 +1809,7 @@ function DarkhousesPage() {
                                                     setFormDhPhone(mObj.phone);
                                                 }
                                             }}
-                                            required
-                                        >
+                                            >
                                             <option value="">Select Manager</option>
                                             {managers.map(m => (
                                                 <option key={m.id} value={m.name}>
@@ -1771,8 +1819,8 @@ function DarkhousesPage() {
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhPhone">Phone Contacts</label>
-                                        <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} required />
+                                        <label htmlFor="formDhPhone">Phone Contacts <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} />
                                     </div>
                                 </form>
                             )}
@@ -1783,22 +1831,22 @@ function DarkhousesPage() {
                                     {/* Section 1: Warehouse Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "8px" }}>Section 1: Warehouse Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhName">Warehouse Name</label>
+                                        <label htmlFor="formDhName">Warehouse Name <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhName" placeholder="e.g. HAATZA Koramangala Hub" value={formDhName} onChange={(e) => setFormDhName(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhType">Warehouse Type</label>
+                                        <label htmlFor="formDhType">Warehouse Type <span className="dkh-required-star">*</span></label>
                                         <select id="formDhType" value={formDhType} onChange={(e) => setFormDhType(e.target.value)} required>
                                             <option value="MAIN_WAREHOUSE">Main Warehouse</option>
                                             <option value="DARK_HOUSE">Dark House</option>
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCode">Franchise Code</label>
-                                        <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} required />
+                                        <label htmlFor="formDhCode">Franchise Code <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhCode" placeholder="e.g. BLR-KOR-01" value={formDhCode} onChange={(e) => setFormDhCode(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhStatus">Status</label>
+                                        <label htmlFor="formDhStatus">Status <span className="dkh-required-star">*</span></label>
                                         <select id="formDhStatus" value={formDhStatus} onChange={(e) => setFormDhStatus(e.target.value)} required>
                                             <option value="ACTIVE">Active</option>
                                             <option value="INACTIVE">Inactive</option>
@@ -1809,34 +1857,34 @@ function DarkhousesPage() {
                                     {/* Section 2: Owner Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 2: Owner Info</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhOwnerName">Owner Name</label>
-                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerName">Owner Name <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhOwnerName" placeholder="e.g. Amit Sharma" value={formDhOwnerName} onChange={(e) => setFormDhOwnerName(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhOwnerPhone">Owner Phone</label>
-                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerPhone">Owner Phone <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhOwnerPhone" placeholder="e.g. +91 98765 01234" value={formDhOwnerPhone} onChange={(e) => setFormDhOwnerPhone(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhOwnerEmail">Owner Email</label>
-                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} required />
+                                        <label htmlFor="formDhOwnerEmail">Owner Email <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="email" id="formDhOwnerEmail" placeholder="e.g. owner@haatza.com" value={formDhOwnerEmail} onChange={(e) => setFormDhOwnerEmail(e.target.value)} />
                                     </div>
 
                                     {/* Section 3: Address Info */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 3: Address Info</div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhAddressLine1">Address Line 1</label>
+                                        <label htmlFor="formDhAddressLine1">Address Line 1 <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhAddressLine1" placeholder="e.g. 12th Main Road, Koramangala 3rd Block" value={formDhAddressLine1} onChange={(e) => setFormDhAddressLine1(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label htmlFor="formDhAddressLine2">Address Line 2 (Optional)</label>
+                                        <label htmlFor="formDhAddressLine2">Address Line 2 <span className="dkh-optional-label">(Optional)</span></label>
                                         <input type="text" id="formDhAddressLine2" placeholder="e.g. Suite 101" value={formDhAddressLine2} onChange={(e) => setFormDhAddressLine2(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhState">State</label>
+                                        <label htmlFor="formDhState">State <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhState" placeholder="e.g. Karnataka" value={formDhState} onChange={(e) => setFormDhState(e.target.value)} required />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhCity">City</label>
+                                        <label htmlFor="formDhCity">City <span className="dkh-required-star">*</span></label>
                                         <select id="formDhCity" value={formDhCity} onChange={(e) => setFormDhCity(e.target.value)} required>
                                             <option value="Bangalore">Bangalore</option>
                                             <option value="Mumbai">Mumbai</option>
@@ -1844,19 +1892,19 @@ function DarkhousesPage() {
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhPincode">Pincode</label>
+                                        <label htmlFor="formDhPincode">Pincode <span className="dkh-required-star">*</span></label>
                                         <input type="text" id="formDhPincode" placeholder="e.g. 560034" value={formDhPincode} onChange={(e) => setFormDhPincode(e.target.value)} required />
                                     </div>
 
                                     {/* Section 4: Geo Location */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 4: Geo Location</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhLatitude">Latitude</label>
-                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} required />
+                                        <label htmlFor="formDhLatitude">Latitude <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhLatitude" placeholder="e.g. 12.9352" value={formDhLatitude} onChange={(e) => setFormDhLatitude(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhLongitude">Longitude</label>
-                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} required />
+                                        <label htmlFor="formDhLongitude">Longitude <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhLongitude" placeholder="e.g. 77.6245" value={formDhLongitude} onChange={(e) => setFormDhLongitude(e.target.value)} />
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width" style={{ display: "flex", justifyContent: "flex-end" }}>
                                         <button type="button" className="dkh-action-btn-secondary" style={{ padding: "8px 16px", cursor: "pointer" }} onClick={handleCaptureLocation}>
@@ -1867,21 +1915,21 @@ function DarkhousesPage() {
                                     {/* Section 5: Operations */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 5: Operations</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhServiceRadius">Service Radius (km)</label>
-                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} required min="1" />
+                                        <label htmlFor="formDhServiceRadius">Service Radius (km) <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="number" id="formDhServiceRadius" placeholder="e.g. 10" value={formDhServiceRadius} onChange={(e) => setFormDhServiceRadius(parseInt(e.target.value) || 0)} min="1" />
                                     </div>
                                     <div className="dkh-form-group" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                                         <div style={{ flex: 1 }}>
-                                            <label htmlFor="formDhStartTime">Start Time</label>
-                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} required />
+                                            <label htmlFor="formDhStartTime">Start Time <span className="dkh-optional-label">(Optional)</span></label>
+                                            <input type="time" id="formDhStartTime" value={formDhStartTime} onChange={(e) => setFormDhStartTime(e.target.value)} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <label htmlFor="formDhEndTime">End Time</label>
-                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} required />
+                                            <label htmlFor="formDhEndTime">End Time <span className="dkh-optional-label">(Optional)</span></label>
+                                            <input type="time" id="formDhEndTime" value={formDhEndTime} onChange={(e) => setFormDhEndTime(e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="dkh-form-group dkh-form-group--full-width">
-                                        <label>Operating Days</label>
+                                        <label>Operating Days <span className="dkh-optional-label">(Optional)</span></label>
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "4px" }}>
                                             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
                                                 <label key={day} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
@@ -1905,7 +1953,7 @@ function DarkhousesPage() {
                                     {/* Section 6: Management */}
                                     <div style={{ gridColumn: "span 2", fontWeight: "700", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px", fontSize: "12px", textTransform: "uppercase", marginTop: "12px" }}>Section 6: Management</div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhManager">Manager Assigned</label>
+                                        <label htmlFor="formDhManager">Manager Assigned <span className="dkh-optional-label">(Optional)</span></label>
                                         <select
                                             id="formDhManager"
                                             value={formDhManager}
@@ -1917,8 +1965,7 @@ function DarkhousesPage() {
                                                     setFormDhPhone(mObj.phone);
                                                 }
                                             }}
-                                            required
-                                        >
+                                            >
                                             <option value="">Select Manager</option>
                                             {managers.map(m => (
                                                 <option key={m.id} value={m.name}>
@@ -1928,8 +1975,8 @@ function DarkhousesPage() {
                                         </select>
                                     </div>
                                     <div className="dkh-form-group">
-                                        <label htmlFor="formDhPhone">Phone Contacts</label>
-                                        <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} required />
+                                        <label htmlFor="formDhPhone">Phone Contacts <span className="dkh-optional-label">(Optional)</span></label>
+                                        <input type="text" id="formDhPhone" value={formDhPhone} onChange={(e) => setFormDhPhone(e.target.value)} />
                                     </div>
                                 </form>
                             )}

@@ -235,6 +235,110 @@ const addTransaction = (type, warehouse, productName, sku, qty, prevStock, newSt
 
 // --- Transaction Actions ---
 
+// Helper to get stock of any warehouse (simulated for fallbacks, actual for Central/Primary)
+export const getWarehouseStockForLocation = (warehouseName, sku) => {
+    const whStock = getWarehouseStock();
+    const item = whStock.find(i => i.sku === sku);
+    
+    if (!warehouseName || warehouseName.toLowerCase().includes("central")) {
+        return item ? item.stock : 0;
+    }
+    
+    // For other warehouses, return a simulated deterministic stock
+    if (!item) return 0;
+    const hash = (warehouseName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + sku.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 150;
+    return hash;
+};
+
+// Recommendation engine for fallback routing
+export const getFulfillmentRecommendation = (indentId) => {
+    const indents = getIndents();
+    const indent = indents.find(i => i.id === indentId);
+    if (!indent) return null;
+
+    const primaryWh = indent.requestedTo;
+    const sku = indent.sku;
+    const reqQty = indent.requestedQty;
+
+    // Check primary warehouse stock
+    const primaryStock = getWarehouseStockForLocation(primaryWh, sku);
+    if (primaryStock >= reqQty) {
+        return {
+            status: "sufficient",
+            message: `Primary warehouse "${primaryWh}" has sufficient stock (${primaryStock} units).`,
+            sourceWarehouse: primaryWh,
+            availableStock: primaryStock
+        };
+    }
+
+    // Inspect fallbacks in sequence from mapped darkhouses config
+    const mappingsSaved = localStorage.getItem("haatza_warehouse_mappings");
+    if (mappingsSaved) {
+        try {
+            const mappings = JSON.parse(mappingsSaved);
+            const mapping = mappings.find(m => 
+                (m.darkhouseName && m.darkhouseName.toLowerCase().trim() === indent.requestedBy.toLowerCase().trim()) ||
+                (m.darkhouseId && m.darkhouseId.toLowerCase().trim() === indent.requestedBy.toLowerCase().trim())
+            );
+
+            if (mapping) {
+                const fallbacks = [
+                    { id: mapping.fallback1, name: mapping.fallback1Name },
+                    { id: mapping.fallback2, name: mapping.fallback2Name },
+                    { id: mapping.fallback3, name: mapping.fallback3Name }
+                ].filter(f => f.id && f.name);
+
+                for (let i = 0; i < fallbacks.length; i++) {
+                    const fb = fallbacks[i];
+                    const fbStock = getWarehouseStockForLocation(fb.name, sku);
+                    if (fbStock >= reqQty) {
+                        return {
+                            status: "recommend_fallback",
+                            message: `Sufficient stock found in Priority ${i + 1} Fallback: "${fb.name}" (${fbStock} units).`,
+                            sourceWarehouse: fb.name,
+                            fallbackPriority: i + 1,
+                            availableStock: fbStock
+                        };
+                    }
+                }
+                
+                // If none of the fallbacks have enough stock, find the one with the maximum stock
+                let bestFb = null;
+                let maxFbStock = -1;
+                let bestFbPriority = -1;
+                for (let i = 0; i < fallbacks.length; i++) {
+                    const fb = fallbacks[i];
+                    const fbStock = getWarehouseStockForLocation(fb.name, sku);
+                    if (fbStock > maxFbStock) {
+                        maxFbStock = fbStock;
+                        bestFb = fb.name;
+                        bestFbPriority = i + 1;
+                    }
+                }
+
+                if (bestFb && maxFbStock > primaryStock) {
+                    return {
+                        status: "insufficient_but_better",
+                        message: `Insufficient stock in primary. Priority ${bestFbPriority} Fallback "${bestFb}" has the most stock (${maxFbStock} units).`,
+                        sourceWarehouse: bestFb,
+                        fallbackPriority: bestFbPriority,
+                        availableStock: maxFbStock
+                    };
+                }
+            }
+        } catch (e) {
+            console.error("Error calculating recommendation:", e);
+        }
+    }
+
+    return {
+        status: "insufficient_all",
+        message: `Insufficient stock in primary (${primaryStock} units) and all configured fallbacks.`,
+        sourceWarehouse: primaryWh,
+        availableStock: primaryStock
+    };
+};
+
 // 1. Create Stock Request (Dark House / Main Warehouse)
 export const createIndent = (sku, productName, requestedBy, requestedQty, priority, remarks, userName) => {
     const indents = getIndents();
@@ -244,13 +348,31 @@ export const createIndent = (sku, productName, requestedBy, requestedQty, priori
     const localEntry = darkhouseStock.find(item => item.darkhouse === requestedBy && item.sku === sku);
     const prevStock = localEntry ? localEntry.available : 0;
     
+    // Resolve dynamic primary warehouse instead of hardcoded central warehouse
+    const mappingsSaved = localStorage.getItem("haatza_warehouse_mappings");
+    let requestedTo = "HAATZA Central Warehouse";
+    if (mappingsSaved) {
+        try {
+            const mappings = JSON.parse(mappingsSaved);
+            const mapping = mappings.find(m => 
+                (m.darkhouseName && m.darkhouseName.toLowerCase().trim() === requestedBy.toLowerCase().trim()) ||
+                (m.darkhouseId && m.darkhouseId.toLowerCase().trim() === requestedBy.toLowerCase().trim())
+            );
+            if (mapping && mapping.warehouseName) {
+                requestedTo = mapping.warehouseName;
+            }
+        } catch (e) {
+            console.error("Failed to parse mappings in createIndent:", e);
+        }
+    }
+
     const timestamp = formatCurrentDateTime();
     const newIndent = {
         id: `IND-${Math.floor(10000 + Math.random() * 90000)}`,
         productName,
         sku,
         requestedBy,
-        requestedTo: "HAATZA Central Warehouse",
+        requestedTo,
         requestedQty,
         approvedQty: 0,
         status: "Pending",
@@ -276,7 +398,7 @@ export const createIndent = (sku, productName, requestedBy, requestedQty, priori
 };
 
 // 2. Approve / Reject Indent (Main Warehouse / Admin)
-export const approveIndent = (indentId, approvedQty, remarks, userName) => {
+export const approveIndent = (indentId, approvedQty, remarks, userName, sourceWarehouse = null) => {
     const indents = getIndents();
     const indent = indents.find(i => i.id === indentId);
     if (!indent) throw new Error("Indent request not found.");
@@ -284,12 +406,15 @@ export const approveIndent = (indentId, approvedQty, remarks, userName) => {
     const timestamp = formatCurrentDateTime();
     const isFullApproval = approvedQty === indent.requestedQty;
     const nextStatus = isFullApproval ? "Approved" : "Partially Approved";
+    
+    const finalRequestedTo = sourceWarehouse || indent.requestedTo;
 
     const updatedIndents = indents.map(item => {
         if (item.id === indentId) {
             return {
                 ...item,
                 approvedQty,
+                requestedTo: finalRequestedTo,
                 status: nextStatus,
                 history: [
                     ...item.history,
@@ -297,7 +422,7 @@ export const approveIndent = (indentId, approvedQty, remarks, userName) => {
                         date: timestamp,
                         status: nextStatus,
                         user: userName,
-                        remarks: remarks || `Approved ${approvedQty} out of ${item.requestedQty} requested units.`
+                        remarks: remarks || `Approved ${approvedQty} out of ${item.requestedQty} requested units.${sourceWarehouse ? ' Sourced from ' + sourceWarehouse + '.' : ''}`
                     }
                 ]
             };
@@ -308,7 +433,7 @@ export const approveIndent = (indentId, approvedQty, remarks, userName) => {
     saveIndents(updatedIndents);
 
     // Create Transaction Log
-    addTransaction("Approved", indent.requestedTo, indent.productName, indent.sku, approvedQty, 0, 0, userName);
+    addTransaction("Approved", finalRequestedTo, indent.productName, indent.sku, approvedQty, 0, 0, userName);
 
     return true;
 };
@@ -347,35 +472,45 @@ export const rejectIndent = (indentId, remarks, userName) => {
 };
 
 // 3. Dispatch Stock (Main Warehouse / Admin)
-// Deducts from Central Warehouse stock and transitions request to Dispatched
 export const dispatchIndent = (indentId, vehicleNumber, driverName, remarks, userName) => {
     const indents = getIndents();
     const indent = indents.find(i => i.id === indentId);
     if (!indent) throw new Error("Indent request not found.");
 
-    const whStock = getWarehouseStock();
-    const centralItemIndex = whStock.findIndex(item => item.sku === indent.sku);
-    if (centralItemIndex === -1) throw new Error("Product SKU not found in Main Warehouse catalog.");
+    const isCentral = indent.requestedTo.toLowerCase().includes("central");
+    const timestamp = formatCurrentDateTime();
+    
+    let prevStock;
+    let newStock;
 
-    const centralItem = whStock[centralItemIndex];
-    if (centralItem.stock < indent.approvedQty) {
-        throw new Error(`Insufficient stock in Main Warehouse. Available: ${centralItem.stock}, Approved Qty: ${indent.approvedQty}`);
+    if (isCentral) {
+        const whStock = getWarehouseStock();
+        const centralItemIndex = whStock.findIndex(item => item.sku === indent.sku);
+        if (centralItemIndex === -1) throw new Error("Product SKU not found in Main Warehouse catalog.");
+
+        const centralItem = whStock[centralItemIndex];
+        if (centralItem.stock < indent.approvedQty) {
+            throw new Error(`Insufficient stock in Main Warehouse. Available: ${centralItem.stock}, Approved Qty: ${indent.approvedQty}`);
+        }
+
+        prevStock = centralItem.stock;
+        newStock = prevStock - indent.approvedQty;
+
+        // Deduct from Main Warehouse stock
+        whStock[centralItemIndex] = {
+            ...centralItem,
+            stock: newStock,
+            status: newStock === 0 ? "Out of Stock" : newStock <= centralItem.reorderPoint ? "Low Stock" : "In Stock",
+            lastUpdated: timestamp
+        };
+        saveWarehouseStock(whStock);
+    } else {
+        // Fallback warehouse stock: simulate deduction
+        prevStock = getWarehouseStockForLocation(indent.requestedTo, indent.sku);
+        newStock = Math.max(0, prevStock - indent.approvedQty);
     }
 
-    const timestamp = formatCurrentDateTime();
-    const prevStock = centralItem.stock;
-    const newStock = prevStock - indent.approvedQty;
-
-    // 1. Deduct from Main Warehouse stock
-    whStock[centralItemIndex] = {
-        ...centralItem,
-        stock: newStock,
-        status: newStock === 0 ? "Out of Stock" : newStock <= centralItem.reorderPoint ? "Low Stock" : "In Stock",
-        lastUpdated: timestamp
-    };
-    saveWarehouseStock(whStock);
-
-    // 2. Update request status to Dispatched
+    // Update request status to Dispatched
     const updatedIndents = indents.map(item => {
         if (item.id === indentId) {
             return {
@@ -390,7 +525,7 @@ export const dispatchIndent = (indentId, vehicleNumber, driverName, remarks, use
                         date: timestamp,
                         status: "Dispatched",
                         user: userName,
-                        remarks: remarks || `Dispatched via vehicle ${vehicleNumber} (Driver: ${driverName}).`
+                        remarks: remarks || `Dispatched from ${indent.requestedTo} via vehicle ${vehicleNumber} (Driver: ${driverName}).`
                     }
                 ]
             };
@@ -399,7 +534,7 @@ export const dispatchIndent = (indentId, vehicleNumber, driverName, remarks, use
     });
     saveIndents(updatedIndents);
 
-    // 3. Create stock movement log
+    // Create stock movement log
     addTransaction("Dispatched", indent.requestedTo, indent.productName, indent.sku, indent.approvedQty, prevStock, newStock, userName);
 
     return true;

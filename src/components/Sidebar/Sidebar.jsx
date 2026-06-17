@@ -143,6 +143,7 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Role & Page Permissions") return "/admin/permissions";
             if (pageName === "Role Master") return "/admin/rolemaster";
             if (pageName === "Manage Warehouses & Dark Houses") return "/admin/warehouses";
+            if (pageName === "Warehouse Mapping") return "/admin/warehouse-mapping";
             if (pageName === "Manage Categories") return "/admin/categories";
             if (pageName === "Manage Products") return "/admin/products";
             return "/admin/users";
@@ -329,6 +330,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "Role & Page Permissions", path: "/admin/permissions" },
                     { label: "Role Master", path: "/admin/rolemaster" },
                     { label: "Manage Warehouses & Dark Houses", path: "/admin/warehouses" },
+                    { label: "Warehouse Mapping", path: "/admin/warehouse-mapping" },
                     { label: "Manage Categories", path: "/admin/categories" },
                     { label: "Manage Products", path: "/admin/products" }
                 ];

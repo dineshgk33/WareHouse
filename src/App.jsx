@@ -234,6 +234,7 @@ function App() {
                                     <Route path="admin/permissions" element={<AdminPage />} />
                                     <Route path="admin/rolemaster" element={<AdminPage />} />
                                     <Route path="admin/warehouses" element={<AdminPage />} />
+                                    <Route path="admin/warehouse-mapping" element={<AdminPage />} />
                                     <Route path="admin/categories" element={<AdminPage />} />
                                     <Route path="admin/products" element={<AdminPage />} />
                                     <Route path="admin" element={<Navigate to="/admin/users" replace />} />

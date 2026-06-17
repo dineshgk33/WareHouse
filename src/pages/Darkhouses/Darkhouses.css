@@ -671,6 +671,15 @@
   box-shadow: 0 0 0 3px rgba(30, 96, 255, 0.12);
 }
 
+.dkh-form-group input:disabled,
+.dkh-form-group select:disabled,
+.dkh-form-group textarea:disabled {
+  background-color: var(--bg-app, #F6F8FF);
+  color: var(--text-muted, #9CA3AF);
+  cursor: not-allowed;
+  border-color: var(--border-color, #E5E7EB);
+}
+
 .dkh-form-group textarea {
   resize: vertical;
 }
@@ -1532,5 +1541,18 @@
   accent-color: var(--primary);
   border-radius: 4px;
 }
+
+.dkh-required-star {
+  color: #ef4444; /* red-500 */
+  margin-left: 2px;
+}
+
+.dkh-optional-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
 
 
