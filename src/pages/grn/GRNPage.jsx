@@ -121,14 +121,18 @@ function GRNPage() {
                     expiry: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
                 };
             });
-            setFormItems(initialFormItems);
+            setTimeout(() => {
+                setFormItems(initialFormItems);
+            }, 0);
         }
     }, [selectedPO]);
 
     // Set initial active GRN details if missing
     useEffect(() => {
         if (!selectedGrnId && grns.length > 0) {
-            setSelectedGrnId(grns[0].id);
+            setTimeout(() => {
+                setSelectedGrnId(grns[0].id);
+            }, 0);
         }
     }, [grns, selectedGrnId]);
 

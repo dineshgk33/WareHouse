@@ -36,6 +36,7 @@ import {
 import { MOCK_ORDERS, MOCK_PICKING, MOCK_PACKING, MOCK_DELIVERY } from "../../data/ordersData";
 import { INITIAL_DARKHOUSES } from "../../data/darkhouses";
 import { getOrderStatusClass } from "../../utils/statusUtils";
+import { Barcode128Svg } from "../../utils/barcode";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
 import InvoicePreviewModal from "./InvoicePreviewModal";
@@ -154,7 +155,9 @@ function OrdersPage() {
 
     useEffect(() => {
         if (activeTab === "details" && !selectedInspectorOrderId && orders.length > 0) {
-            setSelectedInspectorOrderId(orders[0].id);
+            setTimeout(() => {
+                setSelectedInspectorOrderId(orders[0].id);
+            }, 0);
         }
     }, [activeTab, orders, selectedInspectorOrderId]);
 
@@ -172,17 +175,19 @@ function OrdersPage() {
     const [ordPage, setOrdPage] = useState(1);
 
     useEffect(() => {
-        if (activeTab === "orders") {
-            if (boardStep === "all") setSelectedStatus("ALL");
-            else if (boardStep === "pending") setSelectedStatus("Pending");
-            else if (boardStep === "completed") setSelectedStatus("Delivered");
-        } else if (activeTab === "picking") {
-            setSelectedStatus("Picking");
-        } else if (activeTab === "packing") {
-            setSelectedStatus("Packing");
-        } else if (activeTab === "tracking") {
-            setSelectedStatus("Ready To Dispatch");
-        }
+        setTimeout(() => {
+            if (activeTab === "orders") {
+                if (boardStep === "all") setSelectedStatus("ALL");
+                else if (boardStep === "pending") setSelectedStatus("Pending");
+                else if (boardStep === "completed") setSelectedStatus("Delivered");
+            } else if (activeTab === "picking") {
+                setSelectedStatus("Picking");
+            } else if (activeTab === "packing") {
+                setSelectedStatus("Packing");
+            } else if (activeTab === "tracking") {
+                setSelectedStatus("Ready To Dispatch");
+            }
+        }, 0);
     }, [activeTab, boardStep]);
 
     // Filters Picking

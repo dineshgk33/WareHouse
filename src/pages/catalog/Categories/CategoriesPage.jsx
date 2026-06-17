@@ -8,6 +8,7 @@ import CatalogModal from "../../../components/CatalogCommon/CatalogModal";
 import StatCard from "../../../components/StatCard/StatCard";
 import { MOCK_CATEGORIES } from "../../../data/catalogData";
 import "./CategoriesPage.css";
+import { saveCategories, addAuditLog } from "../../../services/dbService";
 
 const PAGE_SIZE = 5;
 

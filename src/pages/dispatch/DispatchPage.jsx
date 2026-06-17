@@ -99,7 +99,9 @@ function DispatchPage() {
     // Automatically select first dispatch for details/tracking if none selected
     useEffect(() => {
         if (!activeDispatchId && dispatches.length > 0) {
-            setActiveDispatchId(dispatches[0].id);
+            setTimeout(() => {
+                setActiveDispatchId(dispatches[0].id);
+            }, 0);
         }
     }, [activeDispatchId, dispatches]);
 

@@ -104,7 +104,9 @@ function AdminPage() {
 
     // Reset showHeader to true and reset scroll to top when activeTab changes
     useEffect(() => {
-        setShowHeader(true);
+        setTimeout(() => {
+            setShowHeader(true);
+        }, 0);
         const scrollContainer = document.querySelector(".admin-content-area");
         if (scrollContainer) {
             scrollContainer.scrollTop = 0;

@@ -120,10 +120,9 @@ const QRISvg = () => {
 };
 
 function InvoicePreviewModal({ isOpen, order, onClose }) {
-    if (!isOpen || !order) return null;
-
     // Retrieve order items dynamically
     const getItemsForOrder = (ord) => {
+        if (!ord) return [];
         const idNum = parseInt((ord.id || "").replace(/\D/g, "")) || 1234;
         const productsList = [
             { name: "Mr Muscle Kitchen Cleaner (Spray)", sku: "FRT-ANG-01", price: 120 },
@@ -148,10 +147,24 @@ function InvoicePreviewModal({ isOpen, order, onClose }) {
 
     // Calculate tax breakdowns dynamically so they sum exactly to order.amount
     const invoiceCalculations = useMemo(() => {
+        if (!order) {
+            return {
+                items: [],
+                deliveryTotal: 0,
+                deliveryTaxable: 0,
+                deliveryCgst: 0,
+                deliverySgst: 0,
+                totalQty: 0,
+                totalTaxable: 0,
+                totalCgst: 0,
+                totalSgst: 0,
+                targetTotal: 0
+            };
+        }
         const targetTotal = parseFloat((order.amount || "₹0").replace(/[^\d.]/g, '')) || 260.00;
         
         let sumPaidItems = 0;
-        const processed = rawItems.map((item, idx) => {
+        const processed = rawItems.map((item, _idx) => {
             const isHighTax = !["Milk", "Paneer", "Dettol", "Liquid"].some(keyword => item.name.includes(keyword));
             const cgstPct = isHighTax ? 9.0 : 2.5;
             const sgstPct = isHighTax ? 9.0 : 2.5;
@@ -222,6 +235,8 @@ function InvoicePreviewModal({ isOpen, order, onClose }) {
             targetTotal
         };
     }, [rawItems, order]);
+
+    if (!isOpen || !order) return null;
 
     const handlePrint = () => {
         window.print();

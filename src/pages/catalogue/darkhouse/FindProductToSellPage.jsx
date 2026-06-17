@@ -30,6 +30,20 @@ const MOCK_GLOBAL_PRODUCTS = [
     { id: "GP-10", sku: "DRY-BRD-BRN", name: "Britannia Brown Bread", category: "Dairy & Bread", price: 45, stock: 110 },
 ];
 
+const EmptyState = ({ message, type }) => (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
+            {type === "global" ? <Package size={28} /> : <Store size={28} />}
+        </div>
+        <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
+        <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
+            {type === "global"
+                ? "All global items are already added or search filters returned no matches."
+                : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
+        </p>
+    </div>
+);
+
 function FindProductToSellPage() {
     const { canView } = useAuth();
 
@@ -77,10 +91,12 @@ function FindProductToSellPage() {
         const local = MOCK_GLOBAL_PRODUCTS.filter(p => localSkus.has(p.sku));
         const global = MOCK_GLOBAL_PRODUCTS.filter(p => !localSkus.has(p.sku));
 
-        setTempLocalProducts(local);
-        setTempGlobalProducts(global);
-        setGlobalSelectedSkus(new Set());
-        setLocalSelectedSkus(new Set());
+        setTimeout(() => {
+            setTempLocalProducts(local);
+            setTempGlobalProducts(global);
+            setGlobalSelectedSkus(new Set());
+            setLocalSelectedSkus(new Set());
+        }, 0);
     }, [selectedDh, darkhouseStock]);
 
     const handleMoveRight = () => {
@@ -235,20 +251,6 @@ function FindProductToSellPage() {
             return next;
         });
     };
-
-    const EmptyState = ({ message, type }) => (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="p-4 bg-slate-100 rounded-full text-slate-400 mb-3">
-                {type === "global" ? <Package size={28} /> : <Store size={28} />}
-            </div>
-            <p className="text-sm font-bold text-slate-600 m-0">{message}</p>
-            <p className="text-xs text-slate-400 m-0 mt-1.5 max-w-[220px] leading-relaxed">
-                {type === "global"
-                    ? "All global items are already added or search filters returned no matches."
-                    : "Select items from the global pool and click the right arrow to add them to this darkhouse catalog."}
-            </p>
-        </div>
-    );
 
     return (
         <div className="inv-root fade-in">

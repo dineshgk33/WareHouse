@@ -79,12 +79,17 @@ import {
     getFulfillmentRecommendation,
     getReplenishmentKPIs,
     checkDuplicateActiveIndent,
-    PRODUCT_REPLENISHMENT_META
+    PRODUCT_REPLENISHMENT_META,
+    getAutoSuggestedQuantity
 } from "../../../services/indentService";
 import "../Catalogue.css";
 import "../../Darkhouses/Darkhouses.css";
 
 const ROWS_PER_PAGE = 7;
+
+const getOffsetDateISO = (hoursOffset) => {
+    return new Date(Date.now() + hoursOffset * 60 * 60 * 1000).toISOString();
+};
 
 function IndentPage() {
     const { userRole, selectedWarehouseName, userName } = useAuth();
@@ -182,15 +187,17 @@ function IndentPage() {
 
     useEffect(() => {
         if (verificationIndent) {
-            setVerReceivedQty(verificationIndent.approvedQty || verificationIndent.requestedQty || "");
-            setVerShortQty("0");
-            setVerDamagedQty("0");
-            setVerRejectedQty("0");
-            setVerRemarks("");
-            setVerOverReceiptApproved(false);
-            setVerAttachments([]);
-            setUploadingFile(null);
-            setUploadProgress(0);
+            setTimeout(() => {
+                setVerReceivedQty(verificationIndent.approvedQty || verificationIndent.requestedQty || "");
+                setVerShortQty("0");
+                setVerDamagedQty("0");
+                setVerRejectedQty("0");
+                setVerRemarks("");
+                setVerOverReceiptApproved(false);
+                setVerAttachments([]);
+                setUploadingFile(null);
+                setUploadProgress(0);
+            }, 0);
         }
     }, [verificationIndent]);
 
@@ -473,8 +480,8 @@ function IndentPage() {
         setWizardStep(1);
         setIndentType("Regular Replenishment");
         setRequestPriority("Medium");
-        setRequiredDate(new Date(Date.now() + 48*60*60*1000).toISOString().split('T')[0]);
-        setExpectedDeliveryDate(new Date(Date.now() + 24*60*60*1000).toISOString().split('T')[0]);
+        setRequiredDate(getOffsetDateISO(48).split('T')[0]);
+        setExpectedDeliveryDate(getOffsetDateISO(24).split('T')[0]);
         setReason("Reorder point breach");
         setRequestRemarks("");
         setProductSearchTerm("");
@@ -609,8 +616,8 @@ function IndentPage() {
                 indentType: "Regular Replenishment",
                 requestedBy: alertItem.warehouse,
                 priority: "High",
-                requiredDate: new Date(Date.now() + 48*60*60*1000).toISOString(),
-                expectedDeliveryDate: new Date(Date.now() + 24*60*60*1000).toISOString(),
+                requiredDate: getOffsetDateISO(48),
+                expectedDeliveryDate: getOffsetDateISO(24),
                 reason: "Auto low stock alert trigger",
                 remarks: "Low stock alert",
                 userName: userName || "System Auto",

@@ -107,8 +107,10 @@ function ReceivingPage() {
                     qc: "Pass"
                 };
             });
-            setReceiveItemsData(initialData);
-            setSearchParams({ tab: "receive", po: selectedPO.id });
+            setTimeout(() => {
+                setReceiveItemsData(initialData);
+                setSearchParams({ tab: "receive", po: selectedPO.id });
+            }, 0);
         }
     }, [selectedPO, setSearchParams]);
 
