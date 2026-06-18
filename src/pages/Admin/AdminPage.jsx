@@ -68,7 +68,12 @@ function AdminPage() {
     
     // Determine active tab from URL path
     const pathParts = location.pathname.split('/');
-    const tabFromPath = pathParts[pathParts.length - 1];
+    let tabFromPath = pathParts[pathParts.length - 1];
+    
+    // Map alternate URLs from sidebar to valid tabs
+    if (tabFromPath === "role-permissions") tabFromPath = "permissions";
+    if (tabFromPath === "user-management") tabFromPath = "users";
+
     const validTabs = ["users", "permissions", "rolemaster", "warehouses", "warehouse-mapping", "categories", "products"];
     const initialTab = validTabs.includes(tabFromPath) ? tabFromPath : "users";
 

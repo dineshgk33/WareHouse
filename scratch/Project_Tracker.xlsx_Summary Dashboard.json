@@ -1,0 +1,52 @@
+[
+  {
+    "Project Development & QA Dashboard": "Key Metrics",
+    "__EMPTY": "Value"
+  },
+  {
+    "Project Development & QA Dashboard": "Total Modules"
+  },
+  {
+    "Project Development & QA Dashboard": "Total Sub Models"
+  },
+  {
+    "Project Development & QA Dashboard": "Overall Completion %"
+  },
+  {
+    "Project Development & QA Dashboard": "Status Breakdown",
+    "__EMPTY": "Count"
+  },
+  {
+    "Project Development & QA Dashboard": "Not Started"
+  },
+  {
+    "Project Development & QA Dashboard": "Progress"
+  },
+  {
+    "Project Development & QA Dashboard": "In Progress"
+  },
+  {
+    "Project Development & QA Dashboard": "Completed"
+  },
+  {
+    "Project Development & QA Dashboard": "Blocked"
+  },
+  {
+    "Project Development & QA Dashboard": "UAT"
+  },
+  {
+    "Project Development & QA Dashboard": "Deployed"
+  },
+  {
+    "Project Development & QA Dashboard": "Module",
+    "__EMPTY": "Sub Models",
+    "__EMPTY_1": "Completed",
+    "__EMPTY_2": "Progress %"
+  },
+  {
+    "Project Development & QA Dashboard": "Login"
+  },
+  {
+    "Project Development & QA Dashboard": "OrgRolePage"
+  }
+]

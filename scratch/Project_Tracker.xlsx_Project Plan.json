@@ -1,0 +1,30 @@
+[
+  {
+    "Model ID": "M1",
+    "Module": "Login",
+    "Model Name": "Authentication & Authorization",
+    "Sub Model": "Authentication",
+    "Description": "Implement secure Email/Mobile and Password login with validation, JWT authentication, error handling, password visibility toggle, and password strength indicator.",
+    "Development Status": "Completed",
+    "Development Time": "15 days",
+    "Test Case ID": "TC-1.0-01: Initial UI Load;\r\nTC-1.0-02: Validate empty email/mobile input;\r\nTC-1.0-03: Validate mobile number format;\r\nTC-1.0-04: Validate email format;\r\nTC-1.0-05: Detect mobile input;\r\nTC-1.0-06: Password visibility toggle;\r\nTC-1.0-07: Password strength indicator;"
+  },
+  {
+    "Model ID": "M2",
+    "Module": "OrgRolePage",
+    "Model Name": "Authentication & Authorization",
+    "Sub Model": "Role Selection",
+    "Description": "Dynamically load workspaces from API, allow workspace selection, and display user role based on the selected workspace.",
+    "Development Status": "Completed",
+    "Test Case ID": "TC-1.1-01: Warehouse Dropdown Load;\r\nTC-1.1-02: Warehouse Dropdown Select;\r\nTC-1.1-03: Warehouse Filtering;\r\nTC-1.1-04: Workspace Change;"
+  },
+  {
+    "Model ID": "M2",
+    "Module": "",
+    "Model Name": "Authentication & Authorization",
+    "Sub Model": "Role Metrics",
+    "Description": "Dynamically filter and display operational metrics based on the selected workspace and role using dashboard Stat Cards.",
+    "Development Status": "Completed",
+    "Test Case ID": "TC-1.2-01: Role Dropdown Load;\r\nTC-1.2-02: Role Filtering;\r\nTC-1.2-03: Display selected role metrics;"
+  }
+]

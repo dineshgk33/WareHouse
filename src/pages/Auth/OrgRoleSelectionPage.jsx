@@ -70,48 +70,22 @@ function OrgRoleSelectionPage() {
 
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setTimeout(() => {
-                setFetchedRoles([]);
-                setSelectedRoleId("");
-                setRoleErrorText("");
-            }, 0);
-            return;
-        }
-
-        setTimeout(() => {
-            setRolesLoading(true);
             setFetchedRoles([]);
             setSelectedRoleId("");
             setRoleErrorText("");
-        }, 0);
+            return;
+        }
 
-        authService.getWarehouseRoles(selectedWarehouseId)
-            .then(res => {
-                if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
-                    setFetchedRoles(res.message.roles);
-                } else {
-                    const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-                    if (whMatch && whMatch.roles.length > 0) {
-                        setFetchedRoles(whMatch.roles);
-                    } else {
-                        setFetchedRoles([]);
-                        setRoleErrorText("No roles available");
-                    }
-                }
-            })
-            .catch(err => {
-                console.error("Failed to load roles:", err);
-                const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-                if (whMatch && whMatch.roles.length > 0) {
-                    setFetchedRoles(whMatch.roles);
-                } else {
-                    setFetchedRoles([]);
-                    setRoleErrorText("No roles available");
-                }
-            })
-            .finally(() => {
-                setRolesLoading(false);
-            });
+        setRolesLoading(true);
+        const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+        if (whMatch && whMatch.roles.length > 0) {
+            setFetchedRoles(whMatch.roles);
+            setRoleErrorText("");
+        } else {
+            setFetchedRoles([]);
+            setRoleErrorText("No roles available");
+        }
+        setRolesLoading(false);
     }, [selectedWarehouseId, uniqueWarehouses]);
 
 

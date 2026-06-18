@@ -34,7 +34,46 @@ import { useAuth } from "../../contexts/AuthContext";
 import "./Sidebar.css";
 
 // ─── Dynamic Routing & Menu Configuration Helper Mapping Functions ──────────────────────────────
-const getRouteForPage = (pageId, pageName) => {
+const getRouteForPage = (pageId, pageName, moduleName) => {
+    const isDept = [
+        "operations", "inventory", "purchase", "logistics & delivery", 
+        "customer support", "sales & business", "marketing", "finance & accounts", 
+        "human resources", "information technology", "administration"
+    ].includes((moduleName || "").toLowerCase());
+
+    if (isDept) {
+        const modSlug = moduleName.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
+        const pageSlug = pageName.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
+        
+        // Custom exceptions where routes differ from slug formula
+        if (moduleName === "Operations" && pageName === "Order Management") {
+            return "/orders?tab=management";
+        }
+        if (moduleName === "Inventory" && pageName === "Stock Transfer") {
+            return "/inventory/stock-transfer";
+        }
+        if (moduleName === "Customer Support" && pageName === "Order Lookup") {
+            return "/customer-support/order-lookup";
+        }
+        if (moduleName === "Purchase" && pageName === "Vendor Management") {
+            return "/purchase/vendor-management";
+        }
+        if (moduleName === "Purchase" && pageName === "Goods Receipt (GRN)") {
+            return "/purchase/goods-receipt-grn";
+        }
+        if (moduleName === "Marketing" && pageName === "Coupons & Offers") {
+            return "/marketing/coupons-offers";
+        }
+        if (moduleName === "Finance & Accounts" && pageName === "Profit & Loss Reports") {
+            return "/finance-accounts/profit-loss-reports";
+        }
+        if (moduleName === "Information Technology" && pageName === "Role & Permissions") {
+            return "/information-technology/role-permissions";
+        }
+        
+        return `/${modSlug}/${pageSlug}`;
+    }
+
     const id = pageId.toUpperCase();
     switch (id) {
         case "DASHBOARD":
@@ -109,6 +148,9 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Orders by Dark House") return "/reports/orders-by-darkhouse";
             if (pageName === "Top Selling Products") return "/reports/top-selling";
             if (pageName === "Order Status Report") return "/reports/order-status";
+            if (moduleName && pageName === "Reports") {
+                return `/${moduleName.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-")}/reports`;
+            }
             return "/reports";
         case "ANALYTICS":
             return "/analytics";
@@ -153,6 +195,19 @@ const getRouteForPage = (pageId, pageName) => {
             if (pageName === "Assign Products") return "/darkhouses?tab=assign";
             return "/darkhouses";
         default:
+            // Dynamic path resolver for sub-module pages
+            if (id.startsWith("OPERATIONS_")) return `/operations/${id.replace("OPERATIONS_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("INVENTORY_")) return `/inventory/${id.replace("INVENTORY_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("PURCHASE_")) return `/purchase/${id.replace("PURCHASE_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("LOGISTICS_")) return `/logistics-delivery/${id.replace("LOGISTICS_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("CUSTOMER_SUPPORT_")) return `/customer-support/${id.replace("CUSTOMER_SUPPORT_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("SALES_BUSINESS_")) return `/sales-business/${id.replace("SALES_BUSINESS_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("MARKETING_")) return `/marketing/${id.replace("MARKETING_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("FINANCE_ACCOUNTS_")) return `/finance-accounts/${id.replace("FINANCE_ACCOUNTS_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("HR_")) return `/human-resources/${id.replace("HR_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("IT_")) return `/information-technology/${id.replace("IT_", "").toLowerCase().replace(/_/g, "-")}`;
+            if (id.startsWith("ADMINISTRATION_")) return `/administration/${id.replace("ADMINISTRATION_", "").toLowerCase().replace(/_/g, "-")}`;
+            
             return `/${id.toLowerCase().replace(/_/g, "-")}`;
     }
 };
@@ -179,7 +234,17 @@ const getIconForModule = (moduleName) => {
         "Indent Management": ClipboardList,
         "Receiving Management": ArrowDownToLine,
         "GRN (Goods Receipt Note)": FileText,
-        "Dispatch Management": Truck
+        "Dispatch Management": Truck,
+        
+        // Excel Modules
+        "Logistics & Delivery": Truck,
+        "Customer Support": HelpCircle,
+        "Sales & Business": ShoppingBag,
+        "Marketing": BarChart3,
+        "Finance & Accounts": CreditCard,
+        "Human Resources": Users,
+        "Information Technology": Shield,
+        "Administration": Settings
     };
     return iconMap[moduleName] || Package;
 };
@@ -227,24 +292,36 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             let mod = page.moduleName || "General";
             let pName = page.pageName;
 
-            // Map Inventory and Darkhouses to Catalogue module
-            if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
-                mod = "Catalogue";
-            }
-            const pageIdUpper = (page.pageId || "").toUpperCase();
-            const pageModUpper = (page.moduleName || "").toUpperCase();
-            if (pageIdUpper === "INDENT" || pageModUpper === "INDENT" || pageModUpper === "INDENT MANAGEMENT") {
-                mod = "Indent Management";
-                if (pageIdUpper === "INDENT") {
-                    pName = "Indent Management";
-                }
-            }
+            const isDeptRole = [
+                "operations", "inventory", "purchase", "logistics & delivery", 
+                "customer support", "sales & business", "marketing", "finance & accounts", 
+                "human resources", "information technology", "administration", "admin", "super admin", "sa", "administrator"
+            ].includes((userRole || "").toLowerCase());
 
-            // Map page labels to Catalogue names
-            if (page.pageId === "WAREHOUSE_INVENTORY") {
-                pName = "Warehouse Catalogue";
-            } else if (page.pageId === "DARKHOUSE_INVENTORY") {
-                pName = "Darkhouse Catalogue";
+            if (!isDeptRole) {
+                // Map Inventory and Darkhouses to Catalogue module only for default catalog/transfers
+                if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
+                    if (page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY" || page.pageId === "STOCK_TRANSFERS") {
+                        mod = "Catalogue";
+                    } else {
+                        mod = "Inventory";
+                    }
+                }
+                const pageIdUpper = (page.pageId || "").toUpperCase();
+                const pageModUpper = (page.moduleName || "").toUpperCase();
+                if (pageIdUpper === "INDENT" || pageModUpper === "INDENT" || pageModUpper === "INDENT MANAGEMENT") {
+                    mod = "Indent Management";
+                    if (pageIdUpper === "INDENT") {
+                        pName = "Indent Management";
+                    }
+                }
+
+                // Map page labels to Catalogue names
+                if (page.pageId === "WAREHOUSE_INVENTORY") {
+                    pName = "Warehouse Catalogue";
+                } else if (page.pageId === "DARKHOUSE_INVENTORY") {
+                    pName = "Darkhouse Catalogue";
+                }
             }
 
             if (!groups[mod]) {
@@ -273,7 +350,17 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             "Reports",
             "Operations",
             "Settings",
-            "Support"
+            "Support",
+            
+            // Excel custom modules ordering
+            "Logistics & Delivery",
+            "Customer Support",
+            "Sales & Business",
+            "Marketing",
+            "Finance & Accounts",
+            "Human Resources",
+            "Information Technology",
+            "Administration"
         ];
 
         const BOTTOM_MODULES = ["Settings", "Support"];
@@ -290,11 +377,15 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             } else if (moduleName === "Indent Management") {
                 isAuthorized = canView("INDENT");
             } else if (upperModule === "SETTINGS") {
-                isAuthorized = canView("SETTINGS");
+                isAuthorized = true;
             } else if (upperModule === "SUPPORT") {
                 isAuthorized = canView("SUPPORT");
             } else {
-                isAuthorized = canView(moduleName);
+                isAuthorized = canView(moduleName) || modulePagesHasAccess(groups[moduleName]);
+            }
+
+            function modulePagesHasAccess(modPages) {
+                return Array.isArray(modPages) && modPages.some(p => p.canView);
             }
 
             if (!isAuthorized) {
@@ -310,82 +401,14 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 icon: getIconForModule(moduleName),
             };
 
-            if (moduleName === "Catalogue") {
-                item.submenu = [
-                    { label: "Products", path: "/catalogue/darkhouse/products" },
-                    { label: "Inventory", path: "/catalogue/darkhouse/inventory" },
-                    { label: "Find Product to Sell", path: "/catalogue/darkhouse/find-product-to-sell" }
-                ];
-                item.path = "/catalogue/darkhouse/products";
-            } else if (moduleName === "Orders") {
-                item.submenu = [
-                    { label: "Order Management", path: "/orders?tab=management" },
-                    { label: "Order List", path: "/orders?tab=board" },
-                    { label: "Order Details", path: "/orders?tab=details" },
-                    { label: "New Order Query", path: "/orders?tab=new-query" },
-                    { label: "Picking", path: "/orders?tab=board&step=picking" },
-                    { label: "Packing", path: "/orders?tab=board&step=packing" },
-                    { label: "Delivery Management", path: "/orders?tab=board&step=delivery" },
-                    { label: "Cancelled Orders", path: "/orders?tab=cancelled" }
-                ];
-                item.path = "/orders?tab=management";
-            } else if (moduleName === "Admin") {
-                item.submenu = [
-                    { label: "Manage Users", path: "/admin/users" },
-                    { label: "Role & Page Permissions", path: "/admin/permissions" },
-                    { label: "Role Master", path: "/admin/rolemaster" },
-                    { label: "Manage Warehouses & Dark Houses", path: "/admin/warehouses" },
-                    { label: "Warehouse Mapping", path: "/admin/warehouse-mapping" },
-                    { label: "Manage Categories", path: "/admin/categories" },
-                    { label: "Manage Products", path: "/admin/products" }
-                ];
-                item.path = "/admin/users";
-            } else if (moduleName === "Reports") {
-                item.submenu = [
-                    { label: "Inventory Summary Report", path: "/reports/inventory-summary" },
-                    { label: "Low Stock Report", path: "/reports/low-stock" },
-                    { label: "Inventory Movement Report", path: "/reports/inventory-movement" },
-                    { label: "Indent Report", path: "/reports/indent" },
-                    { label: "Dispatch Report", path: "/reports/dispatch" },
-                    { label: "Receiving Report", path: "/reports/receiving" },
-                    { label: "Order Summary Report", path: "/reports/order-summary" },
-                    { label: "Orders by Dark House", path: "/reports/orders-by-darkhouse" },
-                    { label: "Top Selling Products", path: "/reports/top-selling" },
-                    { label: "Order Status Report", path: "/reports/order-status" }
-                ];
-                item.path = "/reports/inventory-summary";
-            } else if (moduleName === "Dispatch Management") {
-                item.submenu = [
-                    { label: "Dispatch List", path: "/dispatch?tab=list" },
-                    { label: "Create Dispatch", path: "/dispatch?tab=create" },
-                    { label: "Dispatch Details", path: "/dispatch?tab=details" },
-                    { label: "Dispatch Tracking", path: "/dispatch?tab=tracking" }
-                ];
-                item.path = "/dispatch?tab=list";
-            } else if (moduleName === "Indent Management") {
-                item.submenu = [
-                    { label: "Indent List", path: "/indent?tab=list" },
-                    { label: "Indent Details", path: "/indent?tab=details" },
-                    { label: "Pending Indents", path: "/indent?tab=list&status=Pending" },
-                    { label: "Approved Indents", path: "/indent?tab=list&status=Approved" },
-                    { label: "Rejected Indents", path: "/indent?tab=list&status=Rejected" }
-                ];
-                item.path = "/indent?tab=list";
-            } else if (moduleName === "GRN (Goods Receipt Note)") {
-                item.submenu = [
-                    { label: "GRN List", path: "/grn?tab=list" },
-                    { label: "Create GRN", path: "/grn?tab=create" },
-                    { label: "GRN Details", path: "/grn?tab=details" }
-                ];
-                item.path = "/grn?tab=list";
-            } else if (modulePages.length === 1) {
+            if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
-                item.path = getRouteForPage(singlePage.pageId, singlePage.pageName);
+                item.path = getRouteForPage(singlePage.pageId, singlePage.pageName, moduleName);
             } else {
                 item.submenu = modulePages.map(page => {
                     return {
                         label: page.pageName,
-                        path: getRouteForPage(page.pageId, page.pageName)
+                        path: getRouteForPage(page.pageId, page.pageName, moduleName)
                     };
                 });
                 if (item.submenu.length > 0) {
@@ -408,9 +431,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             return rankA - rankB;
         };
 
-        // Ensure Settings is available in the bottomItems list if authorized
+        // Ensure Settings is available in the bottomItems list for all users
         const hasSettings = bottomItems.some(item => item.id === "settings");
-        if (!hasSettings && canView("SETTINGS")) {
+        if (!hasSettings) {
             bottomItems.push({
                 id: "settings",
                 label: "Settings",

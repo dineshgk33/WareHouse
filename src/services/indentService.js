@@ -7,7 +7,7 @@ import {
     saveInventory, 
     addAuditLog, 
     adjustStock 
-} from "./dbService";
+} from "./dbService.js";
 
 // Define mock data for UOM, Average Daily Sales (ADS), and Barcodes for auto-replenishment suggested quantity engine
 export const PRODUCT_REPLENISHMENT_META = {

@@ -24,57 +24,68 @@ function SwitchWorkspaceModal({ onClose }) {
     const [fetchedRoles, setFetchedRoles] = useState([]);
     const [rolesLoading, setRolesLoading] = useState(false);
     const [roleErrorText, setRoleErrorText] = useState("");
+    const uniqueWarehouses = React.useMemo(() => {
+        const list = [];
+        const warehouseMap = new Map();
+        
+        if (!Array.isArray(warehouseRoles)) return list;
+
+        warehouseRoles.forEach(item => {
+            if (!item || !item.warehouseId) return;
+            if (!warehouseMap.has(item.warehouseId)) {
+                const whObj = {
+                    warehouseId: item.warehouseId,
+                    warehouseName: item.warehouseName || "Warehouse",
+                    roles: []
+                };
+                warehouseMap.set(item.warehouseId, whObj);
+                list.push(whObj);
+            }
+            
+            const whObj = warehouseMap.get(item.warehouseId);
+            
+            if (Array.isArray(item.roles)) {
+                item.roles.forEach(r => {
+                    if (r && r.roleId) {
+                        if (!whObj.roles.some(existing => existing.roleId === r.roleId)) {
+                            whObj.roles.push({
+                                roleId: r.roleId,
+                                roleName: r.roleName || r.roleId
+                            });
+                        }
+                    }
+                });
+            } else if (item.roleId) {
+                if (!whObj.roles.some(existing => existing.roleId === item.roleId)) {
+                    whObj.roles.push({
+                        roleId: item.roleId,
+                        roleName: item.roleName || item.roleId
+                    });
+                }
+            }
+        });
+        return list;
+    }, [warehouseRoles]);
 
     useEffect(() => {
         if (!selectedWarehouseId) {
-            setTimeout(() => {
-                setFetchedRoles([]);
-                setSelectedRoleId("");
-                setRoleErrorText("");
-            }, 0);
-            return;
-        }
-
-        setTimeout(() => {
-            setRolesLoading(true);
             setFetchedRoles([]);
             setSelectedRoleId("");
             setRoleErrorText("");
-        }, 0);
+            return;
+        }
 
-        authService.getWarehouseRoles(selectedWarehouseId)
-            .then(res => {
-                if (res.status === "success" && res.message && Array.isArray(res.message.roles) && res.message.roles.length > 0) {
-                    setFetchedRoles(res.message.roles);
-                } else {
-                    const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
-                    if (fallback.length > 0) {
-                        setFetchedRoles(fallback);
-                    } else {
-                        setFetchedRoles([]);
-                        setRoleErrorText("No roles available");
-                    }
-                }
-            })
-            .catch(err => {
-                console.error("Failed to load roles:", err);
-                const fallback = warehouseRoles.filter(r => r.warehouseId === selectedWarehouseId);
-                if (fallback.length > 0) {
-                    setFetchedRoles(fallback);
-                } else {
-                    setFetchedRoles([]);
-                    setRoleErrorText("No roles available");
-                }
-            })
-            .finally(() => {
-                setRolesLoading(false);
-            });
-    }, [selectedWarehouseId, warehouseRoles]);
-
-
-    const uniqueWarehouses = [
-        ...new Map(warehouseRoles.map(item => [item.warehouseId, item])).values()
-    ];
+        setRolesLoading(true);
+        const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+        if (whMatch && Array.isArray(whMatch.roles) && whMatch.roles.length > 0) {
+            setFetchedRoles(whMatch.roles);
+            setRoleErrorText("");
+        } else {
+            setFetchedRoles([]);
+            setRoleErrorText("No roles available");
+        }
+        setRolesLoading(false);
+    }, [selectedWarehouseId, uniqueWarehouses]);
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
         value: wh.warehouseId,
@@ -82,11 +93,7 @@ function SwitchWorkspaceModal({ onClose }) {
         rawObj: wh
     }));
 
-    const userRoleIds = warehouseRoles
-        .filter(r => r.warehouseId === selectedWarehouseId)
-        .map(r => r.roleId);
-
-    const filteredRoles = fetchedRoles.filter(role => userRoleIds.includes(role.roleId));
+    const filteredRoles = fetchedRoles;
 
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,

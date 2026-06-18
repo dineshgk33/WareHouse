@@ -85,6 +85,7 @@ export function AuthProvider({ children }) {
 
     // Helper methods for RBAC
     const canView = useCallback((pageId) => {
+        if (pageId && pageId.toUpperCase() === "SETTINGS") return true;
         const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
         if (hasPage) {
             return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canView);
@@ -103,6 +104,7 @@ export function AuthProvider({ children }) {
     }, [accessiblePages, selectedRoleName]);
 
     const canEdit = useCallback((pageId) => {
+        if (pageId && pageId.toUpperCase() === "SETTINGS") return true;
         const hasPage = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase());
         if (hasPage) {
             return accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === pageId.toUpperCase() && p.canEdit);
@@ -152,6 +154,22 @@ export function AuthProvider({ children }) {
             roles = responseData.warehouseRoles;
         }
         
+        // Normalize flat array of strings to structured warehouse-roles mapping
+        if (roles.length > 0 && typeof roles[0] === "string") {
+            const whId = userProfile.warehouseId || "WH-001";
+            const whName = userProfile.warehouseName || "HAATZA Central Warehouse";
+            roles = [
+                {
+                    warehouseId: whId,
+                    warehouseName: whName,
+                    roles: roles.map(r => ({
+                        roleId: r.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-"),
+                        roleName: r
+                      }))
+                }
+            ];
+        }
+        
         // Ensure both fields are set for backward compatibility
         userProfile.warehouseRoles = roles;
         userProfile.roles = roles;
@@ -165,6 +183,10 @@ export function AuthProvider({ children }) {
         // new session before completeSetup() is called.
         localStorage.removeItem("accessiblePages");
         localStorage.removeItem("permissionsVersion");
+        sessionStorage.removeItem("selectedWarehouseId");
+        sessionStorage.removeItem("selectedWarehouseName");
+        sessionStorage.removeItem("selectedRoleId");
+        sessionStorage.removeItem("selectedRoleName");
         setAccessiblePages([]);
 
         localStorage.setItem("isAuthenticated", "true");
@@ -189,16 +211,16 @@ export function AuthProvider({ children }) {
                 throw new Error("No API endpoint configured.");
             }
             const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId, role.roleName);
-            if (res.status === "success") {
-                pages = res.message.accessiblePages || [];
+            if (res.status === "success" && res.message.accessiblePages && res.message.accessiblePages.length > 0) {
+                pages = res.message.accessiblePages;
                 setAccessiblePages(pages);
             } else {
-                pages = getFallbackAccessiblePages(role.roleName);
+                pages = getFallbackAccessiblePages(role.roleName || role.roleId);
                 setAccessiblePages(pages);
             }
         } catch (error) {
             console.warn("Failed to fetch permissions, falling back to default matrix:", error);
-            pages = getFallbackAccessiblePages(role.roleName);
+            pages = getFallbackAccessiblePages(role.roleName || role.roleId);
             setAccessiblePages(pages);
         } finally {
             setPermissionsLoading(false);
@@ -214,6 +236,11 @@ export function AuthProvider({ children }) {
         localStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
         localStorage.setItem("selectedRoleId", role.roleId);
         localStorage.setItem("selectedRoleName", role.roleName);
+        
+        sessionStorage.setItem("selectedWarehouseId", warehouse.warehouseId);
+        sessionStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
+        sessionStorage.setItem("selectedRoleId", role.roleId);
+        sessionStorage.setItem("selectedRoleName", role.roleName);
         
         setSelectedWarehouseId(warehouse.warehouseId);
         setSelectedWarehouseName(warehouse.warehouseName);
@@ -249,6 +276,11 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("userLoc");
         localStorage.removeItem("accessiblePages");
         localStorage.removeItem("permissionsVersion");
+        
+        sessionStorage.removeItem("selectedWarehouseId");
+        sessionStorage.removeItem("selectedWarehouseName");
+        sessionStorage.removeItem("selectedRoleId");
+        sessionStorage.removeItem("selectedRoleName");
         
         setUserPassword("");
 

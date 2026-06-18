@@ -1,7 +1,7 @@
 // dbService.js - Central database persistence layer for HAATZA PIM & Replenishment
-import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "../data/catalogData";
-import { INITIAL_DARKHOUSES } from "../data/darkhouses";
-import { MOCK_WAREHOUSE_STOCK, MOCK_DARKHOUSE_STOCK } from "../data/inventoryData";
+import { MOCK_PRODUCTS, MOCK_CATEGORIES } from "../data/catalogData.js";
+import { INITIAL_DARKHOUSES } from "../data/darkhouses.js";
+import { MOCK_WAREHOUSE_STOCK, MOCK_DARKHOUSE_STOCK } from "../data/inventoryData.js";
 
 // Seed Database helper
 export const seedDatabase = () => {

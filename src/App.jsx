@@ -43,6 +43,7 @@ const VendorPerformance       = lazy(() => import("./pages/purchase/VendorPerfor
 // Dynamic Role Pages
 const ReportsPage             = lazy(() => import("./pages/reports/ReportsPage.jsx"));
 const OperationsPage          = lazy(() => import("./pages/operations/OperationsPage.jsx"));
+const DynamicMissingPage      = lazy(() => import("./pages/common/DynamicMissingPage.jsx"));
 
 // Admin Module
 const AdminPage               = lazy(() => import("./pages/admin/AdminPage.jsx"));
@@ -283,10 +284,287 @@ function App() {
                                     <Route path="billing" element={<Billing />} />
                                 </Route>
 
-                                {/* Settings */}
-                                <Route element={<ProtectedRoute pageId="SETTINGS" />}>
-                                    <Route path="settings" element={<Settings />} />
+                                {/* Global Support Route */}
+                                <Route element={<ProtectedRoute pageId="SUPPORT" />}>
+                                    <Route path="support" element={<DynamicMissingPage />} />
                                 </Route>
+
+                                {/* Operations Module Routes */}
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_ORDER_PICKING" />}>
+                                    <Route path="operations/order-picking" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_ORDER_PACKING" />}>
+                                    <Route path="operations/order-packing" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_STORE_OPERATIONS" />}>
+                                    <Route path="operations/store-operations" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_SHIFT_MANAGEMENT" />}>
+                                    <Route path="operations/shift-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_WORKFORCE_MANAGEMENT" />}>
+                                    <Route path="operations/workforce-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_PERFORMANCE_REPORTS" />}>
+                                    <Route path="operations/performance-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="OPERATIONS_SUPPORT" />}>
+                                    <Route path="operations/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Inventory Module Routes */}
+                                <Route element={<ProtectedRoute pageId="INVENTORY_STOCK_INWARD" />}>
+                                    <Route path="inventory/stock-inward" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_STOCK_ADJUSTMENT" />}>
+                                    <Route path="inventory/stock-adjustment" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_INVENTORY_AUDIT" />}>
+                                    <Route path="inventory/inventory-audit" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_BIN_LOCATION_MANAGEMENT" />}>
+                                    <Route path="inventory/bin-location-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_EXPIRY_MANAGEMENT" />}>
+                                    <Route path="inventory/expiry-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_LOW_STOCK_ALERTS" />}>
+                                    <Route path="inventory/low-stock-alerts" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="INVENTORY_SUPPORT" />}>
+                                    <Route path="inventory/support" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="WAREHOUSE_INVENTORY" />}>
+                                    <Route path="inventory/inventory-management" element={<DynamicMissingPage />} />
+                                    <Route path="inventory/stock-transfer" element={<StockTransfers />} />
+                                </Route>
+
+                                {/* Purchase Module Routes */}
+                                <Route element={<ProtectedRoute pageId="PURCHASE_VENDOR_PAYMENTS_STATUS" />}>
+                                    <Route path="purchase/vendor-payments-status" element={<DynamicMissingPage />} />
+                                    <Route path="purchase/vendor-management" element={<Vendors />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="PURCHASE_REPORTS" />}>
+                                    <Route path="purchase/purchase-reports" element={<DynamicMissingPage />} />
+                                    <Route path="purchase/purchase-requests" element={<PurchaseRequisition />} />
+                                    <Route path="purchase/purchase-orders" element={<PurchaseOrders />} />
+                                    <Route path="purchase/goods-receipt-grn" element={<PurchaseGRN />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="PURCHASE_SUPPORT" />}>
+                                    <Route path="purchase/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Logistics & Delivery Routes */}
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_DELIVERY_ASSIGNMENT" />}>
+                                    <Route path="logistics-delivery/delivery-assignment" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_DELIVERY_TRACKING" />}>
+                                    <Route path="logistics-delivery/delivery-tracking" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_RIDER_MANAGEMENT" />}>
+                                    <Route path="logistics-delivery/rider-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_ROUTE_MANAGEMENT" />}>
+                                    <Route path="logistics-delivery/route-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_DELIVERY_REPORTS" />}>
+                                    <Route path="logistics-delivery/delivery-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_RETURN_PICKUP_MANAGEMENT" />}>
+                                    <Route path="logistics-delivery/return-pickup-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="LOGISTICS_SUPPORT" />}>
+                                    <Route path="logistics-delivery/support" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="REPORTS" />}>
+                                     <Route path="operations/reports" element={<ReportsPage />} />
+                                     <Route path="inventory/reports" element={<ReportsPage />} />
+                                     <Route path="purchase/reports" element={<ReportsPage />} />
+                                     <Route path="logistics-delivery/reports" element={<ReportsPage />} />
+                                     <Route path="customer-support/reports" element={<ReportsPage />} />
+                                     <Route path="sales-business/reports" element={<ReportsPage />} />
+                                     <Route path="marketing/reports" element={<ReportsPage />} />
+                                     <Route path="finance-accounts/reports" element={<ReportsPage />} />
+                                     <Route path="human-resources/reports" element={<ReportsPage />} />
+                                     <Route path="information-technology/reports" element={<ReportsPage />} />
+                                     <Route path="administration/reports" element={<ReportsPage />} />
+                                </Route>
+
+                                {/* Customer Support Routes */}
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_CUSTOMER_TICKETS" />}>
+                                    <Route path="customer-support/customer-tickets" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_ORDER_LOOKUP" />}>
+                                    <Route path="customer-support/order-lookup" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_REFUND_REQUESTS" />}>
+                                    <Route path="customer-support/refund-requests" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_RETURN_REQUESTS" />}>
+                                    <Route path="customer-support/return-requests" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_COMPLAINT_MANAGEMENT" />}>
+                                    <Route path="customer-support/complaint-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_CUSTOMER_CHAT" />}>
+                                    <Route path="customer-support/customer-chat" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_CUSTOMER_FEEDBACK" />}>
+                                    <Route path="customer-support/customer-feedback" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="CUSTOMER_SUPPORT_SUPPORT" />}>
+                                    <Route path="customer-support/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Sales & Business Routes */}
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_MERCHANT_MANAGEMENT" />}>
+                                    <Route path="sales-business/merchant-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_PARTNER_MANAGEMENT" />}>
+                                    <Route path="sales-business/partner-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_LEADS_MANAGEMENT" />}>
+                                    <Route path="sales-business/leads-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_BUSINESS_OPPORTUNITIES" />}>
+                                    <Route path="sales-business/business-opportunities" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_SALES_REPORTS" />}>
+                                    <Route path="sales-business/sales-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_EXPANSION_PLANNING" />}>
+                                    <Route path="sales-business/expansion-planning" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="SALES_BUSINESS_SUPPORT" />}>
+                                    <Route path="sales-business/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Marketing Routes */}
+                                <Route element={<ProtectedRoute pageId="MARKETING_CAMPAIGN_MANAGEMENT" />}>
+                                    <Route path="marketing/campaign-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_COUPONS_OFFERS" />}>
+                                    <Route path="marketing/coupons-offers" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_BANNER_MANAGEMENT" />}>
+                                    <Route path="marketing/banner-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_PUSH_NOTIFICATIONS" />}>
+                                    <Route path="marketing/push-notifications" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_CUSTOMER_SEGMENTATION" />}>
+                                    <Route path="marketing/customer-segmentation" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_MARKETING_ANALYTICS" />}>
+                                    <Route path="marketing/marketing-analytics" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="MARKETING_SUPPORT" />}>
+                                    <Route path="marketing/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Finance & Accounts Routes */}
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_VENDOR_PAYMENTS" />}>
+                                    <Route path="finance-accounts/vendor-payments" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_CUSTOMER_REFUNDS" />}>
+                                    <Route path="finance-accounts/customer-refunds" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_SETTLEMENTS" />}>
+                                    <Route path="finance-accounts/settlements" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_REVENUE_REPORTS" />}>
+                                    <Route path="finance-accounts/revenue-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_EXPENSE_MANAGEMENT" />}>
+                                    <Route path="finance-accounts/expense-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_GST_REPORTS" />}>
+                                    <Route path="finance-accounts/gst-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_PROFIT_LOSS_REPORTS" />}>
+                                    <Route path="finance-accounts/profit-loss-reports" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_WALLET_MANAGEMENT" />}>
+                                    <Route path="finance-accounts/wallet-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="FINANCE_ACCOUNTS_SUPPORT" />}>
+                                    <Route path="finance-accounts/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Human Resources Routes */}
+                                <Route element={<ProtectedRoute pageId="EMPLOYEES" />}>
+                                    <Route path="human-resources/employee-management" element={<AdminPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_ATTENDANCE" />}>
+                                    <Route path="human-resources/attendance" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_LEAVE_MANAGEMENT" />}>
+                                    <Route path="human-resources/leave-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_PAYROLL" />}>
+                                    <Route path="human-resources/payroll" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_RECRUITMENT" />}>
+                                    <Route path="human-resources/recruitment" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_PERFORMANCE_REVIEWS" />}>
+                                    <Route path="human-resources/performance-reviews" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_OFFER_LETTERS" />}>
+                                    <Route path="human-resources/offer-letters" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="HR_SUPPORT" />}>
+                                    <Route path="human-resources/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Information Technology Routes */}
+                                <Route element={<ProtectedRoute pageId="IT_USER_MANAGEMENT" />}>
+                                    <Route path="information-technology/user-management" element={<AdminPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_ROLE_PERMISSIONS" />}>
+                                    <Route path="information-technology/role-permissions" element={<AdminPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_API_LOGS" />}>
+                                    <Route path="information-technology/api-logs" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_SYSTEM_LOGS" />}>
+                                    <Route path="information-technology/system-logs" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_DEVICE_MANAGEMENT" />}>
+                                    <Route path="information-technology/device-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_SECURITY_SETTINGS" />}>
+                                    <Route path="information-technology/security-settings" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_APPLICATION_SETTINGS" />}>
+                                    <Route path="information-technology/application-settings" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="IT_SUPPORT" />}>
+                                    <Route path="information-technology/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Administration Routes */}
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_ASSET_MANAGEMENT" />}>
+                                    <Route path="administration/asset-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_FACILITY_MANAGEMENT" />}>
+                                    <Route path="administration/facility-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_OFFICE_SUPPLIES" />}>
+                                    <Route path="administration/office-supplies" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_VEHICLE_MANAGEMENT" />}>
+                                    <Route path="administration/vehicle-management" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_GENERAL_ADMINISTRATION" />}>
+                                    <Route path="administration/general-administration" element={<DynamicMissingPage />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="ADMINISTRATION_SUPPORT" />}>
+                                    <Route path="administration/support" element={<DynamicMissingPage />} />
+                                </Route>
+
+                                {/* Settings */}
+                                <Route path="settings" element={<Settings />} />
                             </Route>
                         </Route>
 

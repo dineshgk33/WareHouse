@@ -1,4 +1,4 @@
-import { getInventory, saveInventory, addAuditLog, adjustStock, getProducts } from "./dbService";
+import { getInventory, saveInventory, addAuditLog, adjustStock, getProducts } from "./dbService.js";
 
 // --- Seed Data definitions ---
 const INITIAL_VENDORS = [

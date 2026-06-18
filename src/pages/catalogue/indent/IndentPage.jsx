@@ -912,7 +912,8 @@ function IndentPage() {
                 requestedTo: "HAATZA Central Warehouse",
                 sku: "DRY-MLK-TAZ",
                 requestedQty: 400,
-                status: "Pending"
+                status: "Pending",
+                history: []
             };
             localStorage.setItem("haatza_indent_requests", JSON.stringify([testIndent, ...currentIndents]));
             
@@ -2396,7 +2397,7 @@ function IndentPage() {
                                 {/* Logs list */}
                                 <h3 style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 12 }}>Activity History Log</h3>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 12, maxHeight: 200, overflowY: "auto" }}>
-                                    {trackedIndent.history.map((h, i) => (
+                                    {(trackedIndent.history || []).map((h, i) => (
                                         <div key={i} style={{ display: "flex", gap: 12, position: "relative" }}>
                                             <div style={{ width: 14, height: 14, borderRadius: "50%", backgroundColor: "var(--bg-app)", border: "2px solid var(--primary)", zIndex: 1, marginTop: 3 }} />
                                             <div>
