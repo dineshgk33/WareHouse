@@ -31,6 +31,15 @@ const Settings                = lazy(() => import("./pages/settings/SettingsPage
 const Darkhouses              = lazy(() => import("./pages/darkhouses/DarkhousesPage.jsx"));
 const ManagePreview           = lazy(() => import("./pages/managepreview/ManagePreviewPage.jsx"));
 
+// Purchase Module Pages
+const PurchaseDashboard       = lazy(() => import("./pages/purchase/PurchaseDashboard.jsx"));
+const PurchaseRequisition     = lazy(() => import("./pages/purchase/PurchaseRequisition.jsx"));
+const PurchaseOrders          = lazy(() => import("./pages/purchase/PurchaseOrders.jsx"));
+const Vendors                 = lazy(() => import("./pages/purchase/Vendors.jsx"));
+const InboundDeliveries       = lazy(() => import("./pages/purchase/InboundDeliveries.jsx"));
+const PurchaseGRN             = lazy(() => import("./pages/purchase/PurchaseGRN.jsx"));
+const VendorPerformance       = lazy(() => import("./pages/purchase/VendorPerformance.jsx"));
+
 // Dynamic Role Pages
 const ReportsPage             = lazy(() => import("./pages/reports/ReportsPage.jsx"));
 const OperationsPage          = lazy(() => import("./pages/operations/OperationsPage.jsx"));
@@ -194,6 +203,17 @@ function App() {
                                 {/* Stock Requests */}
                                 <Route element={<ProtectedRoute pageId="INDENT" />}>
                                     <Route path="indent" element={<IndentPage />} />
+                                </Route>
+
+                                {/* Purchase Management Module */}
+                                <Route element={<ProtectedRoute pageId="PURCHASE" />}>
+                                    <Route path="purchase/dashboard" element={<PurchaseDashboard />} />
+                                    <Route path="purchase/requisition" element={<PurchaseRequisition />} />
+                                    <Route path="purchase/orders" element={<PurchaseOrders />} />
+                                    <Route path="purchase/vendors" element={<Vendors />} />
+                                    <Route path="purchase/deliveries" element={<InboundDeliveries />} />
+                                    <Route path="purchase/grn" element={<PurchaseGRN />} />
+                                    <Route path="purchase/performance" element={<VendorPerformance />} />
                                 </Route>
 
                                 {/* Darkhouses */}

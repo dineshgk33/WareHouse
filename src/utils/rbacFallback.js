@@ -41,7 +41,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("OPERATIONS", "Operations", "Operations", "checked"),
             page("SETTINGS", "Settings", "Settings", "checked"),
             page("SUPPORT", "Support", "Support", "checked"),
-            page("ADMIN", "Admin", "Admin", "checked")
+            page("ADMIN", "Admin", "Admin", "checked"),
+            page("PURCHASE", "Purchase Management", "Purchase", "checked")
         ];
     }
     
@@ -63,7 +64,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("REPORTS", "Reports", "Reports", "checked"),
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
-            page("ADMIN", "Admin", "Admin", "cross")
+            page("ADMIN", "Admin", "Admin", "cross"),
+            page("PURCHASE", "Purchase Management", "Purchase", "checked")
         ];
     }
 
@@ -85,7 +87,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("REPORTS", "Reports", "Reports", "eye"),
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
-            page("ADMIN", "Admin", "Admin", "cross")
+            page("ADMIN", "Admin", "Admin", "cross"),
+            page("PURCHASE", "Purchase Management", "Purchase", "checked")
         ];
     }
 
@@ -106,7 +109,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("REPORTS", "Reports", "Reports", "eye"),
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
-            page("ADMIN", "Admin", "Admin", "cross")
+            page("ADMIN", "Admin", "Admin", "cross"),
+            page("PURCHASE", "Purchase Management", "Purchase", "checked")
         ];
     }
 
@@ -127,7 +131,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("REPORTS", "Reports", "Reports", "checked"),
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
-            page("ADMIN", "Admin", "Admin", "cross")
+            page("ADMIN", "Admin", "Admin", "cross"),
+            page("PURCHASE", "Purchase Management", "Purchase", "checked")
         ];
     }
 
@@ -170,7 +175,8 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("REPORTS", "Reports", "Reports", "eye"),
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
-            page("ADMIN", "Admin", "Admin", "cross")
+            page("ADMIN", "Admin", "Admin", "cross"),
+            page("PURCHASE", "Purchase Management", "Purchase", "eye")
         ];
     }
 

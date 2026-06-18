@@ -162,6 +162,7 @@ const getIconForModule = (moduleName) => {
         "Dashboard": LayoutDashboard,
         "Manage Preview": Eye,
         "Orders": ShoppingBag,
+        "Purchase": ShoppingBag,
         "Inventory": Database,
         "Catalogue": Database,
         "Catalog": BookOpen,
@@ -492,6 +493,26 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                     { label: "GRN List", path: "/grn?tab=list" },
                     { label: "Create GRN", path: "/grn?tab=create" },
                     { label: "GRN Details", path: "/grn?tab=details" }
+                ]
+            });
+        }
+
+        // Ensure Purchase Management is available in the sidebarItems list if authorized
+        const hasPurchase = sidebarItems.some(item => item.id === "purchase-management");
+        if (!hasPurchase && canView("PURCHASE")) {
+            sidebarItems.push({
+                id: "purchase-management",
+                label: "Purchase",
+                icon: getIconForModule("Purchase"),
+                path: "/purchase/dashboard",
+                submenu: [
+                    { label: "Purchase Dashboard", path: "/purchase/dashboard" },
+                    { label: "Purchase Requisition", path: "/purchase/requisition" },
+                    { label: "Purchase Orders", path: "/purchase/orders" },
+                    { label: "Vendors", path: "/purchase/vendors" },
+                    { label: "Inbound Deliveries", path: "/purchase/deliveries" },
+                    { label: "Purchase GRN", path: "/purchase/grn" },
+                    { label: "Vendor Performance", path: "/purchase/performance" }
                 ]
             });
         }
