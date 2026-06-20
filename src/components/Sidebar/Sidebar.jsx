@@ -289,6 +289,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             if (pageIdUpper === "INDENT" || modNameUpper === "INDENT" || modNameUpper === "INDENT MANAGEMENT") return false;
             if (pageIdUpper === "DISPATCH" || modNameUpper === "DISPATCH" || modNameUpper === "DISPATCH MANAGEMENT") return false;
             if (pageIdUpper === "RECEIVING" || modNameUpper === "RECEIVING" || modNameUpper === "RECEIVING MANAGEMENT") return false;
+            
+            // Remove redundant main page links from multi-page drop-downs
+            if (pageIdUpper === "OPERATIONS" || pageIdUpper === "ADMIN") return false;
 
             return p.canView && 
                    p.pageName !== "User Roles";
@@ -298,6 +301,13 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
         allowedPages.forEach(page => {
             let mod = page.moduleName || "General";
             let pName = page.pageName;
+
+            // Group Support and Reports under their own top-level modules
+            if (pName === "Support") {
+                mod = "Support";
+            } else if (pName === "Reports" && page.pageId === "REPORTS") {
+                mod = "Reports";
+            }
 
             const isInventoryRole = (userRole || "").toLowerCase().includes("inventory");
 
@@ -381,8 +391,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 isAuthorized = canView("INDENT");
             } else if (upperModule === "SETTINGS") {
                 isAuthorized = true;
-            } else if (upperModule === "SUPPORT") {
-                isAuthorized = canView("SUPPORT");
+            } else if (upperModule === "SUPPORT" || upperModule === "REPORTS") {
+                isAuthorized = true;
             } else {
                 isAuthorized = canView(moduleName) || modulePagesHasAccess(groups[moduleName]);
             }
@@ -397,6 +407,8 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
             const modulePages = groups[moduleName];
             const id = moduleName.toLowerCase().replace(/\s+/g, "-");
+
+
 
             const item = {
                 id,
@@ -449,6 +461,30 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 label: "Settings",
                 icon: getIconForModule("Settings"),
                 path: "/settings"
+            });
+        }
+
+        // Ensure Support is available in the bottomItems list for all users
+        const hasSupport = bottomItems.some(item => item.id === "support");
+        if (!hasSupport) {
+            bottomItems.push({
+                id: "support",
+                label: "Support",
+                icon: getIconForModule("Support"),
+                path: "/support"
+            });
+        }
+
+        // Ensure Reports is available in the sidebarItems list for all users
+        const hasReports = sidebarItems.some(item => item.id === "reports");
+        if (!hasReports) {
+            const roleSlug = (userRole || "Operations").toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-");
+            const reportsPath = roleSlug === "administrator" ? "/reports" : `/${roleSlug}/reports`;
+            sidebarItems.push({
+                id: "reports",
+                label: "Reports",
+                icon: getIconForModule("Reports"),
+                path: reportsPath
             });
         }
 
