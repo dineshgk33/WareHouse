@@ -15,10 +15,6 @@ function OrgRoleSelectionPage() {
     const [selectedWarehouseId, setSelectedWarehouseId] = useState("");
     const [selectedRoleId, setSelectedRoleId] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [fetchedRoles, setFetchedRoles] = useState([]);
-    const [rolesLoading, setRolesLoading] = useState(false);
-    const [roleErrorText, setRoleErrorText] = useState("");
-
     const uniqueWarehouses = React.useMemo(() => {
         const list = [];
         const warehouseMap = new Map();
@@ -56,6 +52,20 @@ function OrgRoleSelectionPage() {
         return list;
     }, [warehouseRoles]);
 
+    const { fetchedRoles, roleErrorText } = React.useMemo(() => {
+        if (!selectedWarehouseId) {
+            return { fetchedRoles: [], roleErrorText: "" };
+        }
+        const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+        if (whMatch && whMatch.roles.length > 0) {
+            return { fetchedRoles: whMatch.roles, roleErrorText: "" };
+        } else {
+            return { fetchedRoles: [], roleErrorText: "No roles available" };
+        }
+    }, [selectedWarehouseId, uniqueWarehouses]);
+
+    const rolesLoading = false;
+
     const totalUniqueRoles = React.useMemo(() => {
         return new Set(
             uniqueWarehouses.flatMap(wh => wh.roles.map(r => r.roleId))
@@ -68,25 +78,7 @@ function OrgRoleSelectionPage() {
         }
     }, [user, navigate]);
 
-    useEffect(() => {
-        if (!selectedWarehouseId) {
-            setFetchedRoles([]);
-            setSelectedRoleId("");
-            setRoleErrorText("");
-            return;
-        }
 
-        setRolesLoading(true);
-        const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-        if (whMatch && whMatch.roles.length > 0) {
-            setFetchedRoles(whMatch.roles);
-            setRoleErrorText("");
-        } else {
-            setFetchedRoles([]);
-            setRoleErrorText("No roles available");
-        }
-        setRolesLoading(false);
-    }, [selectedWarehouseId, uniqueWarehouses]);
 
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
@@ -96,7 +88,6 @@ function OrgRoleSelectionPage() {
     }));
 
     const selectedWhObj = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-    const userRoleIds = selectedWhObj ? selectedWhObj.roles.map(r => r.roleId) : [];
 
     const filteredRoles = React.useMemo(() => {
         const map = new Map();
@@ -108,6 +99,8 @@ function OrgRoleSelectionPage() {
             });
         }
         
+        const userRoleIds = selectedWhObj ? selectedWhObj.roles.map(r => r.roleId) : [];
+        
         // 2. Add roles from API fetchedRoles if they match user's role IDs
         fetchedRoles.forEach(role => {
             if (userRoleIds.includes(role.roleId)) {
@@ -116,7 +109,7 @@ function OrgRoleSelectionPage() {
         });
         
         return Array.from(map.values());
-    }, [selectedWhObj, fetchedRoles, userRoleIds]);
+    }, [selectedWhObj, fetchedRoles]);
 
     if (!user) return null;
 

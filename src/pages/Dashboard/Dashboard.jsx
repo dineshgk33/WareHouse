@@ -219,7 +219,7 @@ const CustomTooltip = ({ active, payload, label, selectedMetric }) => {
 
 function Dashboard() {
     const navigate = useNavigate();
-    const { canView } = useAuth();
+    const { canView, selectedRoleName } = useAuth();
 
     // Chart States
     const [chartPeriod, setChartPeriod] = useState("30D"); // "7D", "30D", "90D", "1Y"
@@ -554,8 +554,11 @@ function Dashboard() {
     // Card configurations mapping for responsive sparkline rendering
     // Each card also carries a pageId so we can gate navigation to pages the
     // current user does not have access to (prevents reaching /403 from the dashboard).
-    const cardConfigs = [
+const cardConfigs = [
         {
+            widgetId: "open_indents",
+            module: "Purchase",
+            permission: "INDENT_VIEW",
             title: "Open Indents",
             value: liveStats.openIndents.toString(),
             icon: ShoppingCart,
@@ -568,6 +571,9 @@ function Dashboard() {
             fill: "#DBEAFE"
         },
         {
+            widgetId: "approved_indents",
+            module: "Purchase",
+            permission: "INDENT_VIEW",
             title: "Approved Indents",
             value: liveStats.approvedIndents.toString(),
             icon: Check,
@@ -580,6 +586,9 @@ function Dashboard() {
             fill: "#D1FAE5"
         },
         {
+            widgetId: "pending_dispatches",
+            module: "Logistics",
+            permission: "DISPATCH_VIEW",
             title: "Pending Dispatches",
             value: liveStats.pendingDispatches.toString(),
             icon: Warehouse,
@@ -592,6 +601,9 @@ function Dashboard() {
             fill: "#FEF3C7"
         },
         {
+            widgetId: "in_transit_shipments",
+            module: "Logistics",
+            permission: "RECEIVING_VIEW",
             title: "In Transit Shipments",
             value: liveStats.inTransit.toString(),
             icon: Activity,
@@ -604,6 +616,9 @@ function Dashboard() {
             fill: "#EDE9FE"
         },
         {
+            widgetId: "pending_grn",
+            module: "Purchase",
+            permission: "GRN_VIEW",
             title: "Pending GRNs",
             value: liveStats.pendingGRN.toString(),
             icon: RefreshCw,
@@ -616,6 +631,9 @@ function Dashboard() {
             fill: "#FCE7F3"
         },
         {
+            widgetId: "short_receipts",
+            module: "Purchase",
+            permission: "INDENT_VIEW",
             title: "Short Receipts",
             value: liveStats.shortReceipts.toString(),
             icon: AlertTriangle,
@@ -628,6 +646,9 @@ function Dashboard() {
             fill: "#FEE2E2"
         },
         {
+            widgetId: "damaged_receipts",
+            module: "Purchase",
+            permission: "INDENT_VIEW",
             title: "Damaged Receipts",
             value: liveStats.damagedReceipts.toString(),
             icon: AlertTriangle,
@@ -640,6 +661,9 @@ function Dashboard() {
             fill: "#FEE2E2"
         },
         {
+            widgetId: "stock_out_skus",
+            module: "Inventory",
+            permission: "INVENTORY_VIEW",
             title: "Stock Out SKUs",
             value: liveStats.stockOutSKUs.toString(),
             icon: AlertTriangle,
@@ -652,6 +676,9 @@ function Dashboard() {
             fill: "#FEE2E2"
         },
         {
+            widgetId: "critical_inventory",
+            module: "Inventory",
+            permission: "INVENTORY_VIEW",
             title: "Critical Inventory",
             value: liveStats.criticalInventory.toString(),
             icon: AlertTriangle,
@@ -664,6 +691,9 @@ function Dashboard() {
             fill: "#FEF3C7"
         },
         {
+            widgetId: "warehouse_utilization",
+            module: "Operations",
+            permission: "OPERATIONS_VIEW",
             title: "Warehouse Utilization",
             value: liveStats.warehouseUtilization.toString() + "%",
             icon: TrendingUp,
@@ -674,8 +704,165 @@ function Dashboard() {
             sparkData: [{ val: 75 }, { val: liveStats.warehouseUtilization }],
             stroke: "#10B981",
             fill: "#D1FAE5"
+        },
+        {
+            widgetId: "customer_tickets",
+            module: "Customer Support",
+            permission: "CUSTOMER_SUPPORT_VIEW",
+            title: "Customer Tickets",
+            value: "24",
+            icon: Users,
+            trend: "+2.5%",
+            isUp: true,
+            route: "/customer-support/customer-tickets",
+            pageId: "CUSTOMER_SUPPORT_CUSTOMER_TICKETS",
+            sparkData: [{ val: 18 }, { val: 24 }],
+            stroke: "#2563EB",
+            fill: "#DBEAFE"
+        },
+        {
+            widgetId: "active_campaigns",
+            module: "Marketing",
+            permission: "MARKETING_VIEW",
+            title: "Active Campaigns",
+            value: "8",
+            icon: Sparkles,
+            trend: "+14.2%",
+            isUp: true,
+            route: "/marketing/campaign-management",
+            pageId: "MARKETING_CAMPAIGN_MANAGEMENT",
+            sparkData: [{ val: 5 }, { val: 8 }],
+            stroke: "#10B981",
+            fill: "#D1FAE5"
+        },
+        {
+            widgetId: "pending_refunds",
+            module: "Finance",
+            permission: "FINANCE_VIEW",
+            title: "Pending Refunds",
+            value: "₹4,500",
+            icon: IndianRupee,
+            trend: "-12.5%",
+            isUp: false,
+            route: "/finance-accounts/customer-refunds",
+            pageId: "FINANCE_ACCOUNTS_CUSTOMER_REFUNDS",
+            sparkData: [{ val: 8 }, { val: 4 }],
+            stroke: "#EF4444",
+            fill: "#FEE2E2"
+        },
+        {
+            widgetId: "active_employees",
+            module: "HR",
+            permission: "HR_VIEW",
+            title: "Active Employees",
+            value: "142",
+            icon: Users,
+            trend: "+4.1%",
+            isUp: true,
+            route: "/human-resources/employee-management",
+            pageId: "EMPLOYEES",
+            sparkData: [{ val: 135 }, { val: 142 }],
+            stroke: "#8B5CF6",
+            fill: "#EDE9FE"
+        },
+        {
+            widgetId: "api_logs_count",
+            module: "IT",
+            permission: "IT_VIEW",
+            title: "API Logs (24h)",
+            value: "1,240",
+            icon: Activity,
+            trend: "+18.9%",
+            isUp: true,
+            route: "/information-technology/api-logs",
+            pageId: "IT_API_LOGS",
+            sparkData: [{ val: 980 }, { val: 1240 }],
+            stroke: "#F59E0B",
+            fill: "#FEF3C7"
         }
     ];
+
+    const checkPermission = (permission, canView) => {
+        switch (permission) {
+            case "INDENT_VIEW":
+                return canView("INDENT");
+            case "DISPATCH_VIEW":
+                return canView("DISPATCH") || canView("LOGISTICS_DELIVERY_ASSIGNMENT");
+            case "RECEIVING_VIEW":
+                return canView("RECEIVING") || canView("LOGISTICS_DELIVERY_TRACKING");
+            case "GRN_VIEW":
+                return canView("GRN");
+            case "INVENTORY_VIEW":
+                return canView("WAREHOUSE_INVENTORY") || canView("DARKHOUSE_INVENTORY");
+            case "OPERATIONS_VIEW":
+                return canView("OPERATIONS") || canView("OPERATIONS_ORDER_PICKING") || canView("ANALYTICS");
+            case "CUSTOMER_SUPPORT_VIEW":
+                return canView("CUSTOMER_SUPPORT_CUSTOMER_TICKETS") || canView("SUPPORT");
+            case "MARKETING_VIEW":
+                return canView("MARKETING_CAMPAIGN_MANAGEMENT");
+            case "FINANCE_VIEW":
+                return canView("FINANCE_ACCOUNTS_CUSTOMER_REFUNDS") || canView("BILLING");
+            case "HR_VIEW":
+                return canView("EMPLOYEES") || canView("HR_ATTENDANCE");
+            case "IT_VIEW":
+                return canView("ADMIN") || canView("IT_API_LOGS");
+            default:
+                return false;
+        }
+    };
+
+    // Filter widgets by permission and active role's dashboard module
+    const filteredWidgets = useMemo(() => {
+        // 1. First, check permissions
+        const permitted = cardConfigs.filter(card => checkPermission(card.permission, canView));
+
+        // 2. Next, filter by role-based dashboard requirements
+        const roleLower = (selectedRoleName || "").toLowerCase();
+
+        // Admin, Super Admin, Warehouse Managers, etc. see all widgets they have permission for
+        const isGlobalRole = 
+            roleLower.includes("admin") || 
+            roleLower === "sa" || 
+            roleLower.includes("warehouse manager") || 
+            roleLower.includes("store manager") || 
+            roleLower.includes("dark house manager") || 
+            roleLower.includes("read only") || 
+            roleLower.includes("stakeholder") || 
+            roleLower === "viewer" || 
+            !selectedRoleName;
+
+        if (isGlobalRole) {
+            return permitted;
+        }
+
+        // Single-department dashboards:
+        let targetModule = null;
+        if (roleLower.includes("operations")) {
+            targetModule = "Operations";
+        } else if (roleLower.includes("inventory")) {
+            targetModule = "Inventory";
+        } else if (roleLower.includes("purchase") || roleLower.includes("procurement")) {
+            targetModule = "Purchase";
+        } else if (roleLower.includes("logistics") || roleLower.includes("delivery")) {
+            targetModule = "Logistics";
+        } else if (roleLower.includes("customer support") || roleLower.includes("support representative")) {
+            targetModule = "Customer Support";
+        } else if (roleLower.includes("marketing")) {
+            targetModule = "Marketing";
+        } else if (roleLower.includes("finance") || roleLower.includes("accounts")) {
+            targetModule = "Finance";
+        } else if (roleLower.includes("human resources") || roleLower.includes("hr")) {
+            targetModule = "HR";
+        } else if (roleLower.includes("information technology") || roleLower.includes("it")) {
+            targetModule = "IT";
+        }
+
+        if (targetModule) {
+            return permitted.filter(card => card.module === targetModule);
+        }
+
+        return permitted;
+    }, [selectedRoleName, canView, liveStats]);
 
     const unreadCount = activities.filter(act => act.unread).length;
 
@@ -705,55 +892,39 @@ function Dashboard() {
 
             {/* 1. UPGRADED KPI CARDS WITH SPARKLINES & PERMISSION-AWARE ROUTING */}
             <div className="dashboard-stats-grid">
-                {cardConfigs.map((card, index) => {
+                {filteredWidgets.map((card) => {
                     const CardIcon = card.icon;
-                    const hasAccess = card.pageId ? canView(card.pageId) : true;
                     return (
                         <div
-                            key={index}
-                            className={`dashboard-summary-card ${!hasAccess ? "dashboard-card-no-access" : ""}`}
-                            onClick={() => hasAccess && navigate(card.route)}
-                            style={{ cursor: hasAccess ? "pointer" : "default" }}
-                            title={!hasAccess ? "You do not have access to this section" : undefined}
+                            key={card.widgetId}
+                            className="dashboard-summary-card"
+                            onClick={() => navigate(card.route)}
+                            style={{ cursor: "pointer" }}
                         >
                             <div className="card-stat-info">
                                 <div className="card-stat-header">
                                     <div className="card-stat-icon-wrapper" style={{ backgroundColor: `${card.fill}` }}>
-                                        <CardIcon size={18} style={{ color: hasAccess ? `${card.stroke}` : "#94a3b8" }} />
+                                        <CardIcon size={18} style={{ color: `${card.stroke}` }} />
                                     </div>
                                     <span className="card-stat-title">{card.title}</span>
-                                    {!hasAccess && (
-                                        <span style={{
-                                            marginLeft: "auto",
-                                            fontSize: 10,
-                                            fontWeight: 600,
-                                            color: "#94a3b8",
-                                            background: "#f1f5f9",
-                                            padding: "2px 7px",
-                                            borderRadius: 9999,
-                                            letterSpacing: "0.3px"
-                                        }}>No access</span>
-                                    )}
                                 </div>
                                 <div className="card-stat-body">
-                                    <span className="card-stat-value" style={{ color: !hasAccess ? "#94a3b8" : undefined }}>{ hasAccess ? card.value : "—" }</span>
-                                    {hasAccess && (
-                                        <div className="card-stat-trend-wrapper">
-                                            <span className={`trend-badge ${card.isUp ? "trend-up" : "trend-down"}`}>
-                                                {card.isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                                                {card.trend}
-                                            </span>
-                                            <span className="comparison-label">vs last 30 days</span>
-                                        </div>
-                                    )}
+                                    <span className="card-stat-value">{card.value}</span>
+                                    <div className="card-stat-trend-wrapper">
+                                        <span className={`trend-badge ${card.isUp ? "trend-up" : "trend-down"}`}>
+                                            {card.isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                            {card.trend}
+                                        </span>
+                                        <span className="comparison-label">vs last 30 days</span>
+                                    </div>
                                 </div>
                             </div>
                             {/* Responsive Recharts Sparkline AreaChart */}
-                            <div className="card-sparkline-wrapper" style={{ opacity: hasAccess ? 1 : 0.25 }}>
+                            <div className="card-sparkline-wrapper">
                                 <ResponsiveContainer width="100%" height={40}>
                                     <AreaChart data={card.sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                                         <defs>
-                                            <linearGradient id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                            <linearGradient id={`gradient-${card.widgetId}`} x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="0%" stopColor={card.stroke} stopOpacity={0.2} />
                                                 <stop offset="100%" stopColor={card.stroke} stopOpacity={0.0} />
                                             </linearGradient>
@@ -761,9 +932,9 @@ function Dashboard() {
                                         <Area
                                             type="monotone"
                                             dataKey="val"
-                                            stroke={hasAccess ? card.stroke : "#cbd5e1"}
+                                            stroke={card.stroke}
                                             strokeWidth={1.8}
-                                            fill={`url(#gradient-${index})`}
+                                            fill={`url(#gradient-${card.widgetId})`}
                                             dot={false}
                                         />
                                     </AreaChart>

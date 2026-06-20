@@ -46,7 +46,9 @@ function PurchaseOrders() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
     const vendors = getVendors();
@@ -54,9 +56,11 @@ function PurchaseOrders() {
     const allProducts = getProducts();
 
     // Auto-populate items when PR is selected
-    useEffect(() => {
-        if (selectedPRNumber) {
-            const pr = approvedPRs.find(r => r.prNumber === selectedPRNumber);
+    const handlePRChange = (e) => {
+        const val = e.target.value;
+        setSelectedPRNumber(val);
+        if (val) {
+            const pr = approvedPRs.find(r => r.prNumber === val);
             if (pr) {
                 const items = pr.items.map(itm => {
                     const prod = allProducts.find(p => p.sku === itm.sku) || {};
@@ -73,7 +77,7 @@ function PurchaseOrders() {
                 setPoItems(items);
             }
         }
-    }, [selectedPRNumber]);
+    };
 
     // Handle individual item cost changes
     const handleCostQtyChange = (sku, field, value) => {
@@ -123,7 +127,11 @@ function PurchaseOrders() {
             warehouseId: "DKH-001",
             warehouseName: resolvedWarehouse,
             orderDate: new Date().toISOString(),
-            expectedDeliveryDate: expectedDate || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+            expectedDeliveryDate: expectedDate || (() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 2);
+                return d.toISOString().split("T")[0];
+            })(),
             paymentTerms,
             taxPercent: parseFloat(taxPercent),
             freightCharges: parseFloat(freightCharges),
@@ -438,7 +446,7 @@ function PurchaseOrders() {
                                         <select 
                                             id="poPR"
                                             value={selectedPRNumber}
-                                            onChange={(e) => setSelectedPRNumber(e.target.value)}
+                                            onChange={handlePRChange}
                                         >
                                             <option value="">-- Direct PO (No PR) --</option>
                                             {approvedPRs.map(r => (

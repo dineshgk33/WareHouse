@@ -42,7 +42,9 @@ function PurchaseRequisition() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
     // Handle single item quantity request
@@ -96,7 +98,11 @@ function PurchaseRequisition() {
             requestedBy: userName || "Warehouse Store Manager",
             requestDate: new Date().toISOString(),
             priority,
-            requiredDate: requiredDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+            requiredDate: requiredDate || (() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 3);
+                return d.toISOString().split("T")[0];
+            })(),
             remarks,
             status: isDraft ? "Draft" : "Submitted",
             items: selectedItems

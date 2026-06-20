@@ -292,13 +292,9 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             let mod = page.moduleName || "General";
             let pName = page.pageName;
 
-            const isDeptRole = [
-                "operations", "inventory", "purchase", "logistics & delivery", 
-                "customer support", "sales & business", "marketing", "finance & accounts", 
-                "human resources", "information technology", "administration", "admin", "super admin", "sa", "administrator"
-            ].includes((userRole || "").toLowerCase());
+            const isInventoryRole = (userRole || "").toLowerCase().includes("inventory");
 
-            if (!isDeptRole) {
+            if (!isInventoryRole) {
                 // Map Inventory and Darkhouses to Catalogue module only for default catalog/transfers
                 if (mod === "Inventory" || mod === "Catalogue" || page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY") {
                     if (page.pageId === "WAREHOUSE_INVENTORY" || page.pageId === "DARKHOUSE_INVENTORY" || page.pageId === "STOCK_TRANSFERS") {

@@ -41,7 +41,9 @@ function InboundDeliveries() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
     const acceptedPOs = getPurchaseOrders().filter(po => ["Approved", "Sent To Vendor", "Accepted"].includes(po.status));

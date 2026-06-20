@@ -26,10 +26,10 @@ const getPageMetadata = (pathname) => {
     const moduleName = formatName(modulePart);
 
     // Dynamic stats and table contents based on the module and page name
-    let stats = [];
-    let headers = [];
-    let data = [];
-    let chartData = [];
+    let stats;
+    let headers;
+    let data;
+    let chartData;
 
     // Fallback default configurations
     stats = [

@@ -170,6 +170,22 @@ export function AuthProvider({ children }) {
             ];
         }
         
+        // Normalize "Admin" (case-insensitive) to "Administrator"
+        if (Array.isArray(roles)) {
+            roles = roles.map(item => {
+                if (item && Array.isArray(item.roles)) {
+                    return {
+                        ...item,
+                        roles: item.roles.map(r => ({
+                            ...r,
+                            roleName: (r.roleName || "").toLowerCase() === "admin" ? "Administrator" : r.roleName
+                        }))
+                    };
+                }
+                return item;
+            });
+        }
+
         // Ensure both fields are set for backward compatibility
         userProfile.warehouseRoles = roles;
         userProfile.roles = roles;
@@ -205,22 +221,27 @@ export function AuthProvider({ children }) {
     const completeSetup = useCallback(async (warehouse, role) => {
         setPermissionsLoading(true);
         let pages;
+        // Normalize "Admin" (case-insensitive) to "Administrator"
+        const normalizedRole = {
+            ...role,
+            roleName: (role.roleName || "").toLowerCase() === "admin" ? "Administrator" : role.roleName
+        };
         try {
             const { authService, GET_USER_PERMISSIONS_API } = await import("../services/authService");
             if (!GET_USER_PERMISSIONS_API) {
                 throw new Error("No API endpoint configured.");
             }
-            const res = await authService.getRolePermissions(warehouse.warehouseId, role.roleId, role.roleName);
+            const res = await authService.getRolePermissions(warehouse.warehouseId, normalizedRole.roleId, normalizedRole.roleName);
             if (res.status === "success" && res.message.accessiblePages && res.message.accessiblePages.length > 0) {
                 pages = res.message.accessiblePages;
                 setAccessiblePages(pages);
             } else {
-                pages = getFallbackAccessiblePages(role.roleName || role.roleId);
+                pages = getFallbackAccessiblePages(normalizedRole.roleName || normalizedRole.roleId);
                 setAccessiblePages(pages);
             }
         } catch (error) {
             console.warn("Failed to fetch permissions, falling back to default matrix:", error);
-            pages = getFallbackAccessiblePages(role.roleName || role.roleId);
+            pages = getFallbackAccessiblePages(normalizedRole.roleName || normalizedRole.roleId);
             setAccessiblePages(pages);
         } finally {
             setPermissionsLoading(false);
@@ -228,32 +249,32 @@ export function AuthProvider({ children }) {
 
         // Stamp a version key so the page-init code can validate freshness
         // on next app load: permissionsVersion = "<warehouseId>::<roleId>"
-        const permVersion = `${warehouse.warehouseId}::${role.roleId}`;
+        const permVersion = `${warehouse.warehouseId}::${normalizedRole.roleId}`;
         localStorage.setItem("accessiblePages", JSON.stringify(pages));
         localStorage.setItem("permissionsVersion", permVersion);
 
         localStorage.setItem("selectedWarehouseId", warehouse.warehouseId);
         localStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
-        localStorage.setItem("selectedRoleId", role.roleId);
-        localStorage.setItem("selectedRoleName", role.roleName);
+        localStorage.setItem("selectedRoleId", normalizedRole.roleId);
+        localStorage.setItem("selectedRoleName", normalizedRole.roleName);
         
         sessionStorage.setItem("selectedWarehouseId", warehouse.warehouseId);
         sessionStorage.setItem("selectedWarehouseName", warehouse.warehouseName);
-        sessionStorage.setItem("selectedRoleId", role.roleId);
-        sessionStorage.setItem("selectedRoleName", role.roleName);
+        sessionStorage.setItem("selectedRoleId", normalizedRole.roleId);
+        sessionStorage.setItem("selectedRoleName", normalizedRole.roleName);
         
         setSelectedWarehouseId(warehouse.warehouseId);
         setSelectedWarehouseName(warehouse.warehouseName);
-        setSelectedRoleId(role.roleId);
-        setSelectedRoleName(role.roleName);
+        setSelectedRoleId(normalizedRole.roleId);
+        setSelectedRoleName(normalizedRole.roleName);
 
         localStorage.setItem("selectedWarehouse", JSON.stringify(warehouse));
-        localStorage.setItem("selectedRole", JSON.stringify(role));
+        localStorage.setItem("selectedRole", JSON.stringify(normalizedRole));
         setSelectedWarehouse(warehouse);
-        setSelectedRole(role);
+        setSelectedRole(normalizedRole);
         
         // Backward-compatible fields
-        localStorage.setItem("userRole", role.roleName);
+        localStorage.setItem("userRole", normalizedRole.roleName);
         localStorage.setItem("userName", user ? `${user.firstName} ${user.lastName}` : "");
         localStorage.setItem("userOrg", user?.Organization || "");
         

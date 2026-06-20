@@ -21,9 +21,6 @@ function SwitchWorkspaceModal({ onClose }) {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
-    const [fetchedRoles, setFetchedRoles] = useState([]);
-    const [rolesLoading, setRolesLoading] = useState(false);
-    const [roleErrorText, setRoleErrorText] = useState("");
     const uniqueWarehouses = React.useMemo(() => {
         const list = [];
         const warehouseMap = new Map();
@@ -67,24 +64,19 @@ function SwitchWorkspaceModal({ onClose }) {
         return list;
     }, [warehouseRoles]);
 
-    useEffect(() => {
-        if (!selectedWarehouseId) {
-            setFetchedRoles([]);
-            setSelectedRoleId("");
-            setRoleErrorText("");
-            return;
-        }
-
-        setRolesLoading(true);
+    const fetchedRoles = React.useMemo(() => {
+        if (!selectedWarehouseId) return [];
         const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
-        if (whMatch && Array.isArray(whMatch.roles) && whMatch.roles.length > 0) {
-            setFetchedRoles(whMatch.roles);
-            setRoleErrorText("");
-        } else {
-            setFetchedRoles([]);
-            setRoleErrorText("No roles available");
+        return (whMatch && Array.isArray(whMatch.roles)) ? whMatch.roles : [];
+    }, [selectedWarehouseId, uniqueWarehouses]);
+
+    const roleErrorText = React.useMemo(() => {
+        if (!selectedWarehouseId) return "";
+        const whMatch = uniqueWarehouses.find(wh => wh.warehouseId === selectedWarehouseId);
+        if (!whMatch || !Array.isArray(whMatch.roles) || whMatch.roles.length === 0) {
+            return "No roles available";
         }
-        setRolesLoading(false);
+        return "";
     }, [selectedWarehouseId, uniqueWarehouses]);
 
     const warehouseOptions = uniqueWarehouses.map(wh => ({
@@ -94,6 +86,7 @@ function SwitchWorkspaceModal({ onClose }) {
     }));
 
     const filteredRoles = fetchedRoles;
+    const rolesLoading = false;
 
     const roleOptions = filteredRoles.map(role => ({
         value: role.roleId,

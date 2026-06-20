@@ -40,7 +40,9 @@ function PurchaseDashboard() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, [selectedWarehouseName]);
 
     const handleAutoReplenish = () => {

@@ -13,8 +13,8 @@ const OPERATION_HEAD_ONLY = [ROLES.OPERATION_HEAD];
 
 // ─── Lazy-loaded Pages ────────────────────────────────────────────────────────
 const MainLayout              = lazy(() => import("./layouts/MainLayout"));
-const Dashboard               = lazy(() => import("./pages/dashboard/Dashboard.jsx"));
-const Orders                  = lazy(() => import("./pages/orders/OrdersPage.jsx"));
+const Dashboard               = lazy(() => import("./pages/Dashboard/Dashboard.jsx"));
+const Orders                  = lazy(() => import("./pages/Orders/OrdersPage.jsx"));
 const Receiving               = lazy(() => import("./pages/receiving/ReceivingPage.jsx"));
 const DispatchPage            = lazy(() => import("./pages/dispatch/DispatchPage.jsx"));
 const GRNPage                 = lazy(() => import("./pages/grn/GRNPage.jsx"));
@@ -24,12 +24,12 @@ const DarkhouseInventory      = lazy(() => import("./pages/catalogue/darkhouse/I
 const FindProductToSell       = lazy(() => import("./pages/catalogue/darkhouse/FindProductToSellPage.jsx"));
 const StockTransfers          = lazy(() => import("./pages/catalogue/transfers/StockTransfersPage.jsx"));
 const IndentPage              = lazy(() => import("./pages/catalogue/indent/IndentPage.jsx"));
-const Analytics               = lazy(() => import("./pages/analytics/AnalyticsPage.jsx"));
-const Customers               = lazy(() => import("./pages/customers/CustomersPage.jsx"));
-const Billing                 = lazy(() => import("./pages/billing/BillingPage.jsx"));
-const Settings                = lazy(() => import("./pages/settings/SettingsPage.jsx"));
-const Darkhouses              = lazy(() => import("./pages/darkhouses/DarkhousesPage.jsx"));
-const ManagePreview           = lazy(() => import("./pages/managepreview/ManagePreviewPage.jsx"));
+const Analytics               = lazy(() => import("./pages/Analytics/AnalyticsPage.jsx"));
+const Customers               = lazy(() => import("./pages/Customers/CustomersPage.jsx"));
+const Billing                 = lazy(() => import("./pages/Billing/BillingPage.jsx"));
+const Settings                = lazy(() => import("./pages/Settings/SettingsPage.jsx"));
+const Darkhouses              = lazy(() => import("./pages/Darkhouses/DarkhousesPage.jsx"));
+const ManagePreview           = lazy(() => import("./pages/ManagePreview/ManagePreviewPage.jsx"));
 
 // Purchase Module Pages
 const PurchaseDashboard       = lazy(() => import("./pages/purchase/PurchaseDashboard.jsx"));
@@ -41,18 +41,18 @@ const PurchaseGRN             = lazy(() => import("./pages/purchase/PurchaseGRN.
 const VendorPerformance       = lazy(() => import("./pages/purchase/VendorPerformance.jsx"));
 
 // Dynamic Role Pages
-const ReportsPage             = lazy(() => import("./pages/reports/ReportsPage.jsx"));
-const OperationsPage          = lazy(() => import("./pages/operations/OperationsPage.jsx"));
+const ReportsPage             = lazy(() => import("./pages/Reports/ReportsPage.jsx"));
+const OperationsPage          = lazy(() => import("./pages/Operations/OperationsPage.jsx"));
 const DynamicMissingPage      = lazy(() => import("./pages/common/DynamicMissingPage.jsx"));
 
 // Admin Module
-const AdminPage               = lazy(() => import("./pages/admin/AdminPage.jsx"));
+const AdminPage               = lazy(() => import("./pages/Admin/AdminPage.jsx"));
 
 // Auth & Setup Pages
-const LoginPage               = lazy(() => import("./pages/auth/LoginPage.jsx"));
-const OrgRoleSelectionPage    = lazy(() => import("./pages/auth/OrgRoleSelectionPage.jsx"));
-const AccessDeniedPage        = lazy(() => import("./pages/auth/AccessDeniedPage.jsx"));
-const SellerZoneDashboard     = lazy(() => import("./pages/dashboard/SellerZoneDashboard.jsx"));
+const LoginPage               = lazy(() => import("./pages/Auth/LoginPage.jsx"));
+const OrgRoleSelectionPage    = lazy(() => import("./pages/Auth/OrgRoleSelectionPage.jsx"));
+const AccessDeniedPage        = lazy(() => import("./pages/Auth/AccessDeniedPage.jsx"));
+const SellerZoneDashboard     = lazy(() => import("./pages/Dashboard/SellerZoneDashboard.jsx"));
 
 // Catalog Module Sub-Pages
 const CatalogProducts         = lazy(() => import("./pages/catalog/Products/ProductsPage.jsx"));

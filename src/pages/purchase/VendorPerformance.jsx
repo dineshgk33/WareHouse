@@ -56,7 +56,9 @@ function VendorPerformance() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
     // Prepare chart data for fill rates

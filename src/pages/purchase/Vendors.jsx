@@ -29,7 +29,10 @@ function Vendors() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedVendor, setSelectedVendor] = useState(null);
-    const [vendorScore, setVendorScore] = useState(null);
+    const vendorScore = React.useMemo(() => {
+        if (!selectedVendor) return null;
+        return getVendorScorecard(selectedVendor.vendorCode);
+    }, [selectedVendor]);
 
     // Form State
     const [vendorName, setVendorName] = useState("");
@@ -53,15 +56,12 @@ function Vendors() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
-    // Set score card values when detail vendor changes
-    useEffect(() => {
-        if (selectedVendor) {
-            setVendorScore(getVendorScorecard(selectedVendor.vendorCode));
-        }
-    }, [selectedVendor]);
+
 
     const handleCreateVendor = (e) => {
         e.preventDefault();

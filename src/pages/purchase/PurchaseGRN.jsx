@@ -46,7 +46,9 @@ function PurchaseGRN() {
     };
 
     useEffect(() => {
-        loadData();
+        Promise.resolve().then(() => {
+            loadData();
+        });
     }, []);
 
     const inboundDeliveries = getInboundDeliveries().filter(d => d.status === "Unloaded");
