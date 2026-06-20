@@ -5,7 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 function AccessDeniedPage() {
     const navigate = useNavigate();
-    const { accessiblePages } = useAuth();
+    const { accessiblePages, canView } = useAuth();
 
     const handleReturn = () => {
         if (!accessiblePages || accessiblePages.length === 0) {
@@ -13,7 +13,7 @@ function AccessDeniedPage() {
             return;
         }
         
-        const hasDashboard = accessiblePages.some(p => p.pageId && p.pageId.toUpperCase() === "DASHBOARD" && p.canView);
+        const hasDashboard = canView("DASHBOARD");
         if (hasDashboard) {
             navigate("/dashboard");
         } else {

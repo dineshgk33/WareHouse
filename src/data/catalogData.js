@@ -58,6 +58,18 @@ export const DYNAMIC_ATTRIBUTES_CONFIG = {
         { code: "fssaiNumber", name: "FSSAI License Number", type: "text", required: true, placeholder: "14-digit number", pattern: "^[0-9]{14}$" },
         { code: "fatPercentage", name: "Fat Percentage (%)", type: "number", required: false, min: 0, max: 100 }
     ],
+    "Frozen Veggies": [
+        { code: "coldChainProtocol", name: "Cold Chain Protocol", type: "select", options: ["Standard", "Deep Freeze", "Ultra Cold"], required: true },
+        { code: "storageTemp", name: "Storage Temperature", type: "text", required: true, placeholder: "e.g. -18°C" },
+        { code: "expiryDate", name: "Expiry Date", type: "date", required: true },
+        { code: "batchNumber", name: "Batch Number", type: "text", required: true, placeholder: "e.g. BAT-FRZ-99" }
+    ],
+    "Frozen Snacks": [
+        { code: "coldChainProtocol", name: "Cold Chain Protocol", type: "select", options: ["Standard", "Deep Freeze", "Ultra Cold"], required: true },
+        { code: "storageTemp", name: "Storage Temperature", type: "text", required: true, placeholder: "e.g. -18°C" },
+        { code: "expiryDate", name: "Expiry Date", type: "date", required: true },
+        { code: "batchNumber", name: "Batch Number", type: "text", required: true, placeholder: "e.g. BAT-FRZ-99" }
+    ],
     "Beverages": [
         { code: "volume", name: "Volume", type: "text", required: true, placeholder: "e.g. 750ml, 1.5L" },
         { code: "containerType", name: "Container Type", type: "select", options: ["Can", "Glass Bottle", "PET Bottle", "Tetra Pack"], required: true },
@@ -221,10 +233,10 @@ export const MOCK_PRODUCTS = [
         image: "🍟",
         description: "Delicious crispy straight cut frozen potato fries.",
         attributes: {
-            weight: "450g",
-            organic: false,
-            storageType: "Refrigerated",
-            harvestDate: "2026-05-10"
+            coldChainProtocol: "Standard",
+            storageTemp: "-18°C",
+            expiryDate: "2027-05-10",
+            batchNumber: "BAT-FRZ-005"
         }
     },
     {

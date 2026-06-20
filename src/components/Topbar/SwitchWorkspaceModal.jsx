@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import SearchableSelect from "../common/SearchableSelect";
 import { authService } from "../../services/authService";
 import "./SwitchWorkspaceModal.css";
 
 function SwitchWorkspaceModal({ onClose }) {
+    const navigate = useNavigate();
     const { user, warehouseRoles, completeSetup, selectedWarehouseId: currentWarehouseId, selectedRoleId: currentRoleId } = useAuth();
     
     const [selectedWarehouseId, setSelectedWarehouseId] = useState(currentWarehouseId || "");
@@ -137,7 +139,45 @@ function SwitchWorkspaceModal({ onClose }) {
         try {
             // completeSetup already calls authService.getRolePermissions,
             // saves to localStorage, and updates accessiblePages state.
-            await completeSetup(selectedWhObj, selectedRlObj);
+            const pages = await completeSetup(selectedWhObj, selectedRlObj);
+
+            let targetPath;
+            if (pages && pages.length > 0) {
+                const hasDashboard = pages.some(p => p.pageId && p.pageId.toUpperCase() === "DASHBOARD" && p.canView);
+                if (hasDashboard) {
+                    targetPath = "/dashboard";
+                } else {
+                    const firstPage = pages.find(p => p.canView);
+                    const firstPageId = firstPage ? (firstPage.pageId ? firstPage.pageId.toUpperCase() : "") : "";
+                    switch (firstPageId) {
+                        case "ORDERS": targetPath = "/orders"; break;
+                        case "INVENTORY":
+                        case "WAREHOUSE_INVENTORY":
+                            targetPath = "/catalogue/warehouse";
+                            break;
+                        case "DARKHOUSE_INVENTORY":
+                            targetPath = "/catalogue/darkhouse";
+                            break;
+                        case "STOCK_TRANSFERS":
+                            targetPath = "/catalogue/transfers";
+                            break;
+                        case "CATALOG": targetPath = "/catalog/products"; break;
+                        case "CUSTOMERS": targetPath = "/customers"; break;
+                        case "BILLING": targetPath = "/billing"; break;
+                        case "SETTINGS": targetPath = "/settings"; break;
+                        case "ANALYTICS": targetPath = "/analytics"; break;
+                        case "REPORTS": targetPath = "/reports"; break;
+                        case "OPERATIONS": targetPath = "/operations"; break;
+                        case "DARKHOUSES": targetPath = "/darkhouses"; break;
+                        case "EMPLOYEES": targetPath = "/employees"; break;
+                        case "ADMIN": targetPath = "/admin/members"; break;
+                        default: targetPath = "/"; break;
+                    }
+                }
+            } else {
+                targetPath = "/";
+            }
+            navigate(targetPath);
         } catch (error) {
             console.error("Failed to switch workspace permissions:", error);
         } finally {

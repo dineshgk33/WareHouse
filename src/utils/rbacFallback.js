@@ -48,6 +48,19 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("SUPPORT", "Support", "Support", "checked"),
             page("ADMIN", "Admin", "Admin", "checked"),
             page("PURCHASE", "Purchase Management", "Purchase", "checked"),
+            page("CATALOG", "Products", "Catalog", "checked"),
+            page("CATALOG", "Categories", "Catalog", "checked"),
+            page("CATALOG", "Brands", "Catalog", "checked"),
+            page("CATALOG", "Attributes", "Catalog", "checked"),
+            page("CATALOG", "Variants", "Catalog", "checked"),
+            page("CATALOG", "Pricing", "Catalog", "checked"),
+            page("CATALOG", "Product Mapping", "Catalog", "checked"),
+            page("CATALOG", "Bulk Upload", "Catalog", "checked"),
+            page("CATALOG", "Media Library", "Catalog", "checked"),
+            page("CATALOG", "Product Audit", "Catalog", "checked"),
+            page("DARKHOUSES", "Darkhouse List", "Darkhouses", "checked"),
+            page("DARKHOUSES", "Managers", "Darkhouses", "checked"),
+            page("DARKHOUSES", "Assign Products", "Darkhouses", "checked"),
             
             // Excel and Phase 6 Pages
             page("OPERATIONS_ORDER_PICKING", "Order Picking", "Operations", "checked"),
@@ -310,7 +323,20 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
             page("ADMIN", "Admin", "Admin", "cross"),
-            page("PURCHASE", "Purchase Management", "Purchase", "checked")
+            page("PURCHASE", "Purchase Management", "Purchase", "checked"),
+            page("CATALOG", "Products", "Catalog", "checked"),
+            page("CATALOG", "Categories", "Catalog", "checked"),
+            page("CATALOG", "Brands", "Catalog", "checked"),
+            page("CATALOG", "Attributes", "Catalog", "checked"),
+            page("CATALOG", "Variants", "Catalog", "checked"),
+            page("CATALOG", "Pricing", "Catalog", "checked"),
+            page("CATALOG", "Product Mapping", "Catalog", "checked"),
+            page("CATALOG", "Bulk Upload", "Catalog", "checked"),
+            page("CATALOG", "Media Library", "Catalog", "checked"),
+            page("CATALOG", "Product Audit", "Catalog", "checked"),
+            page("DARKHOUSES", "Darkhouse List", "Darkhouses", "checked"),
+            page("DARKHOUSES", "Managers", "Darkhouses", "checked"),
+            page("DARKHOUSES", "Assign Products", "Darkhouses", "checked"),
         ];
     }
 
@@ -333,7 +359,20 @@ export const getFallbackAccessiblePages = (roleName) => {
             page("SETTINGS", "Settings", "Settings", "cross"),
             page("SUPPORT", "Support", "Support", "cross"),
             page("ADMIN", "Admin", "Admin", "cross"),
-            page("PURCHASE", "Purchase Management", "Purchase", "eye")
+            page("PURCHASE", "Purchase Management", "Purchase", "eye"),
+            page("CATALOG", "Products", "Catalog", "eye"),
+            page("CATALOG", "Categories", "Catalog", "eye"),
+            page("CATALOG", "Brands", "Catalog", "eye"),
+            page("CATALOG", "Attributes", "Catalog", "eye"),
+            page("CATALOG", "Variants", "Catalog", "eye"),
+            page("CATALOG", "Pricing", "Catalog", "eye"),
+            page("CATALOG", "Product Mapping", "Catalog", "eye"),
+            page("CATALOG", "Bulk Upload", "Catalog", "eye"),
+            page("CATALOG", "Media Library", "Catalog", "eye"),
+            page("CATALOG", "Product Audit", "Catalog", "eye"),
+            page("DARKHOUSES", "Darkhouse List", "Darkhouses", "eye"),
+            page("DARKHOUSES", "Managers", "Darkhouses", "eye"),
+            page("DARKHOUSES", "Assign Products", "Darkhouses", "eye"),
         ];
     }
 

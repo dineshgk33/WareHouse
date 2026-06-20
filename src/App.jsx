@@ -193,11 +193,15 @@ function App() {
                                     <Route path="grn" element={<GRNPage />} />
                                 </Route>
 
-                                <Route element={<ProtectedRoute pageId={["WAREHOUSE_INVENTORY", "DARKHOUSE_INVENTORY", "STOCK_TRANSFERS"]} />}>
+                                <Route element={<ProtectedRoute pageId="WAREHOUSE_INVENTORY" />}>
                                     <Route path="catalogue/warehouse" element={<WarehouseCatalogue />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="DARKHOUSE_INVENTORY" />}>
                                     <Route path="catalogue/darkhouse/products" element={<DarkhouseProducts />} />
                                     <Route path="catalogue/darkhouse/inventory" element={<DarkhouseInventory />} />
                                     <Route path="catalogue/darkhouse/find-product-to-sell" element={<FindProductToSell />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="STOCK_TRANSFERS" />}>
                                     <Route path="catalogue/transfers" element={<StockTransfers />} />
                                 </Route>
 
@@ -335,7 +339,9 @@ function App() {
                                     <Route path="inventory/support" element={<DynamicMissingPage />} />
                                 </Route>
                                 <Route element={<ProtectedRoute pageId="WAREHOUSE_INVENTORY" />}>
-                                    <Route path="inventory/inventory-management" element={<DynamicMissingPage />} />
+                                    <Route path="inventory/inventory-management" element={<WarehouseCatalogue />} />
+                                </Route>
+                                <Route element={<ProtectedRoute pageId="STOCK_TRANSFERS" />}>
                                     <Route path="inventory/stock-transfer" element={<StockTransfers />} />
                                 </Route>
 

@@ -5,28 +5,30 @@ import { getFallbackAccessiblePages } from "../utils/rbacFallback";
 const VITE_API_URL = import.meta.env.VITE_API_URL || "";
 const PERMISSIONS_API_KEY = import.meta.env.VITE_PERMISSIONS_API_KEY || "";
 
+const baseApiUrl = VITE_API_URL && VITE_API_URL.includes("/_functions") ? VITE_API_URL.substring(0, VITE_API_URL.lastIndexOf("/_functions")) : "";
+
 // ─── AUTH SERVICE API PLACEHOLDERS ──────────────────────────────────────────
 // DO NOT ASSIGN VALUES. Values will be provided later.
 const LOGIN_API = VITE_API_URL || "/_functions/loginEmployee";
-const LOGOUT_API = "";
-const REFRESH_TOKEN_API = "";
-const GET_USER_PROFILE_API = "";
+const LOGOUT_API = `${baseApiUrl}/_functions/logoutEmployee`;
+const REFRESH_TOKEN_API = `${baseApiUrl}/_functions/refreshToken`;
+const GET_USER_PROFILE_API = `${baseApiUrl}/_functions/getUserProfile`;
 const GET_USER_PERMISSIONS_API = import.meta.env.VITE_PERMISSIONS_API_URL || "";
-const GET_ROLE_ACCESS_API = "";
-const GET_SIDEBAR_ACCESS_API = "";
-const GET_WAREHOUSE_ROLES_API = "/_functions/getWarehouseRoles";
-const CREATE_MEMBER_API = "";
-const UPLOAD_MEDIA_API = "/_functions/uploadMedia";
-const CHECK_EMPLOYEE_API = "/_functions/checkWarehouseemployee";
-const CREATE_EMPLOYEE_API = "/_functions/createWarehouseEmployee";
-const UPDATE_EMPLOYEE_API = "/_functions/updateEmployeeMasters";
-const GET_EMPLOYEES_API = "/_functions/getWarehouseEmployees";
+const GET_ROLE_ACCESS_API = `${baseApiUrl}/_functions/getRoleAccess`;
+const GET_SIDEBAR_ACCESS_API = `${baseApiUrl}/_functions/getSidebarAccess`;
+const GET_WAREHOUSE_ROLES_API = `${baseApiUrl}/_functions/getWarehouseRoles`;
+const CREATE_MEMBER_API = `${baseApiUrl}/_functions/createMember`;
+const UPLOAD_MEDIA_API = `${baseApiUrl}/_functions/uploadMedia`;
+const CHECK_EMPLOYEE_API = `${baseApiUrl}/_functions/checkWarehouseemployee`;
+const CREATE_EMPLOYEE_API = `${baseApiUrl}/_functions/createWarehouseEmployee`;
+const UPDATE_EMPLOYEE_API = `${baseApiUrl}/_functions/updateEmployeeMasters`;
+const GET_EMPLOYEES_API = `${baseApiUrl}/_functions/getWarehouseEmployees`;
 
 // Warehouse Management API endpoints
-const GET_WAREHOUSES_API = "/_functions/getWarehouses";
-const CREATE_WAREHOUSE_API = "/_functions/createWarehouse";
-const UPDATE_WAREHOUSE_API = "/_functions/updateWarehouse";
-const MAP_WAREHOUSE_API = "/_functions/mapWarehouse";
+const GET_WAREHOUSES_API = `${baseApiUrl}/_functions/getWarehouses`;
+const CREATE_WAREHOUSE_API = `${baseApiUrl}/_functions/createWarehouse`;
+const UPDATE_WAREHOUSE_API = `${baseApiUrl}/_functions/updateWarehouse`;
+const MAP_WAREHOUSE_API = `${baseApiUrl}/_functions/mapWarehouse`;
 
 export const authService = {
     login: async (email, password) => {

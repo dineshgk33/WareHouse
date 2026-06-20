@@ -281,10 +281,17 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
         const allowedPages = pages.filter(p => {
             const pageIdUpper = (p.pageId || "").toUpperCase();
+            const modNameUpper = (p.moduleName || "").toUpperCase();
+            
+            // Exclude modules that are handled by manual injection blocks to avoid duplication
+            if (pageIdUpper === "PURCHASE" || modNameUpper === "PURCHASE") return false;
+            if (pageIdUpper === "GRN" || modNameUpper === "GRN (GOODS RECEIPT NOTE)") return false;
+            if (pageIdUpper === "INDENT" || modNameUpper === "INDENT" || modNameUpper === "INDENT MANAGEMENT") return false;
+            if (pageIdUpper === "DISPATCH" || modNameUpper === "DISPATCH" || modNameUpper === "DISPATCH MANAGEMENT") return false;
+            if (pageIdUpper === "RECEIVING" || modNameUpper === "RECEIVING" || modNameUpper === "RECEIVING MANAGEMENT") return false;
+
             return p.canView && 
-                   p.pageName !== "User Roles" &&
-                   pageIdUpper !== "CATALOG" &&
-                   pageIdUpper !== "DARKHOUSES";
+                   p.pageName !== "User Roles";
         });
 
         const groups = {};
@@ -397,7 +404,14 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
                 icon: getIconForModule(moduleName),
             };
 
-            if (modulePages.length === 1) {
+            if (moduleName === "Catalogue") {
+                item.submenu = [
+                    { label: "Products", path: "/catalogue/darkhouse/products" },
+                    { label: "Inventory", path: "/catalogue/darkhouse/inventory" },
+                    { label: "Find Product to Sell", path: "/catalogue/darkhouse/find-product-to-sell" }
+                ];
+                item.path = "/catalogue/darkhouse/products";
+            } else if (modulePages.length === 1) {
                 const singlePage = modulePages[0];
                 item.path = getRouteForPage(singlePage.pageId, singlePage.pageName, moduleName);
             } else {
@@ -721,20 +735,23 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
             </div>
 
             {/* User Profile Card - Mobile Drawer / Desktop Sidebar */}
-            <div className="sidebar-profile-card">
-                <img 
-                    src={profileImage} 
-                    alt={`${userName} Profile`} 
-                    className="sidebar-profile-avatar"
-                    onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
-                    }}
-                />
-                <div className="sidebar-profile-info">
-                    <span className="sidebar-profile-name">{userName}</span>
-                    <span className="sidebar-profile-role">{userRole}</span>
+            {userName && (
+                <div className="sidebar-profile-card">
+                    <img 
+                        src={profileImage} 
+                        alt={`${userName} Profile`} 
+                        className="sidebar-profile-avatar"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+                        }}
+                    />
+                    <div className="sidebar-profile-info">
+                        <span className="sidebar-profile-name">{userName}</span>
+                        <span className="sidebar-profile-role">{userRole}</span>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Navigation links */}
             <nav className="sidebar-nav">
