@@ -914,6 +914,15 @@ function OrdersPage() {
         setActiveRowMenuId(null);
     };
 
+    const handleSetReadyToDispatch = (order) => {
+        setOrders(prevOrders => 
+            prevOrders.map(o => 
+                o.id === order.id ? { ...o, status: "Ready To Dispatch" } : o
+            )
+        );
+        setActiveRowMenuId(null);
+    };
+
     const openPickAssign = (pick) => {
         setSelectedItem(pick);
         setFormPicker(pick.picker === "Unassigned" ? "Ramesh Kumar" : pick.picker);
@@ -1601,6 +1610,10 @@ function OrdersPage() {
                         bulkActionType={bulkActionType}
                         setBulkActionType={setBulkActionType}
                         handleExecuteBulkAction={handleExecuteBulkAction}
+                        getItemsForOrder={getItemsForOrder}
+                        handleGenerateInvoice={handleGenerateInvoice}
+                        openOrdEdit={openOrdEdit}
+                        handleReadyToDispatch={handleSetReadyToDispatch}
                     />
                 )}
 
@@ -2323,12 +2336,14 @@ function OrdersPage() {
                 </div>
             )}
 
-            {isInvoiceOpen && invoiceOrder && (
+            {isInvoiceOpen && invoiceOrder && createPortal(
                 <InvoicePreviewModal
                     isOpen={isInvoiceOpen}
                     order={invoiceOrder}
                     onClose={() => setIsInvoiceOpen(false)}
-                />
+                    getItemsForOrder={getItemsForOrder}
+                />,
+                document.body
             )}
 
             {/* ─── DEDICATED PRINT CONTAINER (HIDDEN ON SCREEN, VISIBLE ON PRINT) ─── */}

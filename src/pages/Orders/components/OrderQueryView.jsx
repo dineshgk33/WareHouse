@@ -1,6 +1,17 @@
 import React from "react";
 import { Search, Store, Truck, MapPin } from "lucide-react";
 
+const getProductEmoji = (sku) => {
+    switch (sku) {
+        case "FRT-ANG-01": return "🥭";
+        case "DRY-MILK-02": return "🥛";
+        case "FZN-FRIES-03": return "🍟";
+        case "FRT-AAPL-04": return "🍎";
+        case "DRY-PANR-05": return "🧀";
+        default: return "📦";
+    }
+};
+
 function OrderQueryView({
     queryIdInput,
     setQueryIdInput,
@@ -74,7 +85,26 @@ function OrderQueryView({
                             <tbody>
                                 {getItemsForOrder(queryResult).map((item, idx) => (
                                     <tr key={idx}>
-                                        <td>{item.name}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{
+                                                    width: '36px',
+                                                    height: '36px',
+                                                    borderRadius: '6px',
+                                                    backgroundColor: '#F3F4F6',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '20px',
+                                                    flexShrink: 0
+                                                }}>
+                                                    {getProductEmoji(item.sku)}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '600' }}>{item.name}</div>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td className="font-mono">{item.sku}</td>
                                         <td>{item.qty} units</td>
                                         <td className="font-mono">BIN-{(idx * 3) + 12}-A</td>

@@ -2,6 +2,38 @@ import React from "react";
 import { Search, Printer } from "lucide-react";
 import { Barcode128Svg } from "../../../utils/barcode";
 
+const getProductEmoji = (sku) => {
+    switch (sku) {
+        case "FRT-ANG-01": return "🥭";
+        case "DRY-MILK-02": return "🥛";
+        case "FZN-FRIES-03": return "🍟";
+        case "FRT-AAPL-04": return "🍎";
+        case "DRY-PANR-05": return "🧀";
+        default: return "📦";
+    }
+};
+
+const getStaffInitials = (name) => {
+    if (!name || name === "Unassigned") return "👤";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase();
+};
+
+const getStaffColorClass = (role, name) => {
+    if (!name || name === "Unassigned") return "avatar-gray";
+    switch (role) {
+        case "picker": return "avatar-indigo";
+        case "packer": return "avatar-teal";
+        case "rider": return "avatar-amber";
+        default: return "avatar-gray";
+    }
+};
+
+const getSimulatedId = (name, prefix) => {
+    if (!name || name === "Unassigned") return "N/A";
+    const sum = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return `${prefix}-${(sum % 800) + 1000}`;
+};
+
 function OrderDetailInspector({
     selectedInspectorOrder,
     filteredInspectorOrders,
@@ -227,6 +259,70 @@ function OrderDetailInspector({
                             </div>
                         </div>
 
+                        {/* Fulfillment Team Assignments */}
+                        {(() => {
+                            const pick = picks?.find(p => p.orderId === selectedInspectorOrder.id) || null;
+                            const pack = packs?.find(p => p.orderId === selectedInspectorOrder.id) || null;
+                            const dlv = deliveries?.find(d => d.orderId === selectedInspectorOrder.id) || null;
+                            return (
+                                <div className="inspector-section">
+                                    <h4 className="inspector-section-title">Fulfillment Staff Assignments</h4>
+                                    <div className="staff-assignments-grid">
+                                        {/* Picker Card */}
+                                        <div className="staff-card">
+                                            <div className={`staff-avatar-wrapper ${getStaffColorClass("picker", pick?.picker)}`}>
+                                                {getStaffInitials(pick?.picker)}
+                                            </div>
+                                            <div className="staff-info">
+                                                <span className="staff-role-label">Order Picker</span>
+                                                <span className="staff-name">{pick ? pick.picker : "Unassigned"}</span>
+                                                <div className="staff-meta">
+                                                    <span className="font-mono">{getSimulatedId(pick?.picker, "EMP-PCK")}</span>
+                                                    <span className={`staff-status-badge ${pick ? `status-${pick.status.toLowerCase().replace(/\s+/g, '-')}` : 'status-pending'}`}>
+                                                        {pick ? pick.status : "Pending"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Packer Card */}
+                                        <div className="staff-card">
+                                            <div className={`staff-avatar-wrapper ${getStaffColorClass("packer", pack?.packedBy)}`}>
+                                                {getStaffInitials(pack?.packedBy)}
+                                            </div>
+                                            <div className="staff-info">
+                                                <span className="staff-role-label">Packaging Associate</span>
+                                                <span className="staff-name">{pack ? pack.packedBy : "Unassigned"}</span>
+                                                <div className="staff-meta">
+                                                    <span className="font-mono">{getSimulatedId(pack?.packedBy, "EMP-PAK")}</span>
+                                                    <span className={`staff-status-badge ${pack ? `status-${pack.status.toLowerCase().replace(/\s+/g, '-')}` : 'status-waiting'}`}>
+                                                        {pack ? pack.status : "Waiting"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Rider Card */}
+                                        <div className="staff-card">
+                                            <div className={`staff-avatar-wrapper ${getStaffColorClass("rider", dlv?.rider)}`}>
+                                                {getStaffInitials(dlv?.rider)}
+                                            </div>
+                                            <div className="staff-info">
+                                                <span className="staff-role-label">Delivery Partner</span>
+                                                <span className="staff-name">{dlv ? dlv.rider : "Unassigned"}</span>
+                                                <div className="staff-meta">
+                                                    <span className="font-mono">{getSimulatedId(dlv?.rider, "EMP-RDR")}</span>
+                                                    <span className={`staff-status-badge ${dlv ? `status-${dlv.status.toLowerCase().replace(/\s+/g, '-')}` : 'status-waiting'}`}>
+                                                        {dlv ? dlv.status : "Waiting"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                         {/* Items Mapped */}
                         <div className="inspector-section">
                             <h4 className="inspector-section-title">Ordered Items Allocation</h4>
@@ -244,7 +340,26 @@ function OrderDetailInspector({
                                 <tbody>
                                     {getItemsForOrder(selectedInspectorOrder).map((item, idx) => (
                                         <tr key={idx}>
-                                            <td>{item.name}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        borderRadius: '6px',
+                                                        backgroundColor: '#F3F4F6',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '20px',
+                                                        flexShrink: 0
+                                                    }}>
+                                                        {getProductEmoji(item.sku)}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: '600' }}>{item.name}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <span className="category-tag">{getCategoryForProduct(item.name, item.sku)}</span>
                                             </td>

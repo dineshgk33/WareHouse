@@ -119,9 +119,12 @@ const QRISvg = () => {
     );
 };
 
-function InvoicePreviewModal({ isOpen, order, onClose }) {
+function InvoicePreviewModal({ isOpen, order, onClose, getItemsForOrder }) {
     // Retrieve order items dynamically
-    const getItemsForOrder = (ord) => {
+    const getItems = (ord) => {
+        if (getItemsForOrder) {
+            return getItemsForOrder(ord);
+        }
         if (!ord) return [];
         const idNum = parseInt((ord.id || "").replace(/\D/g, "")) || 1234;
         const productsList = [
@@ -143,7 +146,7 @@ function InvoicePreviewModal({ isOpen, order, onClose }) {
         return selected;
     };
 
-    const rawItems = getItemsForOrder(order);
+    const rawItems = getItems(order);
 
     // Calculate tax breakdowns dynamically so they sum exactly to order.amount
     const invoiceCalculations = useMemo(() => {
