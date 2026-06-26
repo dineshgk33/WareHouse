@@ -5,18 +5,11 @@ import { Barcode128Svg } from "../../../utils/barcode";
 
 // Dynamic SLA Timer for Zepto operations dashboard
 function SLATimer({ order }) {
-    const getMaxSLA = useCallback(() => {
-        if (order.priority === "Critical") return 120; // 2 minutes for critical operations
-        if (order.priority === "High") return 300;     // 5 minutes for high-priority operations
-        return 600;                                    // 10 minutes for normal operations
-    }, [order.priority]);
-
     const [secondsLeft, setSecondsLeft] = useState(() => {
         if (order.status === "Delivered" || order.status === "Cancelled") {
             return 0;
         }
 
-        const maxSLA = order.priority === "Critical" ? 120 : order.priority === "High" ? 300 : 600;
         const seedValue = order.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
         
         if (order.priority === "Critical") {
@@ -27,31 +20,6 @@ function SLATimer({ order }) {
             return 180 + (seedValue % 240); // 180 to 420 seconds remaining (Safe zone)
         }
     });
-
-    // Reset timer when priority or id changes
-    const prevPriority = useRef(order.priority);
-    const prevId = useRef(order.id);
-    
-    useEffect(() => {
-        if (prevPriority.current !== order.priority || prevId.current !== order.id) {
-            prevPriority.current = order.priority;
-            prevId.current = order.id;
-            
-            if (order.status === "Delivered" || order.status === "Cancelled") {
-                setSecondsLeft(0);
-                return;
-            }
-
-            const seedValue = order.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-            if (order.priority === "Critical") {
-                setSecondsLeft(-20 - (seedValue % 60));
-            } else if (order.priority === "High") {
-                setSecondsLeft(30 + (seedValue % 90));
-            } else {
-                setSecondsLeft(180 + (seedValue % 240));
-            }
-        }
-    }, [order.priority, order.id, order.status]);
 
     useEffect(() => {
         if (order.status === "Delivered" || order.status === "Cancelled") {
@@ -112,7 +80,7 @@ function SLATimer({ order }) {
     const secs = absSeconds % 60;
     const formattedTime = `${isOverdue ? "-" : ""}${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 
-    const maxSLA = getMaxSLA();
+    const maxSLA = order.priority === "Critical" ? 120 : order.priority === "High" ? 300 : 600;
     const pct = isOverdue ? 0 : Math.max(0, Math.min(100, (secondsLeft / maxSLA) * 100));
 
     let slaClass = "sla-badge--normal";
@@ -308,8 +276,8 @@ function OrderManagementView({
                                                 {order.status}
                                             </span>
                                         </td>
-                                        <td>
-                                            <SLATimer order={order} />
+                                        <td className="table-text font-medium">
+                                            <SLATimer key={`${order.id}-${order.priority}-${order.status}`} order={order} />
                                         </td>
                                         <td className="text-right actions-cell" onClick={(e) => e.stopPropagation()}>
                                             <button 

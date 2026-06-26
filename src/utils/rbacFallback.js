@@ -31,6 +31,7 @@ export const getFallbackAccessiblePages = (roleName) => {
         return [
             ...commonPages,
             page("MANAGE_PREVIEW", "Manage Preview", "Manage Preview", "checked"),
+            page("RECEIVING", "Receiving Management", "Receiving Management", "checked"),
             page("WAREHOUSE_INVENTORY", "Warehouse Catalogue", "Catalogue", "checked"),
             page("DARKHOUSE_INVENTORY", "Darkhouse Catalogue", "Catalogue", "checked"),
             page("STOCK_TRANSFERS", "Stock Transfers", "Catalogue", "checked"),
@@ -178,9 +179,9 @@ export const getFallbackAccessiblePages = (roleName) => {
         return [
             ...commonPages,
             page("PURCHASE_VENDOR_PAYMENTS_STATUS", "Vendor Management", "Purchase", "checked"),
-            page("INDENT", "Purchase Requests", "Purchase", "checked"),
-            page("PURCHASE", "Purchase Orders", "Purchase", "checked"),
-            page("GRN", "Goods Receipt (GRN)", "Purchase", "checked"),
+            page("PURCHASE_REPORTS", "Purchase Requests", "Purchase", "checked"),
+            page("PURCHASE_REPORTS", "Purchase Orders", "Purchase", "checked"),
+            page("PURCHASE_REPORTS", "Goods Receipt (GRN)", "Purchase", "checked"),
             page("PURCHASE_VENDOR_PAYMENTS_STATUS", "Vendor Payments Status", "Purchase", "checked"),
             page("PURCHASE_REPORTS", "Purchase Reports", "Purchase", "checked"),
             page("PURCHASE_SUPPORT", "Support", "Purchase", "checked"),
@@ -206,7 +207,7 @@ export const getFallbackAccessiblePages = (roleName) => {
         return [
             ...commonPages,
             page("CUSTOMER_SUPPORT_CUSTOMER_TICKETS", "Customer Tickets", "Customer Support", "checked"),
-            page("ORDERS", "Order Lookup", "Customer Support", "checked"), // Reuse order query/lookup
+            page("CUSTOMER_SUPPORT_ORDER_LOOKUP", "Order Lookup", "Customer Support", "checked"),
             page("CUSTOMER_SUPPORT_REFUND_REQUESTS", "Refund Requests", "Customer Support", "checked"),
             page("CUSTOMER_SUPPORT_RETURN_REQUESTS", "Return Requests", "Customer Support", "checked"),
             page("CUSTOMER_SUPPORT_COMPLAINT_MANAGEMENT", "Complaint Management", "Customer Support", "checked"),
@@ -279,8 +280,8 @@ export const getFallbackAccessiblePages = (roleName) => {
     if (name === "information technology") {
         return [
             ...commonPages,
-            page("ADMIN", "User Management", "Information Technology", "checked"), // Reuse Admin user list
-            page("ADMIN", "Role & Permissions", "Information Technology", "checked"), // Reuse Admin perm list
+            page("IT_USER_MANAGEMENT", "User Management", "Information Technology", "checked"),
+            page("IT_ROLE_PERMISSIONS", "Role & Permissions", "Information Technology", "checked"),
             page("IT_API_LOGS", "API Logs", "Information Technology", "checked"),
             page("IT_SYSTEM_LOGS", "System Logs", "Information Technology", "checked"),
             page("IT_DEVICE_MANAGEMENT", "Device Management", "Information Technology", "checked"),
@@ -308,6 +309,7 @@ export const getFallbackAccessiblePages = (roleName) => {
         return [
             ...commonPages,
             page("MANAGE_PREVIEW", "Manage Preview", "Manage Preview", "cross"),
+            page("RECEIVING", "Receiving Management", "Receiving Management", "checked"),
             page("WAREHOUSE_INVENTORY", "Warehouse Catalogue", "Catalogue", "checked"),
             page("DARKHOUSE_INVENTORY", "Darkhouse Catalogue", "Catalogue", "checked"),
             page("STOCK_TRANSFERS", "Stock Transfers", "Catalogue", "checked"),
@@ -344,6 +346,7 @@ export const getFallbackAccessiblePages = (roleName) => {
         return [
             ...commonPages,
             page("MANAGE_PREVIEW", "Manage Preview", "Manage Preview", "cross"),
+            page("RECEIVING", "Receiving Management", "Receiving Management", "eye"),
             page("WAREHOUSE_INVENTORY", "Warehouse Catalogue", "Catalogue", "eye"),
             page("DARKHOUSE_INVENTORY", "Darkhouse Catalogue", "Catalogue", "eye"),
             page("STOCK_TRANSFERS", "Stock Transfers", "Catalogue", "eye"),

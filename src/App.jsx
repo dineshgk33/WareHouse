@@ -179,7 +179,7 @@ function App() {
                                 </Route>
 
                                 {/* Receiving Management */}
-                                <Route element={<ProtectedRoute pageId={["ORDERS", "RECEIVING"]} />}>
+                                <Route element={<ProtectedRoute pageId="RECEIVING" />}>
                                     <Route path="receiving" element={<Receiving />} />
                                 </Route>
 

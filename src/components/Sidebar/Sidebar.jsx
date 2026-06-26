@@ -136,7 +136,16 @@ const getRouteForPage = (pageId, pageName, moduleName) => {
             if (pageName === "Rejected Indents") return "/indent?tab=list&status=Rejected";
             return "/indent";
         case "EMPLOYEES":
+            if (moduleName === "Human Resources") return "/human-resources/employee-management";
             return "/employees";
+        case "PURCHASE_REPORTS":
+            if (pageName === "Purchase Requests") return "/purchase/purchase-requests";
+            if (pageName === "Purchase Orders") return "/purchase/purchase-orders";
+            if (pageName === "Goods Receipt (GRN)") return "/purchase/goods-receipt-grn";
+            return "/purchase/purchase-reports";
+        case "PURCHASE_VENDOR_PAYMENTS_STATUS":
+            if (pageName === "Vendor Management") return "/purchase/vendor-management";
+            return "/purchase/vendor-payments-status";
         case "REPORTS":
             if (pageName === "Inventory Summary Report") return "/reports/inventory-summary";
             if (pageName === "Low Stock Report") return "/reports/low-stock";
@@ -501,7 +510,7 @@ function Sidebar({ isCollapsed, toggleSidebar, mobileOpen, setMobileOpen }) {
 
         // Ensure Receiving Management is available in the sidebarItems list if authorized
         const hasReceiving = sidebarItems.some(item => item.id === "receiving-management");
-        if (!hasReceiving && (canView("ORDERS") || canView("RECEIVING"))) {
+        if (!hasReceiving && canView("RECEIVING")) {
             sidebarItems.push({
                 id: "receiving-management",
                 label: "Receiving Management",
